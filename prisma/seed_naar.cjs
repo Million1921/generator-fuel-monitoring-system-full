@@ -168,107 +168,117 @@ const naarData = [
 ];
 
 async function main() {
-    console.log('Starting NAAR region seed...');
+    console.log('Starting NAAR region seed (optimized for Neon)...');
 
-    // 1. Ensure Regions exist
+    // 1. Ensure Regions exist (batch all upserts in a transaction)
     const AA_REGIONS = ['CNR', 'NER', 'NAAR', 'EAAR', 'WAAR', 'SAAR', 'SWAAR'];
     const OUTSIDE_REGIONS = ['SWWR', 'SWR', 'EER', 'WWR', 'NEER', 'NWR', 'WR', 'NR', 'CER', 'SSWR', 'ER', 'CWR', 'SR', 'SER', 'NNWR', 'SSER'];
     const ALL_REGIONS = [...AA_REGIONS, ...OUTSIDE_REGIONS];
 
+    const regionOps = ALL_REGIONS.map(name =>
+        prisma.region.upsert({ where: { name }, update: {}, create: { name } })
+    );
+    const regions = await prisma.$transaction(regionOps);
     const regionMap = {};
-    for (const name of ALL_REGIONS) {
-        const r = await prisma.region.upsert({
-            where: { name },
-            update: {},
-            create: { name }
-        });
-        regionMap[name] = r.id;
-    }
-    console.log('Regions ensured.');
+    ALL_REGIONS.forEach((name, i) => { regionMap[name] = regions[i].id; });
+    console.log(`Regions ensured: ${regions.length} regions.`);
 
     const naarRegionId = regionMap['NAAR'];
 
-    // 2. Seed Sites and Generators
+    // 2. Seed Sites in batches of 20 (using $transaction)
+    const BATCH_SIZE = 20;
     let siteCount = 0;
     let genCount = 0;
 
-    for (const item of naarData) {
-        // Site
-        const site = await prisma.site.upsert({
-            where: { siteId: item.siteId },
-            update: {
-                name: item.name,
-                tankerCapacity: item.tankerCapacity,
-                dgCapacity: String(item.dgCapacity || ''),
-                dgType: item.dgType || '',
-                regionId: naarRegionId,
-                region: 'NAAR',
-            },
-            create: {
-                siteId: item.siteId,
-                name: item.name,
-                tankerCapacity: item.tankerCapacity,
-                dgCapacity: String(item.dgCapacity || ''),
-                dgType: item.dgType || '',
-                regionId: naarRegionId,
-                region: 'NAAR',
-                gpsCoordinates: `9.${Math.floor(Math.random() * 100)}, 38.${Math.floor(Math.random() * 100)}`,
-                installationDate: new Date('2022-01-01')
-            }
-        });
-        siteCount++;
+    for (let b = 0; b < naarData.length; b += BATCH_SIZE) {
+        const batch = naarData.slice(b, b + BATCH_SIZE);
+        const siteOps = batch.map(item =>
+            prisma.site.upsert({
+                where: { siteId: item.siteId },
+                update: {
+                    name: item.name,
+                    tankerCapacity: item.tankerCapacity,
+                    dgCapacity: String(item.dgCapacity || ''),
+                    dgType: item.dgType || '',
+                    regionId: naarRegionId,
+                    region: 'NAAR',
+                },
+                create: {
+                    siteId: item.siteId,
+                    name: item.name,
+                    tankerCapacity: item.tankerCapacity,
+                    dgCapacity: String(item.dgCapacity || ''),
+                    dgType: item.dgType || '',
+                    regionId: naarRegionId,
+                    region: 'NAAR',
+                    gpsCoordinates: `9.${Math.floor(Math.random() * 100)}, 38.${Math.floor(Math.random() * 100)}`,
+                    installationDate: new Date('2022-01-01')
+                }
+            })
+        );
+        const sites = await prisma.$transaction(siteOps);
+        siteCount += sites.length;
+        console.log(`  Sites batch ${Math.floor(b / BATCH_SIZE) + 1}: ${sites.length} sites upserted.`);
 
-        // Generator
-        const genId = `GEN-${item.siteId}`;
-        const generator = await prisma.generator.upsert({
-            where: { genId: genId },
-            update: {
-                model: item.dgType || 'Unknown',
-                capacity: String(item.dgCapacity || ''),
-                stdFuelConsumption: item.genStandardFuelConsumptionPerHr || 0,
-            },
-            create: {
-                genId: genId,
-                model: item.dgType || 'Unknown',
-                capacity: String(item.dgCapacity || ''),
-                stdFuelConsumption: item.genStandardFuelConsumptionPerHr || 0,
-                siteId: site.id,
-                serialNumber: `SN-${item.siteId}-${Math.floor(Math.random() * 1000)}`,
-                installationDate: new Date('2022-02-01')
-            }
-        });
-        genCount++;
-
-        // Add 1-3 random fuel refills per site to make dashboard look "auto-populated"
-        const numRefills = Math.floor(Math.random() * 3) + 1;
-        for (let i = 0; i < numRefills; i++) {
-            const refillDate = new Date();
-            refillDate.setMonth(refillDate.getMonth() - Math.floor(Math.random() * 6));
-            refillDate.setDate(Math.floor(Math.random() * 28) + 1);
-
-            const fuelDelivered = Math.floor(Math.random() * 1000) + 200;
-            const beforeLevel = Math.floor(Math.random() * 500);
-            const afterLevel = beforeLevel + fuelDelivered;
-            const beforeHours = Math.floor(Math.random() * 5000) + 100;
-            const afterHours = beforeHours + Math.floor(Math.random() * 24);
-
-            await prisma.fuelRefill.create({
-                data: {
-                    siteId: site.id,
-                    refillDate: refillDate,
-                    fuelDelivered: fuelDelivered,
-                    beforeLevel: beforeLevel,
-                    afterLevel: afterLevel,
-                    beforeHours: beforeHours,
-                    afterHours: afterHours,
-                    tankerVehicle: "T-8876",
-                    driverName: "Abebe Driver",
+        // 3. Generators for this batch (in a transaction)
+        const genOps = batch.map((item, i) => {
+            const genId = `GEN-${item.siteId}`;
+            return prisma.generator.upsert({
+                where: { genId },
+                update: {
+                    model: item.dgType || 'Unknown',
+                    capacity: String(item.dgCapacity || ''),
+                    stdFuelConsumption: item.genStandardFuelConsumptionPerHr || 0,
+                },
+                create: {
+                    genId,
+                    model: item.dgType || 'Unknown',
+                    capacity: String(item.dgCapacity || ''),
+                    stdFuelConsumption: item.genStandardFuelConsumptionPerHr || 0,
+                    siteId: sites[i].id,
+                    serialNumber: `SN-${item.siteId}-${Math.floor(Math.random() * 1000)}`,
+                    installationDate: new Date('2022-02-01')
                 }
             });
+        });
+        const gens = await prisma.$transaction(genOps);
+        genCount += gens.length;
+        console.log(`  Generators batch ${Math.floor(b / BATCH_SIZE) + 1}: ${gens.length} generators upserted.`);
+
+        // 4. Fuel Refills for this batch (batched create)
+        const refillOps = [];
+        for (let i = 0; i < sites.length; i++) {
+            const numRefills = Math.floor(Math.random() * 3) + 1;
+            for (let r = 0; r < numRefills; r++) {
+                const refillDate = new Date();
+                refillDate.setMonth(refillDate.getMonth() - Math.floor(Math.random() * 6));
+                refillDate.setDate(Math.floor(Math.random() * 28) + 1);
+                const fuelDelivered = Math.floor(Math.random() * 1000) + 200;
+                const beforeLevel = Math.floor(Math.random() * 500);
+                refillOps.push(
+                    prisma.fuelRefill.create({
+                        data: {
+                            siteId: sites[i].id,
+                            refillDate,
+                            fuelDelivered,
+                            beforeLevel,
+                            afterLevel: beforeLevel + fuelDelivered,
+                            beforeHours: Math.floor(Math.random() * 5000) + 100,
+                            afterHours: Math.floor(Math.random() * 5000) + 100 + Math.floor(Math.random() * 24),
+                            tankerVehicle: "T-8876",
+                            driverName: "Abebe Driver",
+                        }
+                    })
+                );
+            }
+        }
+        if (refillOps.length > 0) {
+            await prisma.$transaction(refillOps);
+            console.log(`  Refills batch ${Math.floor(b / BATCH_SIZE) + 1}: ${refillOps.length} refills created.`);
         }
     }
 
-    console.log(`Seed complete! Seeded ${siteCount} sites and ${genCount} generators for NAAR region.`);
+    console.log(`\nSeed complete! Seeded ${siteCount} sites and ${genCount} generators for NAAR region.`);
 }
 
 main()

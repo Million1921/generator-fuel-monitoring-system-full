@@ -1,21 +1,46 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
+import { requireRole, requireAbility, getRegionScope } from "@/lib/auth"
 import prisma from "@/lib/db"
+import { z } from "zod"
 
 export async function getSites(region?: string) {
+  const { role } = await requireAbility("read", "Site")
+  const scopedRegion = await getRegionScope(role)
+  const effectiveRegion = scopedRegion || region
   return await prisma.site.findMany({
-    where: region ? { region } : undefined,
+    where: effectiveRegion ? { region: effectiveRegion } : undefined,
     orderBy: { siteId: 'asc' }
   })
 }
 
+const SiteSchema = z.object({
+  siteId: z.string().min(1),
+  name: z.string().min(1),
+  region: z.string().optional(),
+  tankerCapacity: z.coerce.number().nonnegative(),
+  dgCapacity: z.string().optional(),
+  dgType: z.string().optional(),
+  gpsCoordinates: z.string().optional(),
+  regionId: z.string().optional(),
+})
+
 export async function createSite(data: { siteId: string; name: string; region: string; tankerCapacity: string; dgCapacity?: string; dgType?: string; gpsCoordinates?: string; regionId?: string }) {
-  let actualRegionId = data.regionId ? parseInt(data.regionId) : undefined;
-  
-  if (!actualRegionId && data.region) {
+  await requireRole(["ADMIN", "MANAGER"])
+
+  const parsed = SiteSchema.safeParse(data)
+  if (!parsed.success) {
+    throw new Error(`Invalid site data: ${parsed.error.issues.map(i => i.message).join(", ")}`)
+  }
+  const validated = parsed.data
+
+  let actualRegionId = validated.regionId ? parseInt(validated.regionId) : undefined;
+  if (actualRegionId !== undefined && isNaN(actualRegionId)) actualRegionId = undefined;
+
+  if (!actualRegionId && validated.region) {
     const regionRecord = await prisma.region.findUnique({
-      where: { name: data.region }
+      where: { name: validated.region }
     });
     if (regionRecord) {
       actualRegionId = regionRecord.id;
@@ -24,13 +49,13 @@ export async function createSite(data: { siteId: string; name: string; region: s
 
   const site = await prisma.site.create({
     data: {
-      siteId: data.siteId,
-      name: data.name,
-      region: data.region,
-      tankerCapacity: parseFloat(data.tankerCapacity),
-      dgCapacity: data.dgCapacity,
-      dgType: data.dgType,
-      gpsCoordinates: data.gpsCoordinates,
+      siteId: validated.siteId,
+      name: validated.name,
+      region: validated.region,
+      tankerCapacity: validated.tankerCapacity,
+      dgCapacity: validated.dgCapacity,
+      dgType: validated.dgType,
+      gpsCoordinates: validated.gpsCoordinates,
       regionId: actualRegionId,
     }
   })
@@ -39,11 +64,20 @@ export async function createSite(data: { siteId: string; name: string; region: s
 }
 
 export async function updateSite(id: number, data: { siteId: string; name: string; region: string; tankerCapacity: string; dgCapacity?: string; dgType?: string; gpsCoordinates?: string; regionId?: string }) {
-  let actualRegionId = data.regionId ? parseInt(data.regionId) : undefined;
-  
-  if (!actualRegionId && data.region) {
+  await requireRole(["ADMIN", "MANAGER"])
+
+  const parsed = SiteSchema.safeParse(data)
+  if (!parsed.success) {
+    throw new Error(`Invalid site data: ${parsed.error.issues.map(i => i.message).join(", ")}`)
+  }
+  const validated = parsed.data
+
+  let actualRegionId = validated.regionId ? parseInt(validated.regionId) : undefined;
+  if (actualRegionId !== undefined && isNaN(actualRegionId)) actualRegionId = undefined;
+
+  if (!actualRegionId && validated.region) {
     const regionRecord = await prisma.region.findUnique({
-      where: { name: data.region }
+      where: { name: validated.region }
     });
     if (regionRecord) {
       actualRegionId = regionRecord.id;
@@ -53,13 +87,13 @@ export async function updateSite(id: number, data: { siteId: string; name: strin
   const site = await prisma.site.update({
     where: { id },
     data: {
-      siteId: data.siteId,
-      name: data.name,
-      region: data.region,
-      tankerCapacity: parseFloat(data.tankerCapacity),
-      dgCapacity: data.dgCapacity,
-      dgType: data.dgType,
-      gpsCoordinates: data.gpsCoordinates,
+      siteId: validated.siteId,
+      name: validated.name,
+      region: validated.region,
+      tankerCapacity: validated.tankerCapacity,
+      dgCapacity: validated.dgCapacity,
+      dgType: validated.dgType,
+      gpsCoordinates: validated.gpsCoordinates,
       regionId: actualRegionId,
     }
   })
@@ -68,6 +102,8 @@ export async function updateSite(id: number, data: { siteId: string; name: strin
 }
 
 export async function deleteSite(id: number) {
+  await requireRole(["ADMIN", "MANAGER"])
+
   await prisma.site.delete({ where: { id } })
   revalidatePath("/dashboard/sites")
 }

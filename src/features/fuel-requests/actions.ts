@@ -1,9 +1,14 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
+import { requireRole, requireAbility } from "@/lib/auth"
 import prisma from "@/lib/db"
+import type { Prisma } from "@prisma/client"
+import { logger } from "@/lib/server-utils"
+import { z } from "zod"
 
 export async function getPendingRequests(region?: string) {
+  await requireAbility("read", "FuelRequest")
   return await prisma.fuelRequest.findMany({
     where: {
       status: { in: ['PENDING_SUPERVISOR', 'PENDING'] },
@@ -21,6 +26,7 @@ export async function getPendingRequests(region?: string) {
 }
 
 export async function getDeliverySites(region?: string) {
+  await requireAbility("read", "Site")
   return await prisma.site.findMany({
     where: region ? { region } : {},
     include: { generator: true },
@@ -29,6 +35,7 @@ export async function getDeliverySites(region?: string) {
 }
 
 export async function getApprovedRequests(siteId?: number) {
+  await requireAbility("read", "FuelRequest")
   return await prisma.fuelRequest.findMany({
     where: {
       status: "APPROVED_FOR_FUEL",
@@ -53,62 +60,104 @@ export interface FuelDeliveryData {
   employmentType?: string;
   requestId?: string;
   workOrderNumber?: string;
+  eepu?: number;
+  remark?: string;
+  department?: string;
 }
 
+// Server-side validation for the delivery payload. Client-side zod schemas
+// (see src/schemas/fuel.ts) are UX only — the server owns the real check.
+const FuelDeliveryServerSchema = z.object({
+  siteId: z.coerce.number().int().positive(),
+  actualRefueled: z.coerce.number().positive(),
+  begRunningHour: z.coerce.number().nonnegative(),
+  endRunningHour: z.coerce.number().nonnegative(),
+  fuelBeforeRefuel: z.coerce.number().nonnegative(),
+  unitPrice: z.coerce.number().positive(),
+  driverName: z.string().optional(),
+  driverId: z.string().optional(),
+  technicianName: z.string().optional(),
+  technicianId: z.string().optional(),
+  employmentType: z.string().optional(),
+  requestId: z.string().optional(),
+  workOrderNumber: z.string().optional(),
+  eepu: z.coerce.number().optional(),
+  remark: z.string().optional(),
+  department: z.string().optional(),
+}).refine((data) => data.endRunningHour >= data.begRunningHour, {
+  message: "End hours cannot be less than start hours",
+  path: ["endRunningHour"],
+})
+
 export async function createFuelDelivery(data: FuelDeliveryData) {
+  await requireRole(["ADMIN", "MANAGER", "SUPERVISOR", "TECHNICIAN"])
+
+  const parsed = FuelDeliveryServerSchema.safeParse(data)
+  if (!parsed.success) {
+    throw new Error(`Invalid fuel delivery data: ${parsed.error.issues.map(i => i.message).join(", ")}`)
+  }
+  const validated = parsed.data
+
   try {
-    const siteId = parseInt(data.siteId);
+    const siteId = validated.siteId;
 
-  // 1. Create a FuelRefill record
-  const refill = await prisma.fuelRefill.create({
-    data: {
-      siteId: siteId,
-      fuelDelivered: data.actualRefueled,
-      beforeLevel: data.fuelBeforeRefuel,
-      afterLevel: data.fuelBeforeRefuel + data.actualRefueled,
-      beforeHours: data.begRunningHour,
-      afterHours: data.endRunningHour,
-      driverName: data.driverName,
-      driverId: data.driverId,
-      technicianName: data.technicianName,
-      technicianIdStr: data.technicianId,
-      employmentType: data.employmentType,
-      fuelRequestId: data.requestId ? parseInt(data.requestId) : null,
-      workOrderNumber: data.workOrderNumber,
-      unitPrice: data.unitPrice,
-    } as any
-  });
+    const refill = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+      // 1. Create a FuelRefill record
+      const refill = await tx.fuelRefill.create({
+        data: {
+          siteId: siteId,
+          fuelDelivered: validated.actualRefueled,
+          beforeLevel: validated.fuelBeforeRefuel,
+          afterLevel: validated.fuelBeforeRefuel + validated.actualRefueled,
+          beforeHours: validated.begRunningHour,
+          afterHours: validated.endRunningHour,
+          driverName: validated.driverName,
+          driverId: validated.driverId,
+          technicianName: validated.technicianName,
+          technicianIdStr: validated.technicianId,
+          employmentType: validated.employmentType,
+          fuelRequestId: validated.requestId ? parseInt(validated.requestId) : null,
+          workOrderNumber: validated.workOrderNumber,
+          unitPrice: validated.unitPrice,
+          eepu: validated.eepu,
+          remark: validated.remark,
+          department: validated.department,
+        }
+      });
 
-  // 2. Update Generator current hours
-  const generator = await prisma.generator.findUnique({ where: { siteId: siteId } });
-  if (generator) {
-    await prisma.generator.update({
-      where: { siteId: siteId },
-      data: { lastRunningHours: data.endRunningHour }
-    });
-  }
-
-  // 3. Update FuelRequest if requestId is provided
-  if (data.requestId) {
-    await prisma.fuelRequest.update({
-      where: { id: parseInt(data.requestId) },
-      data: { 
-        status: "COMPLETED",
-        actualRefueled: data.actualRefueled
+      // 2. Update Generator current hours
+      const generator = await tx.generator.findUnique({ where: { siteId: siteId } });
+      if (generator) {
+        await tx.generator.update({
+          where: { siteId: siteId },
+          data: { lastRunningHours: validated.endRunningHour }
+        });
       }
-    });
-  }
 
-  revalidatePath("/dashboard/fuel-delivery")
-  revalidatePath("/dashboard/fuel-journal")
-  revalidatePath("/dashboard/analytical-report")
-  revalidatePath("/dashboard/fuel-request")
-  revalidatePath("/dashboard")
-  revalidatePath("/")
-  
-  return refill;
+      // 3. Update FuelRequest if requestId is provided
+      if (validated.requestId) {
+        await tx.fuelRequest.update({
+          where: { id: parseInt(validated.requestId) },
+          data: {
+            status: "COMPLETED",
+            actualRefueled: validated.actualRefueled
+          }
+        });
+      }
+
+      return refill;
+    });
+
+    revalidatePath("/dashboard/fuel-delivery")
+    revalidatePath("/dashboard/fuel-journal")
+    revalidatePath("/dashboard/analytical-report")
+    revalidatePath("/dashboard/fuel-request")
+    revalidatePath("/dashboard")
+    revalidatePath("/")
+
+    return refill;
   } catch (err: any) {
-    require('fs').writeFileSync('C:\\Users\\Local admin\\Desktop\\Gen-fuel-mon\\debug.log', err.stack || err.toString());
+    logger.error("createFuelDelivery failed", { error: err?.message })
     throw err;
   }
 }
@@ -119,33 +168,73 @@ export interface FuelRequestData {
   literRequired?: number | string;
   technicianId?: string;
   remark?: string;
+  runningHour?: number;
+  securityName?: string;
+  route?: string;
+  driverName?: string;
+  driverType?: string;
+  driverPhone?: string;
+  employeeId?: string;
 }
 
+const FuelRequestServerSchema = z.object({
+  siteId: z.coerce.number().int().positive(),
+  priority: z.string().optional(),
+  literRequired: z.coerce.number().positive().optional().nullable(),
+  technicianId: z.coerce.number().int().positive().optional().nullable(),
+  remark: z.string().optional(),
+  runningHour: z.coerce.number().optional().nullable(),
+  securityName: z.string().optional(),
+  route: z.string().optional(),
+  driverName: z.string().optional(),
+  driverType: z.string().optional(),
+  driverPhone: z.string().optional(),
+  employeeId: z.string().optional(),
+})
+
 export async function createFuelRequest(data: FuelRequestData) {
-  const count = await prisma.fuelRequest.count()
-  const workRequestNumber = `REQ-${1000 + count}`
+  await requireRole(["ADMIN", "MANAGER", "SUPERVISOR", "TECHNICIAN"])
 
-  const literStr = data.literRequired ? String(data.literRequired).trim() : "";
-  const parsedLiter = literStr ? parseFloat(literStr) : null;
+  const parsed = FuelRequestServerSchema.safeParse(data)
+  if (!parsed.success) {
+    throw new Error(`Invalid fuel request data: ${parsed.error.issues.map(i => i.message).join(", ")}`)
+  }
+  const validated = parsed.data
 
+  // Create with a placeholder number, then derive the display number from
+  // the row's own DB-assigned autoincrement id — atomic, no count() race.
   const request = await prisma.fuelRequest.create({
     data: {
-      workRequestNumber,
-      siteId: parseInt(data.siteId),
+      siteId: validated.siteId,
       status: "PENDING_SUPERVISOR",
-      priority: data.priority || "ROUTINE",
-      literRequired: (parsedLiter !== null && !isNaN(parsedLiter)) ? parsedLiter : null,
-      technicianId: data.technicianId ? parseInt(data.technicianId) : null,
-      notes: data.remark || null,
+      priority: validated.priority || "ROUTINE",
+      literRequired: validated.literRequired ?? null,
+      technicianId: validated.technicianId ?? null,
+      notes: validated.remark || null,
+      runningHour: validated.runningHour ?? null,
+      securityName: validated.securityName || null,
+      route: validated.route || null,
+      driverName: validated.driverName || null,
+      driverType: validated.driverType || null,
+      driverPhone: validated.driverPhone || null,
+      employeeId: validated.employeeId || null,
     }
   })
+  const workRequestNumber = `REQ-${1000 + request.id}`
+  const finalRequest = await prisma.fuelRequest.update({
+    where: { id: request.id },
+    data: { workRequestNumber },
+  })
+
   revalidatePath("/dashboard/fuel-request")
   revalidatePath("/dashboard")
   revalidatePath("/")
-  return request
+  return finalRequest
 }
 
 export async function approveToManager(id: number) {
+  await requireRole(["ADMIN", "SUPERVISOR"])
+
   await prisma.fuelRequest.update({
     where: { id },
     data: { status: "PENDING_MANAGER" }
@@ -155,6 +244,8 @@ export async function approveToManager(id: number) {
 }
 
 export async function approveToAdmin(id: number) {
+  await requireRole(["ADMIN", "MANAGER"])
+
   await prisma.fuelRequest.update({
     where: { id },
     data: { status: "PENDING_ADMIN" }
@@ -164,8 +255,11 @@ export async function approveToAdmin(id: number) {
 }
 
 export async function createWorkOrder(id: number) {
-  const woCount = await prisma.fuelRequest.count({ where: { workOrderNumber: { not: null } } })
-  const workOrderNumber = `WO-${1000 + woCount}`
+  await requireRole(["ADMIN", "FLEET_ADMIN"])
+
+  // Derived from the request's own (already unique) id — atomic, no
+  // count()-based race or reuse on delete.
+  const workOrderNumber = `WO-${1000 + id}`
 
   await prisma.fuelRequest.update({
     where: { id },
@@ -176,6 +270,8 @@ export async function createWorkOrder(id: number) {
 }
 
 export async function deleteFuelRequest(id: number) {
+  await requireRole(["ADMIN", "MANAGER"])
+
   await prisma.fuelRequest.delete({
     where: { id }
   })
@@ -184,6 +280,8 @@ export async function deleteFuelRequest(id: number) {
 }
 
 export async function deleteFuelDelivery(id: number) {
+  await requireRole(["ADMIN", "MANAGER"])
+
   await prisma.fuelRefill.delete({
     where: { id }
   })
@@ -194,32 +292,68 @@ export async function deleteFuelDelivery(id: number) {
   revalidatePath("/")
 }
 
+const UpdateFuelDeliveryServerSchema = z.object({
+  siteId: z.coerce.number().int().positive().optional(),
+  actualRefueled: z.coerce.number().positive().optional(),
+  begRunningHour: z.coerce.number().nonnegative().optional(),
+  endRunningHour: z.coerce.number().nonnegative().optional(),
+  fuelBeforeRefuel: z.coerce.number().nonnegative().optional(),
+  unitPrice: z.coerce.number().positive().optional(),
+  driverName: z.string().optional(),
+  driverId: z.string().optional(),
+  technicianName: z.string().optional(),
+  technicianId: z.string().optional(),
+  employmentType: z.string().optional(),
+  requestId: z.string().optional(),
+  workOrderNumber: z.string().optional(),
+})
+
 export async function updateFuelDelivery(id: number, data: Partial<FuelDeliveryData>) {
-  await prisma.fuelRefill.update({
+  await requireRole(["ADMIN", "MANAGER", "SUPERVISOR"])
+
+  const parsed = UpdateFuelDeliveryServerSchema.safeParse(data)
+  if (!parsed.success) {
+    throw new Error(`Invalid fuel delivery update: ${parsed.error.issues.map(i => i.message).join(", ")}`)
+  }
+  const validated = parsed.data
+
+  if (
+    validated.endRunningHour !== undefined &&
+    validated.begRunningHour !== undefined &&
+    validated.endRunningHour < validated.begRunningHour
+  ) {
+    throw new Error("End hours cannot be less than start hours")
+  }
+
+  const updatedRefill = await prisma.fuelRefill.update({
     where: { id },
     data: {
-      ...(data.actualRefueled !== undefined && { fuelDelivered: data.actualRefueled }),
-      ...(data.fuelBeforeRefuel !== undefined && { beforeLevel: data.fuelBeforeRefuel }),
-      ...(data.actualRefueled !== undefined && data.fuelBeforeRefuel !== undefined && { afterLevel: data.fuelBeforeRefuel + data.actualRefueled }),
-      ...(data.begRunningHour !== undefined && { beforeHours: data.begRunningHour }),
-      ...(data.endRunningHour !== undefined && { afterHours: data.endRunningHour }),
-      ...(data.driverName !== undefined && { driverName: data.driverName }),
-      ...(data.driverId !== undefined && { driverId: data.driverId }),
-      ...(data.technicianName !== undefined && { technicianName: data.technicianName }),
-      ...(data.technicianId !== undefined && { technicianIdStr: data.technicianId }),
-      ...(data.employmentType !== undefined && { employmentType: data.employmentType }),
-      ...(data.requestId !== undefined && { fuelRequestId: data.requestId ? parseInt(data.requestId) : null }),
-      ...(data.workOrderNumber !== undefined && { workOrderNumber: data.workOrderNumber }),
-      ...(data.unitPrice !== undefined && { unitPrice: data.unitPrice }),
-    } as any
+      ...(validated.actualRefueled !== undefined && { fuelDelivered: validated.actualRefueled }),
+      ...(validated.fuelBeforeRefuel !== undefined && { beforeLevel: validated.fuelBeforeRefuel }),
+      ...(validated.actualRefueled !== undefined && validated.fuelBeforeRefuel !== undefined && { afterLevel: validated.fuelBeforeRefuel + validated.actualRefueled }),
+      ...(validated.begRunningHour !== undefined && { beforeHours: validated.begRunningHour }),
+      ...(validated.endRunningHour !== undefined && { afterHours: validated.endRunningHour }),
+      ...(validated.driverName !== undefined && { driverName: validated.driverName }),
+      ...(validated.driverId !== undefined && { driverId: validated.driverId }),
+      ...(validated.technicianName !== undefined && { technicianName: validated.technicianName }),
+      ...(validated.technicianId !== undefined && { technicianIdStr: validated.technicianId }),
+      ...(validated.employmentType !== undefined && { employmentType: validated.employmentType }),
+      ...(validated.requestId !== undefined && { fuelRequestId: validated.requestId ? parseInt(validated.requestId) : null }),
+      ...(validated.workOrderNumber !== undefined && { workOrderNumber: validated.workOrderNumber }),
+      ...(validated.unitPrice !== undefined && { unitPrice: validated.unitPrice }),
+    }
   });
 
-  if (data.siteId && data.endRunningHour !== undefined) {
-    const generator = await prisma.generator.findUnique({ where: { siteId: parseInt(data.siteId) } });
+  // Keep the generator's running-hours reading in sync. Derive siteId from
+  // the persisted refill record — not the client payload — since the
+  // server already knows the authoritative value and a client-supplied
+  // siteId could point at a different generator than the refill it belongs to.
+  if (validated.endRunningHour !== undefined) {
+    const generator = await prisma.generator.findUnique({ where: { siteId: updatedRefill.siteId } });
     if (generator) {
       await prisma.generator.update({
-        where: { siteId: parseInt(data.siteId) },
-        data: { lastRunningHours: data.endRunningHour }
+        where: { siteId: updatedRefill.siteId },
+        data: { lastRunningHours: validated.endRunningHour }
       });
     }
   }
@@ -229,4 +363,3 @@ export async function updateFuelDelivery(id: number, data: Partial<FuelDeliveryD
   revalidatePath("/dashboard/analytical-report")
   revalidatePath("/dashboard")
 }
-

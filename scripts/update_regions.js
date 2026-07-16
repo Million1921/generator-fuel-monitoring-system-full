@@ -1,8 +1,8 @@
 const { PrismaClient } = require('@prisma/client')
 
-const prisma = new PrismaClient({
-  datasourceUrl: "postgresql://postgres:postgres@localhost:5432/ethio_telecom_fgams"
-})
+// Uses the same DATABASE_URL the app connects with — never hardcode
+// credentials in a script that might get committed or shared.
+const prisma = new PrismaClient()
 
 async function main() {
   try {

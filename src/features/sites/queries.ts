@@ -7,6 +7,33 @@ export async function getAllSites() {
   })
 }
 
+export async function getSitesWithLocation() {
+  return await prisma.site.findMany({
+    orderBy: { siteId: 'asc' },
+    select: {
+      id: true,
+      siteId: true,
+      name: true,
+      region: true,
+      gpsCoordinates: true,
+      tankerCapacity: true,
+      dgCapacity: true,
+      dgType: true,
+      generator: {
+        select: {
+          id: true,
+          genId: true,
+          model: true,
+          capacity: true,
+          capacityKVA: true,
+          serialNumber: true,
+          lastRunningHours: true,
+        }
+      }
+    }
+  })
+}
+
 export async function getSites(
   region?: string, 
   search?: string, 
@@ -22,17 +49,23 @@ export async function getSites(
       region ? { region } : {},
       search ? {
         OR: [
-          { siteId: { contains: search, mode: 'insensitive' } },
-          { name: { contains: search, mode: 'insensitive' } },
+          { siteId: { contains: search } },
+          { name: { contains: search } },
         ]
       } : {}
     ]
-  } as any
+  }
 
   const [sites, total] = await Promise.all([
     prisma.site.findMany({
       where,
-      include: {
+      select: {
+        id: true,
+        siteId: true,
+        name: true,
+        region: true,
+        tankerCapacity: true,
+        gpsCoordinates: true,
         generator: true,
       },
       orderBy: { [sortBy]: sortOrder },

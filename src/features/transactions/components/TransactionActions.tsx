@@ -10,8 +10,10 @@ import { Label } from "@/components/ui/label"
 import { format } from "date-fns"
 import { toast } from "sonner"
 import { deleteTransaction, updateTransaction } from "../actions"
+import { useRouter } from "next/navigation"
 
 export function TransactionActions({ transaction }: { transaction: any }) {
+  const router = useRouter()
   const [isViewOpen, setIsViewOpen] = useState(false)
   const [isEditOpen, setIsEditOpen] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -75,7 +77,7 @@ export function TransactionActions({ transaction }: { transaction: any }) {
             <Edit2 className="mr-2 h-4 w-4 text-orange-500" /> Edit Record
           </DropdownMenuItem>
           <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={() => window.location.href = `/dashboard/fuel-delivery/create?tx=${transaction.id}`} className="cursor-pointer bg-lime-50 text-lime-700 hover:bg-lime-100 focus:text-lime-800">
+          <DropdownMenuItem onClick={() => router.push(`/dashboard/fuel-delivery/create?tx=${transaction.id}`)} className="cursor-pointer bg-lime-50 text-lime-700 hover:bg-lime-100 focus:text-lime-800">
             <Fuel className="mr-2 h-4 w-4" /> Create Delivery
           </DropdownMenuItem>
           <DropdownMenuSeparator />

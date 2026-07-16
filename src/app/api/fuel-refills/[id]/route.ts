@@ -1,65 +1,106 @@
 export const dynamic = "force-dynamic";
 import prisma from "@/lib/db"
+import type { Prisma } from "@prisma/client"
+import { requireRole, requireAbility } from "@/lib/auth"
+import { apiErrorResponse } from "@/lib/server-utils"
 import { NextRequest, NextResponse } from "next/server"
+import { z } from "zod"
 
+const PutSchema = z.object({
+  fuelDelivered: z.coerce.number().positive().optional(),
+  beforeLevel: z.coerce.number().nonnegative().optional(),
+  afterLevel: z.coerce.number().nonnegative().optional(),
+  beforeHours: z.coerce.number().nonnegative().optional(),
+  afterHours: z.coerce.number().nonnegative().optional(),
+  refillDate: z.coerce.date().optional(),
+  technicianId: z.coerce.number().int().positive().optional().nullable(),
+  tankerVehicle: z.string().optional().nullable(),
+  driverName: z.string().optional().nullable(),
+})
 
 // GET /api/fuel-refills/[id]
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    await requireAbility("read", "FuelRefill")
+
     const { id } = await params;
+    const parsedId = parseInt(id)
+    if (isNaN(parsedId)) return NextResponse.json({ error: "Invalid id" }, { status: 400 })
+
     const refill = await prisma.fuelRefill.findUnique({
-      where: { id: parseInt(id) },
+      where: { id: parsedId },
       include: { site: true, technician: true },
     })
     if (!refill) return NextResponse.json({ error: "Not found" }, { status: 404 })
     return NextResponse.json(refill)
-  } catch (e: any) {
-    return NextResponse.json({ error: e.message }, { status: 500 })
+  } catch (e) {
+    return apiErrorResponse(e, "GET /api/fuel-refills/[id]")
   }
 }
 
 // PUT /api/fuel-refills/[id]
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    await requireRole(["ADMIN", "MANAGER", "SUPERVISOR"])
+
     const { id } = await params;
+    const parsedId = parseInt(id)
+    if (isNaN(parsedId)) return NextResponse.json({ error: "Invalid id" }, { status: 400 })
+
     const body = await req.json()
-    const refill = await prisma.fuelRefill.update({
-      where: { id: parseInt(id) },
-      data: {
-        fuelDelivered: body.fuelDelivered ? parseFloat(body.fuelDelivered) : undefined,
-        beforeLevel: body.beforeLevel ? parseFloat(body.beforeLevel) : undefined,
-        afterLevel: body.afterLevel ? parseFloat(body.afterLevel) : undefined,
-        beforeHours: body.beforeHours ? parseFloat(body.beforeHours) : undefined,
-        afterHours: body.afterHours ? parseFloat(body.afterHours) : undefined,
-        refillDate: body.refillDate ? new Date(body.refillDate) : undefined,
-        siteId: body.siteId ? parseInt(body.siteId) : undefined,
-        technicianId: body.technicianId ? parseInt(body.technicianId) : undefined,
-        tankerVehicle: body.tankerVehicle ?? undefined,
-        driverName: body.driverName ?? undefined,
-      },
-    })
-    
-    // If afterHours was updated, we should also update the generator (optional but keeps consistency)
-    if (body.afterHours) {
-        await prisma.generator.update({
-          where: { siteId: refill.siteId },
-          data: { lastRunningHours: parseFloat(body.afterHours) },
-        })
+    const parsed = PutSchema.safeParse(body)
+    if (!parsed.success) {
+      return NextResponse.json({ error: "Invalid input" }, { status: 400 })
     }
-    
-    return NextResponse.json(refill)
-  } catch (e: any) {
-    return NextResponse.json({ error: e.message }, { status: 500 })
+    const data = parsed.data
+
+    const result = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+      const refill = await tx.fuelRefill.update({
+        where: { id: parsedId },
+        data: {
+          fuelDelivered: data.fuelDelivered,
+          beforeLevel: data.beforeLevel,
+          afterLevel: data.afterLevel,
+          beforeHours: data.beforeHours,
+          afterHours: data.afterHours,
+          refillDate: data.refillDate,
+          technicianId: data.technicianId ?? undefined,
+          tankerVehicle: data.tankerVehicle ?? undefined,
+          driverName: data.driverName ?? undefined,
+        },
+      })
+
+      // If afterHours was updated, keep the generator's reading in sync.
+      // Derive siteId from the persisted refill record — never from the
+      // client payload — since the server already knows the authoritative value.
+      if (data.afterHours !== undefined) {
+        await tx.generator.update({
+          where: { siteId: refill.siteId },
+          data: { lastRunningHours: data.afterHours },
+        })
+      }
+
+      return refill
+    })
+
+    return NextResponse.json(result)
+  } catch (e) {
+    return apiErrorResponse(e, "PUT /api/fuel-refills/[id]")
   }
 }
 
 // DELETE /api/fuel-refills/[id]
 export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    await requireRole(["ADMIN", "MANAGER"])
+
     const { id } = await params;
-    await prisma.fuelRefill.delete({ where: { id: parseInt(id) } })
+    const parsedId = parseInt(id)
+    if (isNaN(parsedId)) return NextResponse.json({ error: "Invalid id" }, { status: 400 })
+
+    await prisma.fuelRefill.delete({ where: { id: parsedId } })
     return NextResponse.json({ success: true })
-  } catch (e: any) {
-    return NextResponse.json({ error: e.message }, { status: 500 })
+  } catch (e) {
+    return apiErrorResponse(e, "DELETE /api/fuel-refills/[id]")
   }
 }

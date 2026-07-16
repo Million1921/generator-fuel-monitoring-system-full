@@ -5,7 +5,8 @@ export async function getGenerators(
   page: number = 1, 
   limit: number = 5,
   sortBy: string = 'genId',
-  sortOrder: 'asc' | 'desc' = 'asc'
+  sortOrder: 'asc' | 'desc' = 'asc',
+  search?: string
 ) {
   const skip = (page - 1) * limit
   
@@ -17,9 +18,20 @@ export async function getGenerators(
      orderBy = { site: { siteId: sortOrder } };
   }
 
+  const whereClause: any = {
+    ...(region && { site: { region } }),
+    ...(search && {
+      OR: [
+        { genId: { contains: search, mode: 'insensitive' } },
+        { site: { name: { contains: search, mode: 'insensitive' } } },
+        { site: { siteId: { contains: search, mode: 'insensitive' } } },
+      ]
+    })
+  };
+
   const [generators, total, allGenerators] = await Promise.all([
     prisma.generator.findMany({
-      where: region ? { site: { region } } : undefined,
+      where: whereClause,
       include: {
         site: true,
       },
@@ -27,13 +39,12 @@ export async function getGenerators(
       skip,
       take: limit,
     }),
-    prisma.generator.count({
-      where: region ? { site: { region } } : undefined,
-    }),
-    // Fetch all for summary stats (small enough dataset for now)
+    prisma.generator.count({ where: whereClause }),
     prisma.generator.findMany({
-      where: region ? { site: { region } } : undefined,
-      select: { stdFuelConsumption: true }
+      where: whereClause,
+      select: {
+        stdFuelConsumption: true,
+      }
     })
   ])
 

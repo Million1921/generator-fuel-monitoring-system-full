@@ -124,7 +124,6 @@ export function TechnicianTable({
 
         {/* Footer — inside min-w div so scrollbar appears below it */}
         <div className="flex items-center justify-between border-t border-slate-400 bg-white px-4 py-1.5 sm:px-6">
-          <Pagination totalPages={totalPages} currentPage={page} />
           <div className="flex items-center text-gray-500 gap-4 uppercase tracking-tighter text-sm font-medium">
             <span className="hidden sm:inline-block font-bold">{total} total technicians</span>
             <span className="hidden sm:inline-block">|</span>

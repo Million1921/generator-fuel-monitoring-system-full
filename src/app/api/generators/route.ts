@@ -1,41 +1,79 @@
 export const dynamic = "force-dynamic";
 import prisma from "@/lib/db"
+import { requireRole, requireAbility, getRegionScope } from "@/lib/auth"
+import { apiErrorResponse, displayNumberFromId } from "@/lib/server-utils"
 import { NextRequest, NextResponse } from "next/server"
+import { z } from "zod"
+
+const PostSchema = z.object({
+  siteId: z.coerce.number().int().positive(),
+  model: z.string().optional().nullable(),
+  serialNumber: z.string().optional().nullable(),
+  capacityKVA: z.coerce.number().nonnegative().default(0),
+  stdFuelConsumption: z.coerce.number().nonnegative().default(0),
+  lastRunningHours: z.coerce.number().nonnegative().default(0),
+})
 
 // GET /api/generators — list all generators (optional ?siteId=)
 export async function GET(req: NextRequest) {
   try {
-    const siteId = req.nextUrl.searchParams.get("siteId")
+    const { role } = await requireAbility("read", "Generator")
+    const scopedRegion = await getRegionScope(role)
+    const siteIdParam = req.nextUrl.searchParams.get("siteId")
+
+    let whereClause: any = {}
+    if (siteIdParam) {
+      const parsedSiteId = parseInt(siteIdParam)
+      if (isNaN(parsedSiteId)) return NextResponse.json({ error: "Invalid siteId" }, { status: 400 })
+      whereClause.siteId = parsedSiteId
+    }
+    if (scopedRegion) {
+      whereClause.site = { region: scopedRegion }
+    }
+
     const generators = await prisma.generator.findMany({
-      where: siteId ? { siteId: parseInt(siteId) } : undefined,
+      where: Object.keys(whereClause).length > 0 ? whereClause : undefined,
       include: { site: true },
       orderBy: { genId: "asc" },
     })
     return NextResponse.json(generators)
-  } catch (e: any) {
-    return NextResponse.json({ error: e.message }, { status: 500 })
+  } catch (e) {
+    return apiErrorResponse(e, "GET /api/generators")
   }
 }
 
 // POST /api/generators — create a generator
 export async function POST(req: NextRequest) {
   try {
+    await requireRole(["ADMIN", "MANAGER"])
+
     const body = await req.json()
-    const count = await prisma.generator.count({ where: { siteId: parseInt(body.siteId) } })
-    const genId = `GEN-${body.siteId}-${count + 1}`
+    const parsed = PostSchema.safeParse(body)
+    if (!parsed.success) {
+      return NextResponse.json({ error: "Invalid input" }, { status: 400 })
+    }
+    const data = parsed.data
+
+    // Create with a placeholder genId, then derive the display id from the
+    // row's own DB-assigned autoincrement id (atomic, no count() race).
     const generator = await prisma.generator.create({
       data: {
-        genId,
-        model: body.model ?? null,
-        serialNumber: body.serialNumber ?? null,
-        capacityKVA: body.capacityKVA ? parseFloat(body.capacityKVA) : 0,
-        stdFuelConsumption: body.stdFuelConsumption ? parseFloat(body.stdFuelConsumption) : 0,
-        lastRunningHours: body.lastRunningHours ? parseFloat(body.lastRunningHours) : 0,
-        siteId: parseInt(body.siteId),
+        genId: `GEN-PENDING-${Date.now()}`,
+        model: data.model ?? null,
+        serialNumber: data.serialNumber ?? null,
+        capacityKVA: data.capacityKVA,
+        stdFuelConsumption: data.stdFuelConsumption,
+        lastRunningHours: data.lastRunningHours,
+        siteId: data.siteId,
       },
     })
-    return NextResponse.json(generator, { status: 201 })
-  } catch (e: any) {
-    return NextResponse.json({ error: e.message }, { status: 500 })
+    const genId = `GEN-${data.siteId}-${generator.id}`
+    const finalGenerator = await prisma.generator.update({
+      where: { id: generator.id },
+      data: { genId },
+    })
+    return NextResponse.json(finalGenerator, { status: 201 })
+  } catch (e) {
+    return apiErrorResponse(e, "POST /api/generators")
   }
 }

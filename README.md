@@ -14,7 +14,7 @@ A comprehensive, automated system for tracking fuel deliveries, generator runnin
 
 - **Framework**: [Next.js](https://nextjs.org) (App Router)
 - **Database**: [PostgreSQL](https://www.postgresql.org) with [Prisma ORM](https://www.prisma.io)
-- **Authentication**: [Better Auth](https://better-auth.com)
+- **Authentication**: [Clerk](https://clerk.com)
 - **Styling**: [Tailwind CSS](https://tailwindcss.com)
 - **UI Components**: [Radix UI](https://www.radix-ui.com) & [Lucide Icons](https://lucide.dev)
 

@@ -33,6 +33,7 @@ import { LogOut, User, Settings, Bell, Sun, Moon } from "lucide-react"
 import { useTheme } from "next-themes"
 import { useUser, useAuth } from "@clerk/nextjs"
 import { usePathname } from "next/navigation"
+import { useAppRole } from "@/components/providers/role-provider"
 
 const ROUTE_LABELS: Record<string, string> = {
   "/dashboard": "Overview",
@@ -59,14 +60,7 @@ interface DashboardHeaderProps {
 
 import { SearchInput } from "@/components/ui/SearchInput"
 
-const SEARCH_PLACEHOLDERS: Record<string, string> = {
-  "/dashboard/sites": "Search sites by ID or name...",
-  "/dashboard/technicians": "Search field engineers by name or ID...",
-  "/dashboard/generators": "Search generators by SN or site...",
-  "/dashboard/transactions": "Search transactions by receipt or AC...",
-  "/dashboard/fuel-delivery": "Search deliveries by site or driver...",
-  "/dashboard/fuel-request": "Search requests by site or ID...",
-}
+const SEARCH_PLACEHOLDERS: Record<string, string> = {}
 
 export function DashboardHeader({ breadcrumbs, showRegionFilter }: DashboardHeaderProps) {
   const { setTheme } = useTheme()
@@ -84,16 +78,17 @@ export function DashboardHeader({ breadcrumbs, showRegionFilter }: DashboardHead
   const isOverview = pathname === "/dashboard"
   
   // Auto-determine showRegionFilter if not provided
-  const shouldShowRegionFilter = showRegionFilter ?? !isOverview
+  const hiddenFilterPages = ["/dashboard", "/dashboard/fuel-delivery", "/dashboard/fuel-requests", "/dashboard/fuel-request", "/dashboard/generators", "/dashboard/technicians", "/dashboard/sites", "/dashboard/transactions"]
+  const shouldShowRegionFilter = showRegionFilter ?? !hiddenFilterPages.includes(pathname)
   
   const searchPlaceholder = SEARCH_PLACEHOLDERS[pathname]
 
   const userName = user?.fullName || user?.primaryEmailAddress?.emailAddress?.split('@')[0] || "User"
-  const userRole = (user?.publicMetadata?.role as string) || "ADMIN"
+  const userRole = useAppRole()
   const initials = userName.split('.').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2)
 
   return (
-    <header className="flex h-20 shrink-0 items-center justify-between gap-6 transition-[width,height] ease-linear px-6 bg-white dark:bg-neutral-950 sticky top-0 z-30 border-b border-neutral-200 dark:border-neutral-800 shadow-sm">
+    <header className="flex h-14 shrink-0 items-center justify-between gap-6 transition-[width,height] ease-linear px-6 bg-white dark:bg-neutral-950 sticky top-0 z-30 border-b border-neutral-200 dark:border-neutral-800 shadow-sm">
       <div className="flex items-center gap-2">
         <SidebarTrigger className="-ml-1" />
         <Separator orientation="vertical" className="mr-2 data-[orientation=vertical]:h-4" />

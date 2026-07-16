@@ -3,6 +3,9 @@ import { FileText, CheckCircle2, Shield, Settings } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { FuelRequestHeader } from "@/features/fuel-requests/components/FuelRequestHeader"
 import { FuelRequestTable } from "@/features/fuel-requests/components/FuelRequestTable"
+import { getRoleFromClerk } from "@/lib/auth"
+import { SearchInput } from "@/components/ui/SearchInput"
+import { RegionFilter } from "@/components/ui/RegionFilter"
 
 export const dynamic = "force-dynamic"
 
@@ -47,10 +50,10 @@ export default async function FuelRequestPage(props: {
 
   if (search) {
     whereBase.OR = [
-      { site: { name: { contains: search, mode: 'insensitive' } } },
-      { site: { siteId: { contains: search, mode: 'insensitive' } } },
-      { workOrderNumber: { contains: search, mode: 'insensitive' } },
-      { workRequestNumber: { contains: search, mode: 'insensitive' } },
+      { site: { name: { contains: search } } },
+      { site: { siteId: { contains: search } } },
+      { workOrderNumber: { contains: search } },
+      { workRequestNumber: { contains: search } },
     ];
   }
 
@@ -63,6 +66,48 @@ export default async function FuelRequestPage(props: {
   }
 
   // Fetch paginated data for main tabs
+  const role = await getRoleFromClerk();
+
+  if (role === 'TECHNICIAN') {
+    const allRequests = await prisma.fuelRequest.findMany({
+      orderBy,
+      where: whereBase,
+      include: { site: true, technician: true },
+      skip, take: limit
+    });
+    const totalRequests = await prisma.fuelRequest.count({ where: whereBase });
+
+    return (
+      <div className="flex flex-1 flex-col px-6 pb-6 bg-gray-50/30 overflow-x-auto overflow-y-hidden">
+        <div className="flex items-center justify-between z-10 relative mb-4 mt-1">
+          <div className="w-full max-w-sm">
+            <SearchInput placeholder="Search by site, driver, technician, work order..." />
+          </div>
+          <div className="flex items-center gap-3">
+            <RegionFilter />
+            <FuelRequestHeader />
+          </div>
+        </div>
+
+        <div>
+          <FuelRequestTable 
+            requests={allRequests} 
+            title="All Fuel Requests" 
+            total={totalRequests} 
+            page={page} 
+            totalPages={Math.ceil(totalRequests/limit)} 
+            region={region} 
+            sortBy={sortBy}
+            sortOrder={sortOrder}
+            dateFrom={from}
+            dateTo={to}
+            search={search}
+          />
+        </div>
+      </div>
+    );
+  }
+
   const [
     pendingRequests, pendingTotal,
     adminRequests, adminTotal,
@@ -73,7 +118,7 @@ export default async function FuelRequestPage(props: {
     prisma.fuelRequest.findMany({
       orderBy,
       where: { status: { in: ['PENDING', 'PENDING_SUPERVISOR', 'PENDING_MANAGER'] }, ...whereBase },
-      include: { site: true },
+      include: { site: true, technician: true },
       skip, take: limit
     }),
     prisma.fuelRequest.count({ where: { status: { in: ['PENDING', 'PENDING_SUPERVISOR', 'PENDING_MANAGER'] }, ...whereBase } }),
@@ -81,7 +126,7 @@ export default async function FuelRequestPage(props: {
     prisma.fuelRequest.findMany({
       orderBy,
       where: { status: 'PENDING_ADMIN', ...whereBase },
-      include: { site: true },
+      include: { site: true, technician: true },
       skip, take: limit
     }),
     prisma.fuelRequest.count({ where: { status: 'PENDING_ADMIN', ...whereBase } }),
@@ -89,7 +134,7 @@ export default async function FuelRequestPage(props: {
     prisma.fuelRequest.findMany({
       orderBy,
       where: { status: 'APPROVED_FOR_FUEL', ...whereBase },
-      include: { site: true },
+      include: { site: true, technician: true },
       skip, take: limit
     }),
     prisma.fuelRequest.count({ where: { status: 'APPROVED_FOR_FUEL', ...whereBase } }),
@@ -97,7 +142,7 @@ export default async function FuelRequestPage(props: {
     prisma.fuelRequest.findMany({
       orderBy,
       where: { status: 'FUNDS_RELEASED', ...whereBase },
-      include: { site: true },
+      include: { site: true, technician: true },
       skip, take: limit
     }),
     prisma.fuelRequest.count({ where: { status: 'FUNDS_RELEASED', ...whereBase } }),
@@ -105,19 +150,25 @@ export default async function FuelRequestPage(props: {
     prisma.fuelRequest.findMany({
       orderBy,
       where: { status: 'COMPLETED', ...whereBase },
-      include: { site: true },
+      include: { site: true, technician: true },
       skip, take: limit
     }),
     prisma.fuelRequest.count({ where: { status: 'COMPLETED', ...whereBase } })
   ]);
 
   return (
-    <div className="flex flex-1 flex-col gap-6 px-6 pb-6 overflow-x-auto overflow-y-hidden">
-        <div className="flex items-center justify-end mt-5">
-          <FuelRequestHeader />
+    <div className="flex flex-1 flex-col px-6 pb-6 bg-gray-50/30 overflow-x-auto overflow-y-hidden">
+        <div className="flex items-center justify-between z-10 relative mb-4 mt-1">
+          <div className="w-full max-w-sm">
+            <SearchInput placeholder="Search by site, driver, technician, work order..." />
+          </div>
+          <div className="flex items-center gap-3">
+            <RegionFilter />
+            <FuelRequestHeader />
+          </div>
         </div>
 
-        <Tabs defaultValue={tab} className="flex flex-1 flex-col mt-2">
+        <Tabs defaultValue={tab} className="flex flex-1 flex-col mt-1">
           <TabsList className="bg-slate-100/50 p-1 w-full max-w-4xl grid grid-cols-6 rounded-lg">
             <TabsTrigger value="pending" className="data-[state=active]:bg-white data-[state=active]:shadow-sm rounded-md py-2 text-xs">
               Approvals ({pendingTotal})
@@ -136,10 +187,10 @@ export default async function FuelRequestPage(props: {
             </TabsTrigger>
           </TabsList>
           
-          <TabsContent value="pending" className="flex-1 mt-6 m-0 border-0 p-0 focus-visible:ring-0">
+          <TabsContent value="pending" className="flex-1 mt-1 m-0 border-0 p-0 focus-visible:ring-0">
             <FuelRequestTable 
               requests={pendingRequests} 
-              title="Supervisor & Manager Approvals" 
+              title="" 
               total={pendingTotal} 
               page={page} 
               totalPages={Math.ceil(pendingTotal/limit)} 
@@ -149,9 +200,10 @@ export default async function FuelRequestPage(props: {
               sortOrder={sortOrder}
               dateFrom={from}
               dateTo={to}
+              search={search}
             />
           </TabsContent>
-          <TabsContent value="admin" className="flex-1 mt-6 m-0 border-0 p-0 focus-visible:ring-0">
+          <TabsContent value="admin" className="flex-1 mt-1 m-0 border-0 p-0 focus-visible:ring-0">
             <FuelRequestTable 
               requests={adminRequests} 
               title="Awaiting Fuel Admin Work Order generation" 
@@ -164,9 +216,10 @@ export default async function FuelRequestPage(props: {
               sortOrder={sortOrder}
               dateFrom={from}
               dateTo={to}
+              search={search}
             />
           </TabsContent>
-          <TabsContent value="approved" className="flex-1 mt-6 m-0 border-0 p-0 focus-visible:ring-0">
+          <TabsContent value="approved" className="flex-1 mt-1 m-0 border-0 p-0 focus-visible:ring-0">
             <FuelRequestTable 
               requests={approvedRequests} 
               title="Approved & Ready for Financial Voucher" 
@@ -178,9 +231,10 @@ export default async function FuelRequestPage(props: {
               sortOrder={sortOrder}
               dateFrom={from}
               dateTo={to}
+              search={search}
             />
           </TabsContent>
-          <TabsContent value="delivery" className="flex-1 mt-6 m-0 border-0 p-0 focus-visible:ring-0">
+          <TabsContent value="delivery" className="flex-1 mt-1 m-0 border-0 p-0 focus-visible:ring-0">
             <FuelRequestTable 
               requests={deliveryRequests} 
               title="Funds Released - Ready for Delivery" 
@@ -192,9 +246,10 @@ export default async function FuelRequestPage(props: {
               sortOrder={sortOrder}
               dateFrom={from}
               dateTo={to}
+              search={search}
             />
           </TabsContent>
-          <TabsContent value="closed" className="flex-1 mt-6 m-0 border-0 p-0 focus-visible:ring-0">
+          <TabsContent value="closed" className="flex-1 mt-1 m-0 border-0 p-0 focus-visible:ring-0">
             <FuelRequestTable 
               requests={closedRequests} 
               title="Closed / Completed Work Orders" 
@@ -206,6 +261,7 @@ export default async function FuelRequestPage(props: {
               sortOrder={sortOrder}
               dateFrom={from}
               dateTo={to}
+              search={search}
             />
           </TabsContent>
         </Tabs>

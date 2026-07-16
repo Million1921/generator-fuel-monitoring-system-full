@@ -1,6 +1,6 @@
 "use client"
 
-import { Trash2 } from "lucide-react"
+import { Trash2, Search, ClipboardList } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { TableColumnHeader } from "@/components/ui/table-column-header"
 import { Button } from "@/components/ui/button"
@@ -27,9 +27,11 @@ import {
 } from "@/components/ui/table"
 import { Input } from "@/components/ui/input"
 import { Pagination } from "@/components/ui/Pagination"
+import { RegionFilter } from "@/components/ui/RegionFilter"
 import { useRouter, useSearchParams, usePathname } from "next/navigation"
 import { approveToManager, approveToAdmin, createWorkOrder, deleteFuelRequest } from "@/features/fuel-requests/actions"
 import { useUser } from "@clerk/nextjs"
+import { useAppRole } from "@/components/providers/role-provider"
 
 interface FuelRequestTableProps {
   requests: any[]
@@ -43,6 +45,7 @@ interface FuelRequestTableProps {
   sortOrder?: string
   dateFrom?: string
   dateTo?: string
+  search?: string
 }
 
 export function FuelRequestTable({
@@ -56,10 +59,11 @@ export function FuelRequestTable({
   sortBy: currentSortBy,
   sortOrder: currentSortOrder,
   dateFrom,
-  dateTo
+  dateTo,
+  search
 }: FuelRequestTableProps) {
   const { user } = useUser()
-  const userRole = (user?.publicMetadata?.role as string) || "ADMIN"
+  const userRole = useAppRole()
   const [isPending, startTransition] = useTransition()
   const router = useRouter()
   const pathname = usePathname()
@@ -120,7 +124,7 @@ export function FuelRequestTable({
   }
 
   const SortableHeader = ({ field, label, align = 'left' }: { field: string, label: string, align?: 'left' | 'right' | 'center' }) => (
-    <TableHead className="p-0 align-middle bg-white">
+    <TableHead className="p-0 align-middle bg-gray-50/50">
       <TableColumnHeader
         label={label}
         sortActive={currentSortBy === field}
@@ -134,19 +138,27 @@ export function FuelRequestTable({
   )
 
   return (
-    <div className="overflow-x-auto mb-10 custom-scrollbar pb-2">
-      <div className="min-w-[1400px] rounded-xl border border-slate-400 bg-white shadow-sm overflow-hidden">
-        <Table>
-          <TableHeader className="bg-white border-b border-gray-200 sticky top-0 z-10">
-            <TableRow className="hover:bg-transparent bg-gray-50/50 h-8">
+    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 space-y-4 mb-10 overflow-hidden">
+      {title && (
+        <div className="flex items-center gap-2 border-b border-gray-100 pb-3">
+          <ClipboardList className="w-4 h-4 text-lime-600" />
+          <h3 className="font-bold text-sm text-lime-700 uppercase tracking-widest">{title}</h3>
+        </div>
+      )}
+      <div className="overflow-x-auto custom-scrollbar pb-2">
+        <div className="min-w-[1400px]">
+          <Table>
+          <TableHeader className="bg-gray-50/50 sticky top-0 z-10">
+            <TableRow className="hover:bg-transparent border-b border-gray-100 h-10">
               <SortableHeader field="siteId" label="Site ID" />
               <SortableHeader field="siteName" label="Site Name" />
               <SortableHeader field="createdAt" label="Date" />
+              <SortableHeader field="technician.name" label="Req. By" />
               <SortableHeader field="workOrderNumber" label="Ref / Order #" />
               <SortableHeader field="priority" label="Priority" />
               <SortableHeader field="literRequired" label="Req (L)" align="right" />
               <SortableHeader field="status" label="Status" align="center" />
-              <TableHead className="p-0 align-middle bg-white ">
+              <TableHead className="p-0 align-middle bg-gray-50/50 ">
                 <TableColumnHeader label="Actions" className="justify-end px-4 text-slate-900 font-bold" />
               </TableHead>
             </TableRow>
@@ -154,7 +166,7 @@ export function FuelRequestTable({
           <TableBody>
             {requests.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} className="h-24 text-center text-gray-400 italic">
+                <TableCell colSpan={9} className="h-24 text-center text-gray-400 italic">
                   No {title.toLowerCase()} found.
                 </TableCell>
               </TableRow>
@@ -169,6 +181,9 @@ export function FuelRequestTable({
                   <TableCell className="text-gray-900 px-4 leading-none">{req.site.name}</TableCell>
                   <TableCell className="text-gray-500 whitespace-nowrap px-4 leading-none">
                     {new Date(req.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
+                  </TableCell>
+                  <TableCell className="text-gray-900 px-4 leading-none whitespace-nowrap">
+                    {req.technician?.name || '-'}
                   </TableCell>
                   <TableCell className="text-gray-500 font-mono px-4 leading-none">
                     {req.workOrderNumber ? req.workOrderNumber : (req.workRequestNumber || 'N/A')}
@@ -191,19 +206,19 @@ export function FuelRequestTable({
                   </TableCell>
                   <TableCell className="text-right px-4 leading-none">
                     <div className="flex justify-end items-center gap-2 pr-2">
-                      {actionType === 'supervisor' && req.status === 'PENDING_SUPERVISOR' && (
+                      {req.status === 'PENDING_SUPERVISOR' && (userRole === 'SUPERVISOR' || userRole === 'ADMIN') && (
                         <Button size="sm" onClick={() => handleApproveToManager(req.id)} disabled={isPending}
                           className="h-7 px-3 text-[11px] bg-lime-600 hover:bg-lime-700 text-white font-semibold uppercase tracking-tight shadow-none">
                           Approve
                         </Button>
                       )}
-                      {actionType === 'supervisor' && req.status === 'PENDING_MANAGER' && (
+                      {req.status === 'PENDING_MANAGER' && (userRole === 'MANAGER' || userRole === 'ADMIN') && (
                         <Button size="sm" onClick={() => handleApproveToAdmin(req.id)} disabled={isPending}
                           className="h-7 px-3 text-[11px] bg-lime-600 hover:bg-lime-700 text-white font-semibold uppercase tracking-tight shadow-none">
                           Approve
                         </Button>
                       )}
-                      {actionType === 'admin' && req.status === 'PENDING_ADMIN' && (
+                      {req.status === 'PENDING_ADMIN' && (userRole === 'FLEET_ADMIN' || userRole === 'ADMIN') && (
                         <Button size="sm" onClick={() => handleCreateWorkOrder(req.id)} disabled={isPending}
                           className="h-7 px-3 text-[11px] bg-lime-600 hover:bg-lime-700 text-white font-semibold uppercase tracking-tight shadow-none">
                           Create WO
@@ -219,31 +234,33 @@ export function FuelRequestTable({
                           Deliver
                         </Button>
                       )}
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button variant="ghost" size="icon"
-                            className="h-7 w-7 text-red-500 hover:bg-red-50 hover:text-red-700"
-                            disabled={isPending}>
-                            <Trash2 className="h-4 w-4" />
-                            <span className="sr-only">Delete</span>
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent className="bg-white">
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              This action cannot be undone. This will permanently delete this fuel request record.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => handleDelete(req.id)}
-                              className="bg-red-600 hover:bg-red-700 text-white">
-                              Yes, delete it
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
+                      {(userRole === 'ADMIN' || userRole === 'MANAGER') && (
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="ghost" size="icon"
+                              className="h-7 w-7 text-red-500 hover:bg-red-50 hover:text-red-700"
+                              disabled={isPending}>
+                              <Trash2 className="h-4 w-4" />
+                              <span className="sr-only">Delete</span>
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent className="bg-white">
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                This action cannot be undone. This will permanently delete this fuel request record.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => handleDelete(req.id)}
+                                className="bg-red-600 hover:bg-red-700 text-white">
+                                Yes, delete it
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      )}
                     </div>
                   </TableCell>
                 </TableRow>
@@ -252,9 +269,7 @@ export function FuelRequestTable({
           </TableBody>
         </Table>
 
-        <div className="flex items-center justify-between border-t border-slate-400 bg-white px-4 py-1.5 sm:px-6">
-          <Pagination totalPages={totalPages} currentPage={page} />
-          
+        <div className="flex items-center justify-between border-t border-gray-100 bg-white pt-4 mt-2 sm:px-6">
           <div className="flex items-center gap-6">
             <div className="flex items-center text-gray-500 gap-4 uppercase tracking-tighter text-sm font-medium">
               <span className="hidden sm:inline-block font-bold">{total} total requests</span>
@@ -288,7 +303,7 @@ export function FuelRequestTable({
                 defaultValue={dateFrom}
                 className="h-8 w-[130px] bg-white border border-slate-200 rounded p-1 text-[12px] font-medium focus:ring-blue-500 outline-hidden"
                 onChange={(e) => {
-                  const params = new URLSearchParams(window.location.search);
+                  const params = new URLSearchParams(searchParams.toString());
                   if (e.target.value) params.set("from", e.target.value);
                   else params.delete("from");
                   params.set("page", "1");
@@ -301,7 +316,7 @@ export function FuelRequestTable({
                 defaultValue={dateTo}
                 className="h-8 w-[130px] bg-white border border-slate-200 rounded p-1 text-[12px] font-medium focus:ring-blue-500 outline-hidden"
                 onChange={(e) => {
-                  const params = new URLSearchParams(window.location.search);
+                  const params = new URLSearchParams(searchParams.toString());
                   if (e.target.value) params.set("to", e.target.value);
                   else params.delete("to");
                   params.set("page", "1");
@@ -314,6 +329,7 @@ export function FuelRequestTable({
           <Pagination totalPages={totalPages} currentPage={page} />
         </div>
       </div>
+    </div>
     </div>
   )
 }

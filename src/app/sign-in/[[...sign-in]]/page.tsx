@@ -27,7 +27,7 @@ export default function Page() {
       {/* Right side - Hero Image */}
       <div className="hidden lg:block lg:w-1/2 xl:w-[55%] relative h-screen">
         <Image 
-          src="/Logo.png"
+          src="/login-hero.png"
           alt="Generator Fuel Monitoring"
           fill
           priority

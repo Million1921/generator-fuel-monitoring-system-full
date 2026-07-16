@@ -18,6 +18,11 @@ async function hashPassword(password) {
 }
 
 async function main() {
+  const adminPassword = process.env.ADMIN_PASSWORD;
+  if (!adminPassword) {
+    throw new Error('Set ADMIN_PASSWORD before creating an admin user.');
+  }
+
   console.log('Connecting to database...');
   console.log('DB URL:', process.env.DATABASE_URL?.substring(0, 40) + '...');
 
@@ -36,7 +41,7 @@ async function main() {
   }
 
   console.log('\nCreating admin user...');
-  const hashedPassword = await hashPassword('Admin@123');
+  const hashedPassword = await hashPassword(adminPassword);
 
   // Create the user
   const newUser = await p.user.create({
@@ -61,7 +66,6 @@ async function main() {
   console.log('\n=============================');
   console.log('  ✅ ADMIN CREATED!');
   console.log('  Email:    admin@ethiotelecom.et');
-  console.log('  Password: Admin@123');
   console.log('  Role:     ADMIN');
   console.log('=============================');
 }

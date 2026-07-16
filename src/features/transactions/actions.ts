@@ -1,9 +1,14 @@
 "use server"
 
 import prisma from "@/lib/db"
+import { requireRole } from "@/lib/auth"
 import { revalidatePath } from "next/cache"
+import { logger } from "@/lib/server-utils"
+import { z } from "zod"
 
 export async function deleteTransaction(id: number) {
+  await requireRole(["ADMIN", "MANAGER", "FINANCE"])
+
   try {
     await prisma.transaction.delete({
       where: { id }
@@ -13,26 +18,49 @@ export async function deleteTransaction(id: number) {
     revalidatePath("/");
     return { success: true };
   } catch (error: any) {
-    throw new Error(`Failed to delete transaction: ${error.message}`);
+    logger.error("deleteTransaction failed", { id, error: error?.message });
+    throw new Error("Failed to delete transaction");
   }
 }
 
-export async function updateTransaction(id: number, data: any) {
+const TransactionUpdateSchema = z.object({
+  receiptNo: z.string().optional(),
+  senderAccount: z.string().optional(),
+  receiverAccount: z.string().optional(),
+  paidAmount: z.coerce.number().nonnegative().optional(),
+  senderAmount: z.coerce.number().nonnegative().optional(),
+  payerName: z.string().optional(),
+  location: z.string().optional(),
+  fuelStation: z.string().optional(),
+  fuelType: z.string().optional(),
+  type: z.string().optional(),
+  remark: z.string().optional(),
+})
+
+export async function updateTransaction(id: number, data: unknown) {
+  await requireRole(["ADMIN", "MANAGER", "FINANCE"])
+
+  const parsed = TransactionUpdateSchema.safeParse(data)
+  if (!parsed.success) {
+    throw new Error(`Invalid transaction data: ${parsed.error.issues.map(i => i.message).join(", ")}`)
+  }
+  const validated = parsed.data
+
   try {
     const updated = await prisma.transaction.update({
       where: { id },
       data: {
-        receiptNo: data.receiptNo !== undefined ? data.receiptNo : undefined,
-        senderAccount: data.senderAccount !== undefined ? data.senderAccount : undefined,
-        receiverAccount: data.receiverAccount !== undefined ? data.receiverAccount : undefined,
-        paidAmount: data.paidAmount !== undefined ? parseFloat(data.paidAmount) : undefined,
-        senderAmount: data.senderAmount !== undefined ? parseFloat(data.senderAmount) : undefined,
-        payerName: data.payerName !== undefined ? data.payerName : undefined,
-        location: data.location !== undefined ? data.location : undefined,
-        fuelStation: data.fuelStation !== undefined ? data.fuelStation : undefined,
-        fuelType: data.fuelType !== undefined ? data.fuelType : undefined,
-        type: data.type !== undefined ? data.type : undefined,
-        remark: data.remark !== undefined ? data.remark : undefined,
+        receiptNo: validated.receiptNo,
+        senderAccount: validated.senderAccount,
+        receiverAccount: validated.receiverAccount,
+        paidAmount: validated.paidAmount,
+        senderAmount: validated.senderAmount,
+        payerName: validated.payerName,
+        location: validated.location,
+        fuelStation: validated.fuelStation,
+        fuelType: validated.fuelType,
+        type: validated.type,
+        remark: validated.remark,
       }
     });
     revalidatePath("/dashboard/transactions");
@@ -40,10 +68,13 @@ export async function updateTransaction(id: number, data: any) {
     revalidatePath("/");
     return { success: true, data: updated };
   } catch (error: any) {
-    throw new Error(`Failed to update transaction: ${error.message}`);
+    logger.error("updateTransaction failed", { id, error: error?.message });
+    throw new Error("Failed to update transaction");
   }
 }
+
 export async function getTransactions() {
+  await requireRole(["ADMIN", "MANAGER", "FINANCE"])
   return await prisma.transaction.findMany({
     orderBy: { createdAt: 'desc' },
     include: { site: true }

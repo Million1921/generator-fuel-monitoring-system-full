@@ -1,4 +1,5 @@
 import { FuelDeliveryHeader } from "@/features/fuel-requests/components/FuelDeliveryHeader"
+import { RegionFilter } from "@/components/ui/RegionFilter"
 import prisma from "@/lib/db"
 import { FuelDeliveryTable } from "@/features/fuel-requests/components/FuelDeliveryTable"
 
@@ -10,10 +11,12 @@ export default async function FuelDeliveryPage(props: {
     page?: string;
     from?: string;
     to?: string;
+    region?: string;
   }> 
 }) {
   const searchParams = await props.searchParams;
   const search = searchParams.search;
+  const region = searchParams.region;
   const page = searchParams.page ? parseInt(searchParams.page) : 1;
   const from = searchParams.from;
   const to = searchParams.to;
@@ -21,28 +24,39 @@ export default async function FuelDeliveryPage(props: {
   const limit = 10;
   const skip = (page - 1) * limit;
 
-  // Build Prisma Where Clause
-  let where: any = {};
-  
+  // Build Prisma Where Clause using AND to avoid site field conflicts
+  const andConditions: any[] = []
+
+  if (region) {
+    andConditions.push({ site: { region } })
+  }
+
   if (search) {
-    where.OR = [
-      { site: { name: { contains: search, mode: 'insensitive' } } },
-      { site: { siteId: { contains: search, mode: 'insensitive' } } },
-      { driverName: { contains: search, mode: 'insensitive' } }
-    ];
+    andConditions.push({
+      OR: [
+        { site: { name: { contains: search } } },
+        { site: { siteId: { contains: search } } },
+        { driverName: { contains: search } },
+        { technicianName: { contains: search } },
+        { workOrderNumber: { contains: search } },
+      ]
+    })
   }
 
   if (from || to) {
-    where.refillDate = {};
-    if (from) where.refillDate.gte = new Date(from);
-    if (to) where.refillDate.lte = new Date(to);
+    const refillDate: any = {}
+    if (from) refillDate.gte = new Date(from)
+    if (to) refillDate.lte = new Date(to)
+    andConditions.push({ refillDate })
   }
+
+  const where: any = andConditions.length > 0 ? { AND: andConditions } : {}
 
   const [deliveries, total] = await Promise.all([
     prisma.fuelRefill.findMany({
       orderBy: { refillDate: 'desc' },
       where,
-      include: { site: true, technician: true },
+      include: { site: true, technician: true, fuelRequest: { include: { technician: true } } },
       skip,
       take: limit,
     }),
@@ -52,11 +66,10 @@ export default async function FuelDeliveryPage(props: {
   const totalPages = Math.ceil(total / limit) || 1;
 
   return (
-    <div className="flex flex-1 flex-col gap-6 px-6 pb-6 bg-gray-50/30 overflow-x-auto overflow-y-hidden">
-        <div className="flex items-center justify-end mt-5">
+    <div className="flex flex-1 flex-col px-6 pb-6 bg-gray-50/30 overflow-x-auto overflow-y-hidden">
+        <div className="flex items-center justify-end z-10 relative">
           <FuelDeliveryHeader deliveries={deliveries} />
         </div>
-
         <FuelDeliveryTable 
           deliveries={deliveries}
           total={total}

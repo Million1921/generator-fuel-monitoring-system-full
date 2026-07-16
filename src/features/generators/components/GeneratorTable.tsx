@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { useRouter, useSearchParams, usePathname } from "next/navigation"
 import { useUser } from "@clerk/nextjs"
+import { useAppRole } from "@/components/providers/role-provider"
 import { useTransition } from "react"
 import { toast } from "sonner"
 import { deleteGenerator } from "@/features/generators/actions"
@@ -80,8 +81,8 @@ export function GeneratorTable({
   sortOrder: currentSortOrder
 }: GeneratorTableProps) {
   const { user } = useUser()
-  const userRole = (user?.publicMetadata?.role as string) || "ADMIN"
-  const canEdit = userRole === "ADMIN" || userRole === "MANAGER"
+  const userRole = useAppRole()
+  const canEdit = userRole === "ADMIN"
   const [isPending, startTransition] = useTransition()
   const router = useRouter()
   const pathname = usePathname()
@@ -207,7 +208,6 @@ export function GeneratorTable({
 
         {/* Footer — inside min-w div so scrollbar appears below it */}
         <div className="flex items-center justify-between border-t border-slate-400 bg-white px-4 py-1.5 sm:px-6">
-          <Pagination totalPages={totalPages} currentPage={page} />
           <div className="flex items-center text-gray-500 gap-4 uppercase tracking-tighter text-sm font-medium">
             <span className="hidden sm:inline-block font-bold">{total} total generators</span>
             <span className="hidden sm:inline-block">|</span>

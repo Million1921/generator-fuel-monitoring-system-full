@@ -32,6 +32,7 @@ import { useTransition } from "react"
 import { Pagination } from "@/components/ui/Pagination"
 import { useSearchParams, useRouter, usePathname } from "next/navigation"
 import { useUser } from "@clerk/nextjs"
+import { useAppRole } from "@/components/providers/role-provider"
 
 interface Site {
   id: number
@@ -39,6 +40,7 @@ interface Site {
   name: string
   region: string | null
   tankerCapacity: number | null
+  gpsCoordinates?: string | null
 }
 
 interface SiteTableProps {
@@ -51,8 +53,8 @@ interface SiteTableProps {
 
 export function SiteTable({ sites, total, page, sortBy: currentSortBy, sortOrder: currentSortOrder }: SiteTableProps) {
   const { user } = useUser()
-  const userRole = (user?.publicMetadata?.role as string) || "ADMIN"
-  const canEdit = userRole === "ADMIN" || userRole === "MANAGER"
+  const userRole = useAppRole()
+  const canEdit = userRole === "ADMIN"
   const [isPending, startTransition] = useTransition()
   const router = useRouter()
   const pathname = usePathname()
@@ -190,15 +192,21 @@ export function SiteTable({ sites, total, page, sortBy: currentSortBy, sortOrder
 
         {/* Footer — inside min-w div so scrollbar appears below it */}
         <div className="flex items-center justify-between border-t border-slate-400 bg-white px-4 py-1.5 sm:px-6">
-          <Pagination totalPages={totalPages} currentPage={page} />
           <div className="flex items-center text-gray-500 gap-4 uppercase tracking-tighter text-sm font-medium">
             <span className="hidden sm:inline-block font-bold">{total} total rows</span>
             <span className="hidden sm:inline-block">|</span>
             <div className="flex items-center gap-2">
               <span>Go to:</span>
-              <form action="" method="get" className="flex items-center gap-2">
-                {region && <input type="hidden" name="region" value={region} />}
-                {search && <input type="hidden" name="search" value={search} />}
+              <form onSubmit={(e) => {
+                e.preventDefault();
+                const formData = new FormData(e.currentTarget);
+                const p = formData.get("page");
+                if (p) {
+                  const params = new URLSearchParams(searchParams.toString());
+                  params.set("page", p.toString());
+                  router.push(`${pathname}?${params.toString()}`);
+                }
+              }} className="flex items-center gap-2">
                 <Input
                   name="page"
                   type="number"

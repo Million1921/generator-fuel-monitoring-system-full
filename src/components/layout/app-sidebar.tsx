@@ -3,7 +3,7 @@ import * as React from "react"
 import {
   LayoutDashboard,
   MapPin,
-  Settings2,
+  Map,
   Fuel,
   FileText,
   BarChart2,
@@ -25,10 +25,11 @@ import {
 
 import { useUser } from "@clerk/nextjs"
 import { FuelRequestSheet } from "@/features/fuel-requests/components/fuel-request-sheet"
+import { useAppRole } from "@/components/providers/role-provider"
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { user } = useUser()
-  const userRole = (user?.publicMetadata?.role as string) || "ADMIN"
+  const userRole = useAppRole()
   const [sheetOpen, setSheetOpen] = React.useState(false)
 
   const navMain = [
@@ -38,56 +39,62 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       icon: LayoutDashboard,
       isActive: true,
       items: [],
-      roles: ["ADMIN", "TECHNICIAN", "MANAGER", "SUPERVISOR"]
+      roles: ["ADMIN", "TECHNICIAN", "MANAGER", "SUPERVISOR", "FINANCE", "FLEET_ADMIN"]
     },
     {
       title: "Sites",
       url: "/dashboard/sites",
       icon: MapPin,
       items: [],
-      roles: ["ADMIN", "MANAGER", "SUPERVISOR", "TECHNICIAN"]
+      roles: ["ADMIN"]
+    },
+    {
+      title: "Site Map",
+      url: "/dashboard/site-map",
+      icon: Map,
+      items: [],
+      roles: ["ADMIN", "MANAGER", "SUPERVISOR", "TECHNICIAN", "FINANCE", "FLEET_ADMIN"]
     },
     {
       title: "Field Engineers",
       url: "/dashboard/technicians",
       icon: Users,
-      roles: ["ADMIN", "MANAGER"]
+      roles: ["ADMIN"]
     },
     {
       title: "Generators",
       url: "/dashboard/generators",
       icon: Zap,
       items: [],
-      roles: ["ADMIN", "MANAGER", "SUPERVISOR", "TECHNICIAN"]
+      roles: ["ADMIN"]
     },
     {
       title: "Fuel Requests",
       url: "/dashboard/fuel-request",
       icon: FileText,
       items: [],
-      roles: ["ADMIN", "MANAGER", "SUPERVISOR", "TECHNICIAN"]
+      roles: ["ADMIN", "MANAGER", "SUPERVISOR", "TECHNICIAN", "FINANCE", "FLEET_ADMIN"]
     },
     {
       title: "Fuel Delivery",
       url: "/dashboard/fuel-delivery",
       icon: Fuel,
       items: [],
-      roles: ["ADMIN", "TECHNICIAN", "SUPERVISOR"]
+      roles: ["ADMIN", "TECHNICIAN", "SUPERVISOR", "MANAGER", "FLEET_ADMIN"]
     },
     {
       title: "Transactions",
       url: "/dashboard/transactions",
       icon: ArrowRightLeft,
       items: [],
-      roles: ["ADMIN", "MANAGER"]
+      roles: ["ADMIN", "MANAGER", "FINANCE"]
     },
     {
       title: "Generator Fuel Journal",
       url: "/dashboard/fuel-journal",
       icon: BarChart2,
-      roles: ["ADMIN", "MANAGER", "SUPERVISOR", "TECHNICIAN"]
+      roles: ["ADMIN", "MANAGER", "SUPERVISOR", "TECHNICIAN", "FINANCE", "FLEET_ADMIN"]
     },
-
     {
       title: "Fuel Usage History",
       url: "/dashboard/history/fuel-usage",

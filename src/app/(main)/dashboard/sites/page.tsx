@@ -1,6 +1,8 @@
 import { SiteTable } from "@/features/sites/components/SiteTable"
 import { getSites } from "@/features/sites/queries"
 import { AddSiteSheet } from "@/features/sites/components/AddSiteSheet"
+import { SearchInput } from "@/components/ui/SearchInput"
+import { RegionFilter } from "@/components/ui/RegionFilter"
 
 
 export const dynamic = "force-dynamic"
@@ -27,8 +29,14 @@ export default async function SitesPage(props: {
 
   return (
     <div className="flex flex-1 flex-col gap-2 px-6 pb-6 overflow-x-auto overflow-y-hidden">
-      <div className="flex items-center justify-end mt-5">
-        <AddSiteSheet />
+      <div className="flex items-center justify-between z-10 relative mb-4 mt-5">
+        <div className="w-full max-w-sm">
+          <SearchInput placeholder="Search sites by ID or name..." />
+        </div>
+        <div className="flex items-center gap-3">
+          <RegionFilter />
+          <AddSiteSheet />
+        </div>
       </div>
 
       <div className="flex flex-1 flex-col pt-1">

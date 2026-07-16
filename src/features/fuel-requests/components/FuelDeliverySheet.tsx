@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { PlusCircle } from "lucide-react"
+import { PlusCircle, Truck, Fuel, User, Wrench, ClipboardCheck, BarChart3, BadgeDollarSign } from "lucide-react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { toast } from "sonner"
 
@@ -43,13 +43,12 @@ export function FuelDeliverySheet() {
   const selectedSite = sites.find((s: any) => s.id.toString() === selectedSiteId)
   const stdConsumption = selectedSite?.generator?.stdFuelConsumption || 0
   const tankerCapacity = selectedSite?.tankerCapacity || 0
-  
+
   const selectedRequest = approvedRequests.find((r: any) => r.id.toString() === requestId)
 
   const diffHours = (parseFloat(endRunningHour) || 0) - (parseFloat(begRunningHour) || 0)
   const expectedFuel = diffHours > 0 ? (diffHours * stdConsumption) : 0
 
-  // Effect for detecting auto-fill params
   React.useEffect(() => {
     const siteIdParam = searchParams.get("siteId")
     const requestIdParam = searchParams.get("requestId")
@@ -68,7 +67,6 @@ export function FuelDeliverySheet() {
     if (open) {
       getDeliverySites().then(setSites)
       getApprovedRequests().then(setApprovedRequests)
-      // Only reset if NOT coming from an auto-fill param
       if (!searchParams.get("siteId") && !searchParams.get("workOrder")) {
         setSelectedSiteId("")
         setBegRunningHour("")
@@ -80,7 +78,6 @@ export function FuelDeliverySheet() {
     }
   }, [open, searchParams])
 
-  // Logic: When a Work Order is selected, auto-fill Site ID
   const handleWorkOrderChange = (value: string) => {
     setRequestId(value)
     const req = approvedRequests.find((r: any) => r.id.toString() === value)
@@ -109,6 +106,9 @@ export function FuelDeliverySheet() {
       employmentType: formData.get("employmentType") as string || undefined,
       workOrderNumber: workOrderNumber,
       requestId: requestId || undefined,
+      eepu: formData.get("eepu") ? parseFloat(formData.get("eepu") as string) : undefined,
+      remark: formData.get("remark") as string || undefined,
+      department: formData.get("department") as string || undefined,
     }
 
     try {
@@ -131,20 +131,30 @@ export function FuelDeliverySheet() {
           Log Delivery
         </Button>
       </SheetTrigger>
-      <SheetContent className="sm:max-w-xl p-0 border-none overflow-y-auto" side="right">
-        <SheetHeader className="bg-lime-600 p-6 text-white relative">
-          <SheetTitle className="text-xl font-bold text-white uppercase tracking-tight">Record Fuel Delivery</SheetTitle>
-          <SheetDescription className="text-lime-100/90 text-sm mt-1">
+      <SheetContent className="sm:max-w-2xl p-0 border-none overflow-y-auto bg-gray-50/50" side="right">
+        <SheetHeader className="bg-gradient-to-r from-lime-600 to-lime-500 p-6 shadow-sm sticky top-0 z-10">
+          <SheetTitle className="text-xl font-bold text-white uppercase tracking-tight flex items-center gap-2">
+            <Truck className="w-5 h-5 opacity-90" />
+            Record Fuel Delivery
+          </SheetTitle>
+          <SheetDescription className="text-lime-50 text-sm mt-1 font-medium italic opacity-90">
             Log the details of a fuel delivery for a pending work request.
           </SheetDescription>
         </SheetHeader>
 
-        <form onSubmit={onSubmit} className="p-8">
-          <div className="space-y-8">
+        <form onSubmit={onSubmit} className="p-6 space-y-6">
+
+          {/* Section 1: Work Order & Site */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 space-y-5">
+            <div className="flex items-center gap-2 border-b border-gray-100 pb-3">
+              <ClipboardCheck className="w-4 h-4 text-lime-600" />
+              <h3 className="font-bold text-sm text-lime-700 uppercase tracking-widest">1. Work Order & Site</h3>
+            </div>
             <div className="space-y-4">
-              <h3 className="font-semibold text-sm text-lime-700 uppercase tracking-widest border-b border-lime-100 pb-2">1. Identification & Site</h3>
-              <div className="space-y-3">
-                <Label htmlFor="requestId" className="text-sm font-semibold text-gray-700">Select Approved Work Order <span className="text-red-500">*</span></Label>
+              <div className="space-y-2">
+                <Label htmlFor="requestId" className="text-sm font-semibold text-gray-700">
+                  Select Approved Work Order <span className="text-red-500">*</span>
+                </Label>
                 <Select value={requestId} onValueChange={handleWorkOrderChange} required>
                   <SelectTrigger className="h-10 border-gray-200 focus:ring-lime-500">
                     <SelectValue placeholder="Select a pending Work Order" />
@@ -161,21 +171,25 @@ export function FuelDeliverySheet() {
                     )}
                   </SelectContent>
                 </Select>
+              </div>
 
-                {selectedRequest && (
-                  <div className="bg-blue-50 border border-blue-100 p-3 rounded-lg mb-4 flex items-center justify-between">
-                    <div>
-                      <p className="text-[10px] uppercase font-bold text-blue-600 tracking-tight">Request Details</p>
-                      <p className="text-xs font-medium text-gray-700">Requested: <span className="font-bold">{selectedRequest.literRequired} Liters</span></p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-[10px] uppercase font-bold text-blue-600 tracking-tight">Priority</p>
-                      <p className="text-xs font-bold text-gray-700">{selectedRequest.priority}</p>
-                    </div>
+              {selectedRequest && (
+                <div className="bg-blue-50 border border-blue-100 p-4 rounded-xl flex items-center justify-between">
+                  <div>
+                    <p className="text-[10px] uppercase font-bold text-blue-600 tracking-tight">Request Details</p>
+                    <p className="text-sm font-medium text-gray-700 mt-0.5">Requested: <span className="font-bold text-gray-900">{selectedRequest.literRequired} Liters</span></p>
                   </div>
-                )}
-                
-                <Label htmlFor="siteId" className="text-sm font-semibold text-gray-700">Site ID (Auto-filled) <span className="text-red-500">*</span></Label>
+                  <div className="text-right">
+                    <p className="text-[10px] uppercase font-bold text-blue-600 tracking-tight">Priority</p>
+                    <p className="text-sm font-bold text-gray-900 mt-0.5">{selectedRequest.priority}</p>
+                  </div>
+                </div>
+              )}
+
+              <div className="space-y-2">
+                <Label htmlFor="siteId" className="text-sm font-semibold text-gray-700">
+                  Site <span className="text-red-500">*</span>
+                </Label>
                 <Select value={selectedSiteId} onValueChange={setSelectedSiteId} disabled={!!requestId} required>
                   <SelectTrigger className="h-10 border-gray-200 focus:ring-lime-500 bg-gray-50">
                     <SelectValue placeholder="Select a site" />
@@ -188,142 +202,188 @@ export function FuelDeliverySheet() {
                     ))}
                   </SelectContent>
                 </Select>
+              </div>
 
-                {selectedSite && (
-                  <div className="bg-lime-50/50 p-4 rounded-lg border border-lime-100 grid grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-[10px] uppercase font-bold text-lime-600">Standard Consumption</p>
-                      <p className="text-sm font-bold text-gray-800">{stdConsumption} L/hr</p>
-                    </div>
-                    <div>
-                      <p className="text-[10px] uppercase font-bold text-lime-600">Tanker Capacity</p>
-                      <p className="text-sm font-bold text-gray-800">{tankerCapacity} L</p>
-                    </div>
+              {selectedSite && (
+                <div className="bg-lime-50/70 p-4 rounded-xl border border-lime-100 grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-[10px] uppercase font-bold text-lime-600">Std Consumption</p>
+                    <p className="text-sm font-bold text-gray-800 mt-0.5">{stdConsumption} L/hr</p>
                   </div>
-                )}
+                  <div>
+                    <p className="text-[10px] uppercase font-bold text-lime-600">Tanker Capacity</p>
+                    <p className="text-sm font-bold text-gray-800 mt-0.5">{tankerCapacity} L</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Section 2: Delivery Metrics */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 space-y-5">
+            <div className="flex items-center gap-2 border-b border-gray-100 pb-3">
+              <BarChart3 className="w-4 h-4 text-lime-600" />
+              <h3 className="font-bold text-sm text-lime-700 uppercase tracking-widest">2. Delivery Metrics</h3>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+              <div className="space-y-2">
+                <Label htmlFor="begRunningHour" className="text-sm font-semibold text-gray-700">Beginning Running Hour <span className="text-red-500">*</span></Label>
+                <Input
+                  id="begRunningHour"
+                  value={begRunningHour}
+                  onChange={(e) => setBegRunningHour(e.target.value)}
+                  type="number" step="0.1" placeholder="0.0" required className="h-10 border-gray-200 focus:ring-lime-500"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="endRunningHour" className="text-sm font-semibold text-gray-700">Ending Running Hour <span className="text-red-500">*</span></Label>
+                <Input
+                  id="endRunningHour"
+                  value={endRunningHour}
+                  onChange={(e) => setEndRunningHour(e.target.value)}
+                  type="number" step="0.1" placeholder="0.0" required className="h-10 border-gray-200 focus:ring-lime-500"
+                />
+              </div>
+
+              {diffHours !== 0 && (
+                <div className="sm:col-span-2 bg-lime-50/70 p-4 rounded-xl border border-lime-100 flex items-center justify-between">
+                  <div>
+                    <p className="text-[10px] uppercase font-bold text-lime-600">Total Run Hours</p>
+                    <p className="text-base font-bold text-lime-800 mt-0.5">{diffHours.toFixed(1)} hrs</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-[10px] uppercase font-bold text-lime-600">Expected Fuel Usage</p>
+                    <p className="text-base font-bold text-lime-800 mt-0.5">{expectedFuel.toFixed(2)} L</p>
+                  </div>
+                </div>
+              )}
+
+              <div className="space-y-2">
+                <Label htmlFor="fuelBeforeRefuel" className="text-sm font-semibold text-gray-700">Fuel Before Refuel (L) <span className="text-red-500">*</span></Label>
+                <Input id="fuelBeforeRefuel" name="fuelBeforeRefuel" type="number" step="0.1" placeholder="0.0" required className="h-10 border-gray-200 focus:ring-lime-500" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="actualRefueled" className="text-sm font-semibold text-gray-700">Actual Refueled (L) <span className="text-red-500">*</span></Label>
+                <Input
+                  id="actualRefueled"
+                  value={actualRefueled}
+                  onChange={(e) => setActualRefueled(e.target.value)}
+                  type="number" step="0.1" placeholder="0.0" required className="h-10 border-gray-200 focus:ring-lime-500 font-bold"
+                />
+              </div>
+
+              {parseFloat(actualRefueled) > 0 && expectedFuel > 0 && (
+                <div className={cn(
+                  "sm:col-span-2 p-4 rounded-xl border flex items-center justify-between",
+                  Math.abs(parseFloat(actualRefueled) - expectedFuel) > (expectedFuel * 0.2)
+                    ? "bg-red-50 border-red-100"
+                    : "bg-lime-50 border-lime-100"
+                )}>
+                  <p className="text-xs font-semibold text-gray-700">
+                    {Math.abs(parseFloat(actualRefueled) - expectedFuel) > (expectedFuel * 0.2)
+                      ? "⚠️ High deviation from expected consumption."
+                      : "✅ Within normal consumption range."}
+                  </p>
+                  <p className="text-xs font-bold text-gray-900">
+                    Diff: {Math.abs(parseFloat(actualRefueled) - expectedFuel).toFixed(1)} L
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Section 3: Pricing */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 space-y-5">
+            <div className="flex items-center gap-2 border-b border-gray-100 pb-3">
+              <BadgeDollarSign className="w-4 h-4 text-lime-600" />
+              <h3 className="font-bold text-sm text-lime-700 uppercase tracking-widest">3. Pricing & Readings</h3>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+              <div className="space-y-2">
+                <Label htmlFor="unitPrice" className="text-sm font-semibold text-gray-700">Unit Price (Birr) <span className="text-red-500">*</span></Label>
+                <Input id="unitPrice" name="unitPrice" type="number" step="0.01" defaultValue="70.50" required className="h-10 border-gray-200 focus:ring-lime-500 font-medium text-lime-700" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="eepu" className="text-sm font-semibold text-gray-700">EEPU Reading</Label>
+                <Input id="eepu" name="eepu" type="number" step="0.1" placeholder="Optional grid power reading" className="h-10 border-gray-200 focus:ring-lime-500" />
               </div>
             </div>
+          </div>
 
-            {/* Section 2: Generator & Fuel Metrics */}
-            <div className="space-y-4">
-              <h3 className="font-semibold text-sm text-lime-700 uppercase tracking-widest border-b border-lime-100 pb-2">2. Delivery Metrics</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
-                <div className="space-y-2">
-                  <Label htmlFor="begRunningHour" className="text-sm font-semibold text-gray-700">Beginning Running Hour</Label>
-                  <Input 
-                    id="begRunningHour" 
-                    value={begRunningHour} 
-                    onChange={(e) => setBegRunningHour(e.target.value)} 
-                    type="number" step="0.1" placeholder="0.0" required className="h-10 border-gray-200 focus:ring-lime-500" 
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="endRunningHour" className="text-sm font-semibold text-gray-700">Ending Running Hour</Label>
-                  <Input 
-                    id="endRunningHour" 
-                    value={endRunningHour} 
-                    onChange={(e) => setEndRunningHour(e.target.value)} 
-                    type="number" step="0.1" placeholder="0.0" required className="h-10 border-gray-200 focus:ring-lime-500" 
-                  />
-                </div>
-
-                {/* Calculation Feedback */}
-                {diffHours !== 0 && (
-                  <div className="md:col-span-2 bg-lime-50/50 p-3 rounded-lg border border-lime-100 flex items-center justify-between">
-                    <div>
-                      <p className="text-[10px] uppercase font-bold text-lime-600">Total Run Hours</p>
-                      <p className="text-base font-bold text-lime-800">{diffHours.toFixed(1)} hrs</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-[10px] uppercase font-bold text-lime-600">Expected Fuel Usage</p>
-                      <p className="text-base font-bold text-lime-800">{expectedFuel.toFixed(2)} L</p>
-                    </div>
-                  </div>
-                )}
-
-                <div className="space-y-2">
-                  <Label htmlFor="fuelBeforeRefuel" className="text-sm font-semibold text-gray-700">Fuel Before Refuel (L)</Label>
-                  <Input id="fuelBeforeRefuel" name="fuelBeforeRefuel" type="number" step="0.1" placeholder="0.0" required className="h-10 border-gray-200 focus:ring-lime-500" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="actualRefueled" className="text-sm font-semibold text-gray-700">Actual Refueled amount (L)</Label>
-                  <Input 
-                    id="actualRefueled" 
-                    value={actualRefueled} 
-                    onChange={(e) => setActualRefueled(e.target.value)} 
-                    type="number" step="0.1" placeholder="0.0" required className="h-10 border-gray-200 focus:ring-lime-500 font-bold" 
-                  />
-                </div>
-
-                {parseFloat(actualRefueled) > 0 && expectedFuel > 0 && (
-                  <div className={cn(
-                    "md:col-span-2 p-3 rounded-lg border flex items-center justify-between",
-                    Math.abs(parseFloat(actualRefueled) - expectedFuel) > (expectedFuel * 0.2) 
-                      ? "bg-red-50 border-red-100" 
-                      : "bg-lime-50 border-lime-100"
-                  )}>
-                    <p className="text-xs font-semibold text-gray-700">
-                      {Math.abs(parseFloat(actualRefueled) - expectedFuel) > (expectedFuel * 0.2) 
-                        ? "⚠️ High deviation from expected consumption." 
-                        : "✅ Within normal consumption range."}
-                    </p>
-                    <p className="text-xs font-bold text-gray-900">
-                      Diff: {Math.abs(parseFloat(actualRefueled) - expectedFuel).toFixed(1)} L
-                    </p>
-                  </div>
-                )}
-                
-                <div className="space-y-2">
-                  <Label htmlFor="unitPrice" className="text-sm font-semibold text-gray-700">Unit Price (Birr)</Label>
-                  <Input id="unitPrice" name="unitPrice" type="number" step="0.01" defaultValue="70.50" required className="h-10 border-gray-200 focus:ring-lime-500 font-medium text-lime-700" />
+          {/* Section 4: Personnel */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 space-y-5">
+            <div className="flex items-center gap-2 border-b border-gray-100 pb-3">
+              <User className="w-4 h-4 text-lime-600" />
+              <h3 className="font-bold text-sm text-lime-700 uppercase tracking-widest">4. Personnel Details</h3>
+            </div>
+            <div className="space-y-5">
+              <div className="space-y-2">
+                <Label className="text-sm font-semibold text-gray-700">Employment Type</Label>
+                <div className="flex items-center gap-6 pt-1">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="radio" name="employmentType" value="EMPLOYEE" className="text-lime-600 focus:ring-lime-500" defaultChecked />
+                    <span className="text-sm font-medium text-gray-700">Employee</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="radio" name="employmentType" value="CONTRACT" className="text-lime-600 focus:ring-lime-500" />
+                    <span className="text-sm font-medium text-gray-700">Contract</span>
+                  </label>
                 </div>
               </div>
-            </div>
 
-            {/* Section 3: Delivery & Personnel Info */}
-            <div className="space-y-4">
-              <h3 className="font-semibold text-sm text-lime-700 uppercase tracking-widest border-b border-lime-100 pb-2">3. Delivery & Personnel Details</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
-                <div className="space-y-4 md:col-span-2">
-                  <Label className="text-sm font-semibold text-gray-700">Employment Type</Label>
-                  <div className="flex items-center gap-6">
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input type="radio" name="employmentType" value="EMPLOYEE" className="text-lime-600 focus:ring-lime-500" defaultChecked />
-                      <span className="text-sm font-medium text-gray-700">Employee</span>
-                    </label>
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input type="radio" name="employmentType" value="CONTRACT" className="text-lime-600 focus:ring-lime-500" />
-                      <span className="text-sm font-medium text-gray-700">Contract</span>
-                    </label>
-                  </div>
-                </div>
-
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 <div className="space-y-2">
-                  <Label htmlFor="technicianName" className="text-sm font-semibold text-gray-700">Technician Name</Label>
-                  <Input id="technicianName" name="technicianName" placeholder="Enter technician's full name" className="h-10 border-gray-200 focus:ring-lime-500" required />
+                  <Label htmlFor="technicianName" className="text-sm font-semibold text-gray-700 flex items-center gap-1.5">
+                    <Wrench className="w-3.5 h-3.5 text-gray-400" /> Technician Name <span className="text-red-500">*</span>
+                  </Label>
+                  <Input id="technicianName" name="technicianName" placeholder="Full name" className="h-10 border-gray-200 focus:ring-lime-500" required />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="technicianId" className="text-sm font-semibold text-gray-700">Technician ID</Label>
+                  <Label htmlFor="technicianId" className="text-sm font-semibold text-gray-700">Technician ID <span className="text-red-500">*</span></Label>
                   <Input id="technicianId" name="technicianId" placeholder="e.g. TECH-01" className="h-10 border-gray-200 focus:ring-lime-500" required />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="driverName" className="text-sm font-semibold text-gray-700">Driver Name</Label>
-                  <Input id="driverName" name="driverName" placeholder="Enter driver's full name" className="h-10 border-gray-200 focus:ring-lime-500" required />
+                  <Label htmlFor="driverName" className="text-sm font-semibold text-gray-700 flex items-center gap-1.5">
+                    <Truck className="w-3.5 h-3.5 text-gray-400" /> Driver Name <span className="text-red-500">*</span>
+                  </Label>
+                  <Input id="driverName" name="driverName" placeholder="Full name" className="h-10 border-gray-200 focus:ring-lime-500" required />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="driverId" className="text-sm font-semibold text-gray-700">Driver ID / License</Label>
+                  <Label htmlFor="driverId" className="text-sm font-semibold text-gray-700">Driver ID / License <span className="text-red-500">*</span></Label>
                   <Input id="driverId" name="driverId" placeholder="e.g. DRV-01" className="h-10 border-gray-200 focus:ring-lime-500" required />
+                </div>
+
+                <div className="space-y-2 sm:col-span-2">
+                  <Label htmlFor="department" className="text-sm font-semibold text-gray-700">Department</Label>
+                  <Input id="department" name="department" placeholder="e.g. NAZO&M" className="h-10 border-gray-200 focus:ring-lime-500" />
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="mt-12 flex items-center justify-end gap-3 border-t pt-8">
+          {/* Section 5: Remarks */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 space-y-5">
+            <div className="flex items-center gap-2 border-b border-gray-100 pb-3">
+              <Fuel className="w-4 h-4 text-lime-600" />
+              <h3 className="font-bold text-sm text-lime-700 uppercase tracking-widest">5. Additional Remarks</h3>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="remark" className="text-sm font-semibold text-gray-700">Remark / Notes</Label>
+              <textarea
+                id="remark"
+                name="remark"
+                placeholder="Enter any additional details or remarks..."
+                className="w-full border border-gray-200 rounded-lg p-3 focus:ring-2 focus:ring-lime-500 focus:border-lime-500 outline-none resize-y min-h-[80px] text-sm text-gray-700 bg-gray-50/50"
+              />
+            </div>
+          </div>
+
+          <div className="flex items-center justify-end gap-3 border-t pt-5">
             <Button type="button" variant="ghost" onClick={() => setOpen(false)} className="px-6 h-10 font-semibold text-gray-500 hover:bg-gray-50 uppercase tracking-tight">
               Cancel
             </Button>
-            <Button type="submit" disabled={isSubmitting} className="px-8 h-10 bg-lime-600 hover:bg-lime-700 text-white font-semibold uppercase tracking-tight shadow-sm">
+            <Button type="submit" disabled={isSubmitting} className="px-8 h-10 bg-lime-600 hover:bg-lime-700 text-white font-bold uppercase tracking-tight shadow-sm">
               {isSubmitting ? "Recording..." : "Record Delivery"}
             </Button>
           </div>

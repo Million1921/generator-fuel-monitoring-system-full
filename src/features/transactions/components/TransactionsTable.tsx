@@ -24,6 +24,7 @@ import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
 import { TransactionActions } from "./TransactionActions"
 import { format } from "date-fns"
+import { useRouter, usePathname, useSearchParams } from "next/navigation"
 
 interface TransactionsTableProps {
   transactions: any[]
@@ -46,21 +47,24 @@ export function TransactionsTable({
   dateFrom,
   dateTo
 }: TransactionsTableProps) {
+  const router = useRouter()
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
   const [searchValue, setSearchValue] = React.useState(initialSearch)
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
-    const params = new URLSearchParams(window.location.search)
+    const params = new URLSearchParams(searchParams.toString())
     if (searchValue) params.set("search", searchValue)
     else params.delete("search")
     params.set("page", "1")
-    window.location.search = params.toString()
+    router.push(`${pathname}?${params.toString()}`)
   }
 
   const handlePageChange = (p: number) => {
-    const params = new URLSearchParams(window.location.search)
+    const params = new URLSearchParams(searchParams.toString())
     params.set("page", p.toString())
-    window.location.search = params.toString()
+    router.push(`${pathname}?${params.toString()}`)
   }
 
   return (
@@ -168,7 +172,6 @@ export function TransactionsTable({
 
         {/* Footer — inside min-w div so scrollbar appears below it */}
         <div className="flex items-center justify-between border-t border-slate-400 bg-white px-4 py-1.5 sm:px-6">
-          <Pagination totalPages={totalPages} currentPage={page} />
           <div className="flex items-center text-gray-500 gap-4 uppercase tracking-tighter text-sm font-medium">
             <span className="hidden sm:inline-block font-bold">{total} total transactions</span>
             <span className="hidden sm:inline-block">|</span>
@@ -179,9 +182,9 @@ export function TransactionsTable({
                 const formData = new FormData(e.currentTarget);
                 const p = formData.get("page");
                 if (p) {
-                  const params = new URLSearchParams(window.location.search);
+                  const params = new URLSearchParams(searchParams.toString());
                   params.set("page", p.toString());
-                  window.location.search = params.toString();
+                  router.push(`${pathname}?${params.toString()}`);
                 }
               }} className="flex items-center gap-2">
                 <Input

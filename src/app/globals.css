@@ -130,6 +130,58 @@
   }
 }
 
+/* ── Dark-mode: override hardcoded white / light-gray backgrounds ── */
+.dark [class*="bg-white"] {
+  background-color: oklch(0.205 0 0) !important;
+}
+.dark [class*="bg-gray-50"] {
+  background-color: oklch(0.22 0 0) !important;
+}
+.dark [class*="bg-gray-100"] {
+  background-color: oklch(0.24 0 0) !important;
+}
+.dark [class*="bg-slate-50"] {
+  background-color: oklch(0.22 0 0) !important;
+}
+.dark [class*="bg-slate-100"] {
+  background-color: oklch(0.24 0 0) !important;
+}
+/* Text overrides */
+.dark [class*="text-gray-900"],
+.dark [class*="text-slate-900"] {
+  color: oklch(0.97 0 0) !important;
+}
+.dark [class*="text-gray-800"],
+.dark [class*="text-slate-800"] {
+  color: oklch(0.93 0 0) !important;
+}
+.dark [class*="text-gray-700"],
+.dark [class*="text-slate-700"] {
+  color: oklch(0.85 0 0) !important;
+}
+.dark [class*="text-gray-600"],
+.dark [class*="text-slate-600"] {
+  color: oklch(0.75 0 0) !important;
+}
+.dark [class*="text-gray-500"],
+.dark [class*="text-slate-500"] {
+  color: oklch(0.65 0 0) !important;
+}
+/* Border overrides */
+.dark [class*="border-gray-100"],
+.dark [class*="border-gray-200"],
+.dark [class*="border-slate-200"],
+.dark [class*="border-slate-400"] {
+  border-color: oklch(1 0 0 / 10%) !important;
+}
+/* Page wrapper backgrounds */
+.dark [class*="bg-gray-50/30"] {
+  background-color: oklch(0.16 0 0) !important;
+}
+.dark [class*="bg-slate-100/50"] {
+  background-color: oklch(0.24 0 0) !important;
+}
+
 /* Global Scrollbar Hiding for Y-Axis */
 *::-webkit-scrollbar {
   width: 0px;
