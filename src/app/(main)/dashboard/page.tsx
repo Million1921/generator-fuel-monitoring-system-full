@@ -1,5 +1,5 @@
 import { currentUser } from "@clerk/nextjs/server"
-import { getRoleFromClerk } from "@/lib/auth"
+import { getRoleFromClerk, getRegionScope } from "@/lib/auth"
 import { AdminDashboard } from "@/features/dashboard/admin-dashboard"
 import { ManagerDashboard } from "@/features/dashboard/manager-dashboard"
 import { TechnicianDashboard } from "@/features/dashboard/technician-dashboard"
@@ -9,10 +9,11 @@ export const dynamic = "force-dynamic"
 
 export default async function DashboardPage(props: { searchParams: Promise<{ region?: string, page?: string }> }) {
   const searchParams = await props.searchParams
-  const region = searchParams.region
-  const topSitesPage = parseInt(searchParams.page || "1")
-
   const role = await getRoleFromClerk()
+  const regionScope = await getRegionScope(role)
+  const region = regionScope ?? searchParams.region
+  
+  const topSitesPage = parseInt(searchParams.page || "1")
 
   if (role === "TECHNICIAN") {
     const user = await currentUser()

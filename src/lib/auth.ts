@@ -50,7 +50,7 @@ export async function requireRole(allowedRoles: AppRole[]) {
 }
 
 export async function getRegionScope(role: AppRole): Promise<string | undefined> {
-  if (role === "ADMIN" || role === "MANAGER" || role === "FINANCE") {
+  if (role === "ADMIN" || role === "FINANCE") {
     return undefined; // All regions access
   }
   
