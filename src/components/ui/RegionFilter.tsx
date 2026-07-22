@@ -11,7 +11,6 @@ function RegionFilterContent() {
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
-  const userRole = useAppRole()
 
   const currentRegion = searchParams.get('region') || "ALL"
 
@@ -24,11 +23,6 @@ function RegionFilterContent() {
     }
     router.push(pathname + '?' + params.toString())
   }, [pathname, router, searchParams])
-
-  const isGlobal = userRole === "ADMIN" || userRole === "FINANCE" || userRole === "FLEET_ADMIN"
-  if (!isGlobal) {
-    return null
-  }
 
   return (
     <div className="flex items-center gap-2">
@@ -55,6 +49,12 @@ function RegionFilterContent() {
 }
 
 export function RegionFilter() {
+  const userRole = useAppRole()
+  const isGlobal = userRole === "ADMIN" || userRole === "FINANCE" || userRole === "FLEET_ADMIN"
+  if (!isGlobal) {
+    return null
+  }
+
   return (
     <Suspense fallback={<div className="h-9 w-[180px] bg-slate-50 rounded-md border border-slate-100 shadow-sm animate-pulse" />}>
       <RegionFilterContent />
