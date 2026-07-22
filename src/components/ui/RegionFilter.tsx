@@ -5,11 +5,13 @@ import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrig
 import { ADDIS_ABABA_REGIONS, OUTSIDE_ADDIS_REGIONS } from "@/lib/constants"
 import { useCallback, Suspense } from "react"
 import { Filter } from "lucide-react"
+import { useAppRole } from "@/components/providers/role-provider"
 
 function RegionFilterContent() {
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
+  const userRole = useAppRole()
 
   const currentRegion = searchParams.get('region') || "ALL"
 
@@ -22,6 +24,11 @@ function RegionFilterContent() {
     }
     router.push(pathname + '?' + params.toString())
   }, [pathname, router, searchParams])
+
+  const isGlobal = userRole === "ADMIN" || userRole === "FINANCE" || userRole === "FLEET_ADMIN"
+  if (!isGlobal) {
+    return null
+  }
 
   return (
     <div className="flex items-center gap-2">
