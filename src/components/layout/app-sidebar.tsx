@@ -56,12 +56,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       roles: ["ADMIN", "MANAGER", "SUPERVISOR", "TECHNICIAN", "FINANCE", "FLEET_ADMIN"]
     },
     {
-      title: "Field Engineers",
-      url: "/dashboard/technicians",
-      icon: Users,
-      roles: ["ADMIN"]
-    },
-    {
       title: "User Management",
       url: "/dashboard/users",
       icon: Users,
