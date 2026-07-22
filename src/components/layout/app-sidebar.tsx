@@ -62,6 +62,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       roles: ["ADMIN"]
     },
     {
+      title: "User Management",
+      url: "/dashboard/users",
+      icon: Users,
+      roles: ["ADMIN"]
+    },
+    {
       title: "Generators",
       url: "/dashboard/generators",
       icon: Zap,
