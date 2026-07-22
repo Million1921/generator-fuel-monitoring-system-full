@@ -50,7 +50,7 @@ export async function requireRole(allowedRoles: AppRole[]) {
 }
 
 export async function getRegionScope(role: AppRole): Promise<string | undefined> {
-  if (role === "ADMIN" || role === "FINANCE") {
+  if (role === "ADMIN" || role === "FINANCE" || role === "FLEET_ADMIN") {
     return undefined; // All regions access
   }
   
@@ -62,7 +62,9 @@ export async function getRegionScope(role: AppRole): Promise<string | undefined>
     claims?.region ??
     (await currentUser())?.publicMetadata?.region;
 
-  return typeof region === "string" ? region : undefined;
+  // If a restricted role (like MANAGER) has no region claim, default to 'UNASSIGNED' 
+  // so they don't accidentally get global access.
+  return typeof region === "string" ? region : "UNASSIGNED";
 }
 
 export async function requireAbility(action: Actions, subject: Subjects) {
