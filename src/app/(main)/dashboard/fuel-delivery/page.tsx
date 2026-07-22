@@ -34,11 +34,11 @@ export default async function FuelDeliveryPage(props: {
   if (search) {
     andConditions.push({
       OR: [
-        { site: { name: { contains: search } } },
-        { site: { siteId: { contains: search } } },
-        { driverName: { contains: search } },
-        { technicianName: { contains: search } },
-        { workOrderNumber: { contains: search } },
+        { site: { name: { contains: search, mode: 'insensitive' } } },
+        { site: { siteId: { contains: search, mode: 'insensitive' } } },
+        { driverName: { contains: search, mode: 'insensitive' } },
+        { technicianName: { contains: search, mode: 'insensitive' } },
+        { workOrderNumber: { contains: search, mode: 'insensitive' } },
       ]
     })
   }

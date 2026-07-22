@@ -50,10 +50,10 @@ export default async function FuelRequestPage(props: {
 
   if (search) {
     whereBase.OR = [
-      { site: { name: { contains: search } } },
-      { site: { siteId: { contains: search } } },
-      { workOrderNumber: { contains: search } },
-      { workRequestNumber: { contains: search } },
+      { site: { name: { contains: search, mode: 'insensitive' } } },
+      { site: { siteId: { contains: search, mode: 'insensitive' } } },
+      { workOrderNumber: { contains: search, mode: 'insensitive' } },
+      { workRequestNumber: { contains: search, mode: 'insensitive' } },
     ];
   }
 

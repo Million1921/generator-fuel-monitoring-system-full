@@ -44,13 +44,13 @@ export async function getSites(
 ) {
   const skip = (page - 1) * limit
 
-  const where = {
+  const where: any = {
     AND: [
       region ? { region } : {},
       search ? {
         OR: [
-          { siteId: { contains: search } },
-          { name: { contains: search } },
+          { siteId: { contains: search, mode: 'insensitive' } },
+          { name: { contains: search, mode: 'insensitive' } },
         ]
       } : {}
     ]

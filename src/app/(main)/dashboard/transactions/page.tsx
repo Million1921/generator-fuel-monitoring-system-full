@@ -32,10 +32,10 @@ export default async function TransactionsPage(props: {
     
       if (search) {
         where.OR = [
-          { receiptNo: { contains: search } },
-          { senderAccount: { contains: search } },
-          { receiverAccount: { contains: search } },
-          { payerName: { contains: search } },
+          { receiptNo: { contains: search, mode: 'insensitive' } },
+          { senderAccount: { contains: search, mode: 'insensitive' } },
+          { receiverAccount: { contains: search, mode: 'insensitive' } },
+          { payerName: { contains: search, mode: 'insensitive' } },
         ];
       }
       
