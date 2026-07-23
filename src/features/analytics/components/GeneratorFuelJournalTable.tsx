@@ -164,7 +164,7 @@ export function GeneratorFuelJournalTable({
         <TableHead 
             rowSpan={rowSpan} 
             className={cn(
-                "border-r border-slate-400 p-0 align-middle bg-white",
+                "border-r border-[#6a9e2f] p-0 align-middle bg-[#8dc63f]",
                 className
             )}
         >
@@ -172,7 +172,7 @@ export function GeneratorFuelJournalTable({
                 label={label}
                 sortActive={currentSortBy === field}
                 onSort={() => handleSort(field)}
-                className="justify-center p-2 text-slate-900 font-bold"
+                className="justify-center p-2 text-white font-bold"
             />
         </TableHead>
     )
@@ -217,7 +217,7 @@ export function GeneratorFuelJournalTable({
                 <div>
                     <Table className="relative w-full border-collapse">
                         <TableHeader>
-                            <TableRow className="hover:bg-transparent bg-gray-50/50 h-8">
+                            <TableRow className="hover:bg-[#8dc63f] bg-[#8dc63f] h-8">
                                 <SortableHeader field="employeeCreatedWO" label="Employee name Created WO" rowSpan={2} className="min-w-[130px]" />
                                 <SortableHeader field="employeeIdWOCreate" label="Employee Id WO Create" rowSpan={2} className="min-w-[100px]" />
                                 <SortableHeader field="workOrderNumber" label="Work order number" rowSpan={2} className="min-w-[160px]" />
@@ -227,11 +227,11 @@ export function GeneratorFuelJournalTable({
                                 <SortableHeader field="tankerCapacity" label="Tanker Capacity" rowSpan={2} className="min-w-[100px]" />
                                 <SortableHeader field="standard" label="Standard" rowSpan={2} className="border-r-slate-300 min-w-[100px]" />
 
-                                <TableHead colSpan={4} className="border-r border-b border-gray-200 text-center font-bold align-middle bg-white text-slate-900 text-[14px] uppercase tracking-wider">
+                                <TableHead colSpan={4} className="border-r border-b border-[#6a9e2f] text-center font-bold align-middle bg-[#8dc63f] text-white text-[14px] uppercase tracking-wider">
                                     Previous refueling
                                 </TableHead>
 
-                                <TableHead colSpan={4} className="border-r border-b border-gray-200 text-center font-bold align-middle bg-white text-slate-900 text-[14px] uppercase tracking-wider">
+                                <TableHead colSpan={4} className="border-r border-b border-[#6a9e2f] text-center font-bold align-middle bg-[#8dc63f] text-white text-[14px] uppercase tracking-wider">
                                     Current refueling
                                 </TableHead>
 
@@ -240,23 +240,23 @@ export function GeneratorFuelJournalTable({
                                 <SortableHeader field="maintOpSeq" label="Maint ce Op Seq" rowSpan={2} className="min-w-[80px]" />
                                 <SortableHeader field="deviation" label="Deviation" rowSpan={2} className="min-w-[80px]" />
                                 <SortableHeader field="unitPrice" label="Unit Price" rowSpan={2} className="min-w-[100px]" />
-                                <TableHead rowSpan={2} className=" p-0 align-middle bg-white">
-                                    <TableColumnHeader label="Remark" className="justify-center p-2 text-slate-900 font-bold" />
+                                <TableHead rowSpan={2} className=" p-0 align-middle bg-[#8dc63f]">
+                                    <TableColumnHeader label="Remark" className="justify-center p-2 text-white font-bold" />
                                 </TableHead>
                             </TableRow>
 
-                            <TableRow>
+                            <TableRow className="bg-[#8dc63f] hover:bg-[#8dc63f]">
                                 {/* Previous Refueling Sub-headers */}
-                                <TableHead className="border-r  min-w-[100px] text-center font-bold bg-white text-slate-600  uppercase">Date</TableHead>
-                                <TableHead className="border-r  min-w-[100px] text-center font-bold bg-white text-slate-900 text-[11px] uppercase whitespace-pre-wrap">Amount In liter</TableHead>
-                                <TableHead className="border-r  min-w-[100px] text-center font-bold bg-white text-slate-900 text-[11px] uppercase whitespace-pre-wrap">Amount In Birr</TableHead>
-                                <TableHead className="border-r border-b border-r-slate-300 min-w-[100px] text-center font-bold bg-white text-slate-900 text-[11px] uppercase whitespace-pre-wrap">beginning Running hour</TableHead>
+                                <TableHead className="border-r border-[#6a9e2f] min-w-[100px] text-center font-bold bg-[#8dc63f] text-white uppercase">Date</TableHead>
+                                <TableHead className="border-r border-[#6a9e2f] min-w-[100px] text-center font-bold bg-[#8dc63f] text-white text-[11px] uppercase whitespace-pre-wrap">Amount In liter</TableHead>
+                                <TableHead className="border-r border-[#6a9e2f] min-w-[100px] text-center font-bold bg-[#8dc63f] text-white text-[11px] uppercase whitespace-pre-wrap">Amount In Birr</TableHead>
+                                <TableHead className="border-r border-b border-[#6a9e2f] min-w-[100px] text-center font-bold bg-[#8dc63f] text-white text-[11px] uppercase whitespace-pre-wrap">beginning Running hour</TableHead>
 
                                 {/* Current Refueling Sub-headers */}
-                                <TableHead className="border-r  min-w-[100px] text-center font-bold bg-white text-slate-600  uppercase">Date</TableHead>
-                                <TableHead className="border-r  min-w-[100px] text-center font-bold bg-white text-slate-900 text-[11px] uppercase whitespace-pre-wrap">Amount In liter</TableHead>
-                                <TableHead className="border-r  min-w-[100px] text-center font-bold bg-white text-slate-900 text-[11px] uppercase whitespace-pre-wrap">Amount In Birr</TableHead>
-                                <TableHead className="border-r border-b border-r-slate-300 min-w-[100px] text-center font-bold bg-white text-slate-900 text-[11px] uppercase whitespace-pre-wrap">Running hour</TableHead>
+                                <TableHead className="border-r border-[#6a9e2f] min-w-[100px] text-center font-bold bg-[#8dc63f] text-white uppercase">Date</TableHead>
+                                <TableHead className="border-r border-[#6a9e2f] min-w-[100px] text-center font-bold bg-[#8dc63f] text-white text-[11px] uppercase whitespace-pre-wrap">Amount In liter</TableHead>
+                                <TableHead className="border-r border-[#6a9e2f] min-w-[100px] text-center font-bold bg-[#8dc63f] text-white text-[11px] uppercase whitespace-pre-wrap">Amount In Birr</TableHead>
+                                <TableHead className="border-r border-b border-[#6a9e2f] min-w-[100px] text-center font-bold bg-[#8dc63f] text-white text-[11px] uppercase whitespace-pre-wrap">Running hour</TableHead>
                             </TableRow>
                         </TableHeader>
 
