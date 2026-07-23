@@ -56,7 +56,7 @@ export function AnalyticalReportTable({
   }
 
   const SortableHeader = ({ field, label, align = 'left' }: { field: string, label: string, align?: 'left' | 'right' | 'center' }) => (
-    <TableHead className="p-0 align-middle bg-white border-b border-gray-200">
+    <TableHead className="p-0 align-middle border-b border-gray-200">
       <TableColumnHeader 
         label={label}
         sortActive={currentSortBy === field}
@@ -73,14 +73,14 @@ export function AnalyticalReportTable({
     <div className="overflow-x-auto mb-10 custom-scrollbar pb-2">
       <div className="w-full rounded-xl border border-slate-400 bg-white shadow-sm overflow-hidden">
         <Table>
-          <TableHeader className="bg-white sticky top-0 z-10 border-b border-gray-200">
-            <TableRow className="hover:bg-transparent bg-gray-50/50 h-8">
+          <TableHeader className="sticky top-0 z-10">
+            <TableRow className=" h-8">
               <SortableHeader field="siteNumber" label="Site #" />
               <SortableHeader field="location" label="Location" />
               <SortableHeader field="totalRefueled" label="Total Refueled" align="right" />
               <SortableHeader field="totalRunningHours" label="Running Hours" align="right" />
               <SortableHeader field="amountInBirr" label="Amount (Birr)" align="right" />
-              <TableHead className="p-0 align-middle bg-white border-b border-gray-200">
+              <TableHead className="p-0 align-middle border-b border-gray-200">
                 <TableColumnHeader label="Variance" className="justify-end px-4 text-slate-900 font-bold whitespace-nowrap" />
               </TableHead>
             </TableRow>

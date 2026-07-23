@@ -74,7 +74,7 @@ export function SiteTable({ sites, total, page, sortBy: currentSortBy, sortOrder
   }
 
   const SortableHeader = ({ field, label, align = 'left' }: { field: string, label: string, align?: 'left' | 'right' | 'center' }) => (
-    <TableHead className="p-0 align-middle bg-white ">
+    <TableHead className="p-0 align-middle ">
       <TableColumnHeader 
         label={label}
         sortActive={currentSortBy === field}
@@ -103,16 +103,16 @@ export function SiteTable({ sites, total, page, sortBy: currentSortBy, sortOrder
     <div className="overflow-x-auto mb-10 custom-scrollbar pb-2 relative z-0">
       <div className="rounded-xl border border-slate-400 bg-white shadow-sm overflow-hidden w-full">
         <Table className="w-full">
-          <TableHeader className="bg-white sticky top-0 z-10 border-b border-gray-200">
-            <TableRow className="hover:bg-transparent bg-gray-50/50 h-8">
+          <TableHeader className="sticky top-0 z-10">
+            <TableRow className=" h-8">
               <SortableHeader field="siteId" label="Site ID" />
               <SortableHeader field="name" label="Site Name" />
               <SortableHeader field="region" label="Region" />
               <SortableHeader field="tankerCapacity" label="Capacity (L)" align="center" />
-              <TableHead className="p-0 align-middle bg-white ">
+              <TableHead className="p-0 align-middle ">
                 <TableColumnHeader label="Status" className="justify-center px-1 text-slate-900 font-bold whitespace-nowrap" />
               </TableHead>
-              <TableHead className="p-0 align-middle bg-white ">
+              <TableHead className="p-0 align-middle ">
                 {canEdit && <TableColumnHeader label="Actions" className="justify-end px-1 text-slate-900 font-bold whitespace-nowrap" />}
               </TableHead>
             </TableRow>

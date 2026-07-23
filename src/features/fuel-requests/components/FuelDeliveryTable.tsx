@@ -51,7 +51,7 @@ export function FuelDeliveryTable({
   }
 
   const SortableHeader = ({ field, label, align = 'left' }: { field: string, label: string, align?: 'left' | 'right' | 'center' }) => (
-    <TableHead className="p-0 align-middle bg-white ">
+    <TableHead className="p-0 align-middle ">
       <TableColumnHeader 
         label={label}
         className={cn(
@@ -104,36 +104,36 @@ export function FuelDeliveryTable({
       <div className="overflow-x-auto custom-scrollbar pb-2">
       <div className="min-w-[1950px] rounded-xl border border-slate-400 bg-white shadow-sm overflow-hidden">
         <Table>
-          <TableHeader className="bg-white sticky top-0 z-10 border-b border-gray-200">
-            <TableRow className="hover:bg-transparent bg-gray-50/50 h-8">
+          <TableHeader className="sticky top-0 z-10">
+            <TableRow className=" h-8">
               <SortableHeader field="siteId" label="Site ID" />
               <SortableHeader field="name" label="Site Name" />
               <SortableHeader field="workOrder" label="Work Order" />
               <SortableHeader field="region" label="Region" />
               <SortableHeader field="date" label="Date" />
               <SortableHeader field="liters" label="Liters" align="right" />
-              <TableHead className="p-0 align-middle bg-white h-8">
+              <TableHead className="p-0 align-middle h-8">
                 <TableColumnHeader label="Run (B)" className="justify-center px-2 text-slate-900 font-bold whitespace-nowrap" />
               </TableHead>
-              <TableHead className="p-0 align-middle bg-white h-8">
+              <TableHead className="p-0 align-middle h-8">
                 <TableColumnHeader label="Run (A)" className="justify-center px-2 text-slate-900 font-bold whitespace-nowrap" />
               </TableHead>
-              <TableHead className="p-0 align-middle bg-white h-8">
+              <TableHead className="p-0 align-middle h-8">
                 <TableColumnHeader label="Level (B)" className="justify-center px-2 text-slate-900 font-bold whitespace-nowrap" />
               </TableHead>
-              <TableHead className="p-0 align-middle bg-white h-8">
+              <TableHead className="p-0 align-middle h-8">
                 <TableColumnHeader label="Level (A)" className="justify-center px-2 text-slate-900 font-bold whitespace-nowrap" />
               </TableHead>
-              <TableHead className="p-0 align-middle bg-white h-8">
+              <TableHead className="p-0 align-middle h-8">
                 <TableColumnHeader label="Requested By" className="justify-start px-4 text-slate-900 font-bold whitespace-nowrap" />
               </TableHead>
-              <TableHead className="p-0 align-middle bg-white h-8">
+              <TableHead className="p-0 align-middle h-8">
                 <TableColumnHeader label="Delivered By" className="justify-start px-4 text-slate-900 font-bold whitespace-nowrap" />
               </TableHead>
-              <TableHead className="p-0 align-middle bg-white h-8">
+              <TableHead className="p-0 align-middle h-8">
                 <TableColumnHeader label="Driver Details" className="justify-start px-4 text-slate-900 font-bold whitespace-nowrap" />
               </TableHead>
-              <TableHead className="p-0 align-middle bg-white h-8">
+              <TableHead className="p-0 align-middle h-8">
                 <TableColumnHeader label="Actions" className="justify-end px-4 text-slate-900 font-bold whitespace-nowrap" />
               </TableHead>
             </TableRow>

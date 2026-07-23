@@ -35,13 +35,13 @@ export function FuelUsageTable({
     <div className="overflow-x-auto mb-10 custom-scrollbar pb-2 relative z-0">
       <div className="min-w-[1200px] rounded-xl border border-slate-400 bg-white shadow-sm overflow-hidden">
         <Table>
-          <TableHeader className="bg-white sticky top-0 z-10 border-b border-gray-200">
-            <TableRow className="hover:bg-transparent bg-gray-50/50 h-8">
+          <TableHeader className="sticky top-0 z-10">
+            <TableRow className=" h-8">
               {[
                 "Date", "Site No", "Site Name", "Delivered (L)", "Level Before (L)", "Level After (L)", 
                 "Beginning Hour", "Current Hour", "Technician", "Vehicle/Driver"
               ].map((label) => (
-                <TableHead key={label} className="font-bold text-sm text-slate-900 uppercase tracking-tight p-0 align-middle bg-white border-b border-gray-100">
+                <TableHead key={label} className="font-bold text-sm uppercase tracking-tight p-0 align-middle border-b border-gray-100">
                   <div className="flex items-center gap-1.5 px-4 h-9 select-none justify-start">
                     <span className="whitespace-nowrap">{label}</span>
                     <div className="flex items-center gap-0.5 opacity-30">

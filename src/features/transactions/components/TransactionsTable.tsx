@@ -97,20 +97,20 @@ export function TransactionsTable({
         {/* Extreme High-Density Table */}
         <div className="flex-1">
           <Table>
-            <TableHeader className="bg-white border-b border-gray-200 sticky top-0 z-10">
-              <TableRow className="hover:bg-transparent bg-gray-50/50 h-8">
-                <TableHead className="w-[40px] text-center font-bold text-slate-900 border-r border-slate-400 px-4">#</TableHead>
-                <TableHead className="font-bold text-slate-900 uppercase tracking-tight text-[11px] px-4 align-middle bg-white whitespace-nowrap">Receipt No</TableHead>
-                <TableHead className="font-bold text-slate-900 uppercase tracking-tight text-[11px] px-4 align-middle bg-white whitespace-nowrap">Sender A/C</TableHead>
-                <TableHead className="font-bold text-slate-900 uppercase tracking-tight text-[11px] px-4 align-middle bg-white whitespace-nowrap">Receiver A/C</TableHead>
-                <TableHead className="font-bold text-slate-900 uppercase tracking-tight text-[11px] px-4 align-middle bg-white whitespace-nowrap">Paid Amount</TableHead>
-                <TableHead className="font-bold text-slate-900 uppercase tracking-tight text-[11px] px-4 align-middle bg-white whitespace-nowrap">Sender Amount</TableHead>
-                <TableHead className="font-bold text-slate-900 uppercase tracking-tight text-[11px] px-4 align-middle bg-white whitespace-nowrap">Payer Name</TableHead>
-                <TableHead className="font-bold text-slate-900 uppercase tracking-tight text-[11px] px-4 align-middle bg-white whitespace-nowrap">Location</TableHead>
-                <TableHead className="font-bold text-slate-900 uppercase tracking-tight text-[11px] px-4 align-middle bg-white whitespace-nowrap">Station</TableHead>
-                <TableHead className="font-bold text-slate-900 uppercase tracking-tight text-[11px] px-4 align-middle bg-white whitespace-nowrap">Type</TableHead>
-                <TableHead className="font-bold text-slate-900 uppercase tracking-tight text-[11px] px-4 align-middle bg-white whitespace-nowrap">Remark</TableHead>
-                <TableHead className="text-right font-bold text-slate-900 border-l border-slate-400 whitespace-nowrap px-4">Actions</TableHead>
+            <TableHeader className="sticky top-0 z-10">
+              <TableRow className=" h-8">
+                <TableHead className="w-[40px] text-center font-bold border-r border-slate-400 px-4">#</TableHead>
+                <TableHead className="font-bold uppercase tracking-tight text-[11px] px-4 align-middle whitespace-nowrap">Receipt No</TableHead>
+                <TableHead className="font-bold uppercase tracking-tight text-[11px] px-4 align-middle whitespace-nowrap">Sender A/C</TableHead>
+                <TableHead className="font-bold uppercase tracking-tight text-[11px] px-4 align-middle whitespace-nowrap">Receiver A/C</TableHead>
+                <TableHead className="font-bold uppercase tracking-tight text-[11px] px-4 align-middle whitespace-nowrap">Paid Amount</TableHead>
+                <TableHead className="font-bold uppercase tracking-tight text-[11px] px-4 align-middle whitespace-nowrap">Sender Amount</TableHead>
+                <TableHead className="font-bold uppercase tracking-tight text-[11px] px-4 align-middle whitespace-nowrap">Payer Name</TableHead>
+                <TableHead className="font-bold uppercase tracking-tight text-[11px] px-4 align-middle whitespace-nowrap">Location</TableHead>
+                <TableHead className="font-bold uppercase tracking-tight text-[11px] px-4 align-middle whitespace-nowrap">Station</TableHead>
+                <TableHead className="font-bold uppercase tracking-tight text-[11px] px-4 align-middle whitespace-nowrap">Type</TableHead>
+                <TableHead className="font-bold uppercase tracking-tight text-[11px] px-4 align-middle whitespace-nowrap">Remark</TableHead>
+                <TableHead className="text-right font-bold border-l border-slate-400 whitespace-nowrap px-4">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

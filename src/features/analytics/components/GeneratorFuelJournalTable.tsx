@@ -72,13 +72,7 @@ export function GeneratorFuelJournalTable({
 
 
     const SortableHeader = ({ field, label, rowSpan = 1, className = "" }: { field: string, label: string, rowSpan?: number, className?: string }) => (
-        <TableHead 
-            rowSpan={rowSpan} 
-            className={cn(
-                "border-r border-[#6a9e2f] p-0 align-middle bg-[#8dc63f]",
-                className
-            )}
-        >
+        <TableHead rowSpan={rowSpan} className={cn( "border-r border-[#6a9e2f] p-0 align-middle bg-[#8dc63f]", className )}>
             <TableColumnHeader 
                 label={label}
                 sortActive={currentSortBy === field}

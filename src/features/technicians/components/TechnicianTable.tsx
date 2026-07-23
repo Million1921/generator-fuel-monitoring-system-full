@@ -47,7 +47,7 @@ export function TechnicianTable({
   }
 
   const SortableHeader = ({ field, label, align = 'left' }: { field: string, label: string, align?: 'left' | 'right' | 'center' }) => (
-    <TableHead className="p-0 align-middle bg-white ">
+    <TableHead className="p-0 align-middle ">
       <TableColumnHeader 
         label={label}
         sortActive={currentSortBy === field}
@@ -64,12 +64,12 @@ export function TechnicianTable({
     <div className="overflow-x-auto mb-10 custom-scrollbar pb-2">
       <div className="w-full rounded-xl border border-slate-400 bg-white shadow-sm overflow-hidden">
         <Table>
-          <TableHeader className="bg-white border-b border-gray-200 sticky top-0 z-10">
-            <TableRow className="hover:bg-transparent bg-gray-50/50 h-8">
+          <TableHeader className="sticky top-0 z-10">
+            <TableRow className=" h-8">
               <SortableHeader field="name" label="Technician Info" />
               <SortableHeader field="department" label="Department" align="center" />
               <SortableHeader field="region" label="Assigned Region" align="center" />
-              <TableHead className="p-0 align-middle bg-white ">
+              <TableHead className="p-0 align-middle ">
                 <TableColumnHeader label="Status" className="justify-center px-1 text-slate-900 font-bold" />
               </TableHead>
             </TableRow>

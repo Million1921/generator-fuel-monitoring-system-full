@@ -124,7 +124,7 @@ export function FuelRequestTable({
   }
 
   const SortableHeader = ({ field, label, align = 'left' }: { field: string, label: string, align?: 'left' | 'right' | 'center' }) => (
-    <TableHead className="p-0 align-middle bg-gray-50/50">
+    <TableHead className="p-0 align-middle ">
       <TableColumnHeader
         label={label}
         sortActive={currentSortBy === field}
@@ -148,8 +148,8 @@ export function FuelRequestTable({
       <div className="overflow-x-auto custom-scrollbar pb-2">
         <div className="min-w-[1400px]">
           <Table>
-          <TableHeader className="bg-gray-50/50 sticky top-0 z-10">
-            <TableRow className="hover:bg-transparent border-b border-gray-100 h-10">
+          <TableHeader className="sticky top-0 z-10">
+            <TableRow className=" border-b border-gray-100 h-10">
               <SortableHeader field="siteId" label="Site ID" />
               <SortableHeader field="siteName" label="Site Name" />
               <SortableHeader field="createdAt" label="Date" />
@@ -158,7 +158,7 @@ export function FuelRequestTable({
               <SortableHeader field="priority" label="Priority" />
               <SortableHeader field="literRequired" label="Req (L)" align="right" />
               <SortableHeader field="status" label="Status" align="center" />
-              <TableHead className="p-0 align-middle bg-gray-50/50 ">
+              <TableHead className="p-0 align-middle ">
                 <TableColumnHeader label="Actions" className="justify-end px-4 text-slate-900 font-bold" />
               </TableHead>
             </TableRow>

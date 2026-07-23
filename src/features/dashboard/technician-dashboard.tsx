@@ -174,7 +174,7 @@ export async function TechnicianDashboard({ email }: { email: string | null }) {
           <div className="overflow-x-auto">
             <Table className="w-full">
               <TableHeader>
-                <TableRow className="hover:bg-transparent bg-gray-50/50 h-8">
+                <TableRow className=" h-8">
                   <TableHead className="px-4 text-[13px] font-bold uppercase tracking-tight">Site</TableHead>
                   <TableHead className="px-4 text-[13px] font-bold uppercase tracking-tight">Status</TableHead>
                   <TableHead className="text-right px-4 text-[13px] font-bold uppercase tracking-tight">Requested</TableHead>
@@ -209,7 +209,7 @@ export async function TechnicianDashboard({ email }: { email: string | null }) {
           <div className="overflow-x-auto">
             <Table className="w-full">
               <TableHeader>
-                <TableRow className="hover:bg-transparent bg-gray-50/50 h-8">
+                <TableRow className=" h-8">
                   <TableHead className="px-4 text-[13px] font-bold uppercase tracking-tight">Site</TableHead>
                   <TableHead className="px-4 text-[13px] font-bold uppercase tracking-tight">Date</TableHead>
                   <TableHead className="text-right px-4 text-[13px] font-bold uppercase tracking-tight">Delivered</TableHead>

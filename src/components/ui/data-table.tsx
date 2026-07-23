@@ -427,7 +427,7 @@ export function DataTable({ data: initialData }: { data: z.infer<typeof schema>[
             id={sortableId}
           >
             <Table>
-              <TableHeader className="sticky top-0 z-10 bg-muted">
+              <TableHeader className="sticky top-0 z-10">
                 {table.getHeaderGroups().map((headerGroup) => (
                   <TableRow key={headerGroup.id}>
                     {headerGroup.headers.map((header) => (

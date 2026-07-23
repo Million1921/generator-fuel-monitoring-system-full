@@ -254,7 +254,7 @@ export async function ManagerDashboard({ region, topSitesPage }: { region?: stri
         <div className="overflow-x-auto">
           <Table className="w-full">
             <TableHeader>
-              <TableRow className="hover:bg-transparent bg-gray-50/50 h-8">
+              <TableRow className=" h-8">
                 <TableHead className="px-4 text-[13px] font-bold uppercase tracking-tight">Request #</TableHead>
                 <TableHead className="px-4 text-[13px] font-bold uppercase tracking-tight">Site</TableHead>
                 <TableHead className="px-4 text-[13px] font-bold uppercase tracking-tight">Technician</TableHead>
@@ -297,13 +297,13 @@ export async function ManagerDashboard({ region, topSitesPage }: { region?: stri
           </div>
           <div className="overflow-x-auto">
             <Table className="w-full">
-              <TableHeader className="bg-white sticky top-0 z-10 border-b border-gray-200">
-                <TableRow className="hover:bg-transparent bg-gray-50/50 h-8">
-                  <TableHead className="px-4 font-bold text-slate-900 text-[13px] uppercase tracking-tight">Site Name</TableHead>
-                  <TableHead className="px-4 font-bold text-slate-900 text-[13px] uppercase tracking-tight">Site ID</TableHead>
-                  <TableHead className="px-4 font-bold text-slate-900 text-[13px] uppercase tracking-tight">Region</TableHead>
-                  <TableHead className="text-right px-4 font-bold text-slate-900 text-[13px] uppercase tracking-tight">Deliveries</TableHead>
-                  <TableHead className="text-right px-4 font-bold text-slate-900 text-[13px] uppercase tracking-tight">Total Fuel</TableHead>
+              <TableHeader className="sticky top-0 z-10">
+                <TableRow className=" h-8">
+                  <TableHead className="px-4 font-bold text-[13px] uppercase tracking-tight">Site Name</TableHead>
+                  <TableHead className="px-4 font-bold text-[13px] uppercase tracking-tight">Site ID</TableHead>
+                  <TableHead className="px-4 font-bold text-[13px] uppercase tracking-tight">Region</TableHead>
+                  <TableHead className="text-right px-4 font-bold text-[13px] uppercase tracking-tight">Deliveries</TableHead>
+                  <TableHead className="text-right px-4 font-bold text-[13px] uppercase tracking-tight">Total Fuel</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -315,7 +315,7 @@ export async function ManagerDashboard({ region, topSitesPage }: { region?: stri
                   </TableRow>
                 ) : (
                   data.topSites.map((site) => (
-                    <TableRow key={site.siteId} className="border-b-gray-50 hover:bg-gray-50/50 transition-colors h-8">
+                    <TableRow key={site.siteId} className="border-b-gray-50 hover: transition-colors h-8">
                       <TableCell className="font-normal text-slate-900 px-4">{site.name}</TableCell>
                       <TableCell className="text-slate-500 font-mono text-[13px] px-4">{site.siteId}</TableCell>
                       <TableCell className="text-slate-500 px-4">{site.region}</TableCell>
