@@ -91,9 +91,8 @@ export function GeneratorFuelJournalTable({
     return (
         <div className="overflow-x-auto mb-10 custom-scrollbar pb-2">
             <div className="min-w-[2500px] rounded-xl border border-slate-400 bg-white shadow-sm overflow-hidden">
-                <div>
                     <Table className="relative w-full border-collapse">
-                        <TableHeader>
+                        <TableHeader className="bg-[#8dc63f]">
                             <TableRow className="hover:bg-[#8dc63f] bg-[#8dc63f] h-8">
                                 <SortableHeader field="employeeCreatedWO" label="Employee name Created WO" rowSpan={2} className="min-w-[130px]" />
                                 <SortableHeader field="employeeIdWOCreate" label="Employee Id WO Create" rowSpan={2} className="min-w-[100px]" />
@@ -188,7 +187,6 @@ export function GeneratorFuelJournalTable({
                             )}
                         </TableBody>
                     </Table>
-                </div>
 
                 {/* Footer — inside min-w div so scrollbar appears below it */}
                 <div className="flex items-center justify-between border-t border-slate-400 bg-white px-4 py-1.5 sm:px-6">
