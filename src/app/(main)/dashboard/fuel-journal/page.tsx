@@ -1,5 +1,6 @@
 import { getFuelJournalData } from "@/features/analytics/queries"
 import { GeneratorFuelJournalTable } from "@/features/analytics/components/GeneratorFuelJournalTable"
+import { FuelJournalExportButton } from "@/features/analytics/components/FuelJournalExportButton"
 
 export const dynamic = "force-dynamic"
 
@@ -21,7 +22,11 @@ export default async function FuelJournalPage(props: {
 
   return (
     <div className="flex flex-1 flex-col gap-2 px-6 pb-6 mt-5 overflow-x-auto overflow-y-hidden">
-        
+        {/* Header bar with export button */}
+        <div className="flex items-center justify-end mb-2">
+          <FuelJournalExportButton region={region} sortBy={sortBy} sortOrder={sortOrder} />
+        </div>
+
         <GeneratorFuelJournalTable data={data} total={total} page={page} sortBy={sortBy} sortOrder={sortOrder} />
     </div>
   )
