@@ -90,7 +90,7 @@ export function GeneratorFuelJournalTable({
 
     return (
         <div className="overflow-x-auto mb-10 custom-scrollbar pb-2">
-            <div className="min-w-[2500px] rounded-xl border border-slate-400 bg-white shadow-sm overflow-hidden p-1">
+            <div className="min-w-[2500px] rounded-xl border border-slate-400 bg-white shadow-sm overflow-hidden">
                 <div>
                     <Table className="relative w-full border-collapse">
                         <TableHeader>
