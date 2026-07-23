@@ -4,6 +4,8 @@ import { AdminDashboard } from "@/features/dashboard/admin-dashboard"
 import { ManagerDashboard } from "@/features/dashboard/manager-dashboard"
 import { TechnicianDashboard } from "@/features/dashboard/technician-dashboard"
 import { SupervisorDashboard } from "@/features/dashboard/supervisor-dashboard"
+import { FuelAdminDashboard } from "@/features/dashboard/fuel-admin-dashboard"
+import { FinanceDashboard } from "@/features/dashboard/finance-dashboard"
 
 export const dynamic = "force-dynamic"
 
@@ -33,6 +35,15 @@ export default async function DashboardPage(props: { searchParams: Promise<{ reg
     return <ManagerDashboard region={region} topSitesPage={topSitesPage} />
   }
 
-  // FINANCE and any other/unrecognized role fall back to the Manager overview
+  if (role === "FLEET_ADMIN") {
+    const user = await currentUser()
+    return <FuelAdminDashboard userId={user?.id || ""} region={region} />
+  }
+
+  if (role === "FINANCE") {
+    return <FinanceDashboard region={region} />
+  }
+
+  // Any other/unrecognized role falls back to the Manager overview
   return <ManagerDashboard region={region} topSitesPage={topSitesPage} />
 }

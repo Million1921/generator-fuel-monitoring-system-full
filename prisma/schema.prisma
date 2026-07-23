@@ -126,9 +126,33 @@ model FuelRequest {
   rejectedAt        DateTime?
   rejectionReason   String?
   notes             String?
+  fuelStation       String?
+  purchasedAmount   Float?
+  financeRemark     String?
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
   fuelRefill        FuelRefill?
+}
+
+model FuelAdminWallet {
+  id          Int       @id @default(autoincrement())
+  userId      String    @unique
+  balance     Float     @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  transactions WalletTransaction[]
+}
+
+model WalletTransaction {
+  id              Int       @id @default(autoincrement())
+  walletId        Int
+  wallet          FuelAdminWallet @relation(fields: [walletId], references: [id])
+  type            String    // DEPOSIT (by Finance) or WITHDRAWAL (Fuel Purchase)
+  amount          Float
+  fuelRequestId   Int?
+  fuelStation     String?
+  description     String?
+  createdAt       DateTime  @default(now())
 }
 
 model FuelRefill {

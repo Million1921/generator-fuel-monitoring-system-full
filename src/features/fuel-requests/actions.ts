@@ -139,7 +139,7 @@ export async function createFuelDelivery(data: FuelDeliveryData) {
         await tx.fuelRequest.update({
           where: { id: parseInt(validated.requestId) },
           data: {
-            status: "COMPLETED",
+            status: "DELIVERED",
             actualRefueled: validated.actualRefueled
           }
         });
@@ -232,23 +232,12 @@ export async function createFuelRequest(data: FuelRequestData) {
   return finalRequest
 }
 
-export async function approveToManager(id: number) {
+export async function approveFuelRequest(id: number) {
   await requireRole(["ADMIN", "SUPERVISOR"])
 
   await prisma.fuelRequest.update({
     where: { id },
-    data: { status: "PENDING_MANAGER" }
-  })
-  revalidatePath("/dashboard/fuel-request")
-  revalidatePath("/dashboard")
-}
-
-export async function approveToAdmin(id: number) {
-  await requireRole(["ADMIN", "MANAGER"])
-
-  await prisma.fuelRequest.update({
-    where: { id },
-    data: { status: "PENDING_ADMIN" }
+    data: { status: "APPROVED_REQUEST" }
   })
   revalidatePath("/dashboard/fuel-request")
   revalidatePath("/dashboard")
@@ -263,11 +252,108 @@ export async function createWorkOrder(id: number) {
 
   await prisma.fuelRequest.update({
     where: { id },
-    data: { status: "APPROVED_FOR_FUEL", workOrderNumber }
+    data: { status: "PENDING_MANAGER_APPROVAL", workOrderNumber }
   })
   revalidatePath("/dashboard/fuel-request")
   revalidatePath("/dashboard")
 }
+
+export async function approveToFinance(id: number) {
+  await requireRole(["ADMIN", "MANAGER"])
+
+  await prisma.fuelRequest.update({
+    where: { id },
+    data: { status: "PENDING_FINANCE" }
+  })
+  revalidatePath("/dashboard/fuel-request")
+  revalidatePath("/dashboard")
+}
+
+export async function releaseFunds(id: number, amount: number, remark: string, adminUserId: string) {
+  await requireRole(["ADMIN", "FINANCE"])
+
+  const request = await prisma.fuelRequest.update({
+    where: { id },
+    data: { 
+      status: "FUNDS_RELEASED",
+      financeRemark: remark
+    }
+  })
+
+  // Update Fuel Admin's Wallet
+  const wallet = await prisma.fuelAdminWallet.upsert({
+    where: { userId: adminUserId },
+    update: { balance: { increment: amount } },
+    create: { userId: adminUserId, balance: amount }
+  })
+
+  await prisma.walletTransaction.create({
+    data: {
+      walletId: wallet.id,
+      type: "DEPOSIT",
+      amount,
+      fuelRequestId: id,
+      description: `Funds released for Work Order ${request.workOrderNumber}`
+    }
+  })
+
+  revalidatePath("/dashboard/fuel-request")
+  revalidatePath("/dashboard")
+}
+
+export async function purchaseAndAssignFuel(id: number, adminUserId: string, technicianId: number, fuelStation: string, purchasedAmount: number) {
+  await requireRole(["ADMIN", "FLEET_ADMIN"])
+
+  const wallet = await prisma.fuelAdminWallet.findUnique({ where: { userId: adminUserId } })
+  if (!wallet || wallet.balance < purchasedAmount) {
+    throw new Error("Insufficient funds in Fuel Admin wallet")
+  }
+
+  // Deduct from wallet and update request in a transaction
+  await prisma.$transaction(async (tx) => {
+    await tx.fuelAdminWallet.update({
+      where: { userId: adminUserId },
+      data: { balance: { decrement: purchasedAmount } }
+    })
+
+    await tx.walletTransaction.create({
+      data: {
+        walletId: wallet.id,
+        type: "WITHDRAWAL",
+        amount: purchasedAmount,
+        fuelRequestId: id,
+        fuelStation,
+        description: `Fuel purchase for Work Order`
+      }
+    })
+
+    await tx.fuelRequest.update({
+      where: { id },
+      data: { 
+        status: "ASSIGNED_TO_TECH",
+        technicianId,
+        fuelStation,
+        purchasedAmount
+      }
+    })
+  })
+
+  revalidatePath("/dashboard/fuel-request")
+  revalidatePath("/dashboard")
+}
+
+export async function verifyAndCompleteDelivery(id: number) {
+  await requireRole(["ADMIN", "FLEET_ADMIN"])
+
+  await prisma.fuelRequest.update({
+    where: { id },
+    data: { status: "COMPLETED" }
+  })
+  revalidatePath("/dashboard/fuel-request")
+  revalidatePath("/dashboard")
+}
+
+
 
 export async function deleteFuelRequest(id: number) {
   await requireRole(["ADMIN", "MANAGER"])

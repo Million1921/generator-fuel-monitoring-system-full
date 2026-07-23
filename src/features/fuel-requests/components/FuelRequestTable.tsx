@@ -29,9 +29,20 @@ import { Input } from "@/components/ui/input"
 import { Pagination } from "@/components/ui/Pagination"
 import { RegionFilter } from "@/components/ui/RegionFilter"
 import { useRouter, useSearchParams, usePathname } from "next/navigation"
-import { approveToManager, approveToAdmin, createWorkOrder, deleteFuelRequest } from "@/features/fuel-requests/actions"
+import { approveFuelRequest, approveToFinance, createWorkOrder, deleteFuelRequest, releaseFunds, purchaseAndAssignFuel, verifyAndCompleteDelivery } from "@/features/fuel-requests/actions"
 import { useUser } from "@clerk/nextjs"
 import { useAppRole } from "@/components/providers/role-provider"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import { Label } from "@/components/ui/label"
+import { useState } from "react"
 
 interface FuelRequestTableProps {
   requests: any[]
@@ -69,6 +80,15 @@ export function FuelRequestTable({
   const pathname = usePathname()
   const searchParams = useSearchParams()
 
+  const [releaseAmount, setReleaseAmount] = useState("")
+  const [releaseRemark, setReleaseRemark] = useState("")
+  const [openFinanceDialog, setOpenFinanceDialog] = useState<number | null>(null)
+
+  const [purchaseAmount, setPurchaseAmount] = useState("")
+  const [purchaseStation, setPurchaseStation] = useState("")
+  const [purchaseTech, setPurchaseTech] = useState("")
+  const [openPurchaseDialog, setOpenPurchaseDialog] = useState<number | null>(null)
+
   const handleDelete = (id: number) => {
     startTransition(async () => {
       try {
@@ -81,24 +101,63 @@ export function FuelRequestTable({
     })
   }
 
-  const handleApproveToManager = (id: number) => {
+  const handleApproveFuelRequest = (id: number) => {
     startTransition(async () => {
       try {
-        await approveToManager(id)
-        toast.success("Approved and forwarded to Manager")
+        await approveFuelRequest(id)
+        toast.success("Approved Fuel Request")
       } catch (error) {
         toast.error("Approval failed")
       }
     })
   }
 
-  const handleApproveToAdmin = (id: number) => {
+  const handleApproveToFinance = (id: number) => {
     startTransition(async () => {
       try {
-        await approveToAdmin(id)
-        toast.success("Approved and forwarded to Fuel Dept")
+        await approveToFinance(id)
+        toast.success("Approved and forwarded to Finance")
       } catch (error) {
         toast.error("Approval failed")
+      }
+    })
+  }
+
+  const handleReleaseFunds = (id: number) => {
+    if (!releaseAmount) return toast.error("Please enter an amount")
+    
+    startTransition(async () => {
+      try {
+        await releaseFunds(id, parseFloat(releaseAmount), releaseRemark, user?.id || "")
+        toast.success("Funds released successfully")
+        setOpenFinanceDialog(null)
+      } catch (error) {
+        toast.error("Failed to release funds")
+      }
+    })
+  }
+
+  const handlePurchaseAndAssign = (id: number) => {
+    if (!purchaseAmount || !purchaseStation || !purchaseTech) return toast.error("Please fill all fields")
+    
+    startTransition(async () => {
+      try {
+        await purchaseAndAssignFuel(id, user?.id || "", parseInt(purchaseTech), purchaseStation, parseFloat(purchaseAmount))
+        toast.success("Fuel purchased and assigned")
+        setOpenPurchaseDialog(null)
+      } catch (error: any) {
+        toast.error(error.message || "Failed to purchase fuel")
+      }
+    })
+  }
+
+  const handleVerifyDelivery = (id: number) => {
+    startTransition(async () => {
+      try {
+        await verifyAndCompleteDelivery(id)
+        toast.success("Delivery verified and Work Order completed")
+      } catch (error) {
+        toast.error("Verification failed")
       }
     })
   }
@@ -207,24 +266,94 @@ export function FuelRequestTable({
                   <TableCell className="text-right px-4 leading-none">
                     <div className="flex justify-end items-center gap-2 pr-2">
                       {req.status === 'PENDING_SUPERVISOR' && (userRole === 'SUPERVISOR' || userRole === 'ADMIN') && (
-                        <Button size="sm" onClick={() => handleApproveToManager(req.id)} disabled={isPending}
+                        <Button size="sm" onClick={() => handleApproveFuelRequest(req.id)} disabled={isPending}
                           className="h-7 px-3 text-[11px] bg-lime-600 hover:bg-lime-700 text-white font-semibold uppercase tracking-tight shadow-none">
                           Approve
                         </Button>
                       )}
-                      {req.status === 'PENDING_MANAGER' && (userRole === 'MANAGER' || userRole === 'ADMIN') && (
-                        <Button size="sm" onClick={() => handleApproveToAdmin(req.id)} disabled={isPending}
-                          className="h-7 px-3 text-[11px] bg-lime-600 hover:bg-lime-700 text-white font-semibold uppercase tracking-tight shadow-none">
-                          Approve
-                        </Button>
-                      )}
-                      {req.status === 'PENDING_ADMIN' && (userRole === 'FLEET_ADMIN' || userRole === 'ADMIN') && (
+                      {req.status === 'APPROVED_REQUEST' && (userRole === 'FLEET_ADMIN' || userRole === 'ADMIN') && (
                         <Button size="sm" onClick={() => handleCreateWorkOrder(req.id)} disabled={isPending}
                           className="h-7 px-3 text-[11px] bg-lime-600 hover:bg-lime-700 text-white font-semibold uppercase tracking-tight shadow-none">
                           Create WO
                         </Button>
                       )}
-                      {(req.status === 'APPROVED_FOR_FUEL' || req.status === 'FUNDS_RELEASED') && (userRole === 'TECHNICIAN' || userRole === 'ADMIN') && (
+                      {req.status === 'PENDING_MANAGER_APPROVAL' && (userRole === 'MANAGER' || userRole === 'ADMIN') && (
+                        <Button size="sm" onClick={() => handleApproveToFinance(req.id)} disabled={isPending}
+                          className="h-7 px-3 text-[11px] bg-lime-600 hover:bg-lime-700 text-white font-semibold uppercase tracking-tight shadow-none">
+                          Send to Finance
+                        </Button>
+                      )}
+                      {req.status === 'PENDING_FINANCE' && (userRole === 'FINANCE' || userRole === 'ADMIN') && (
+                        <Dialog open={openFinanceDialog === req.id} onOpenChange={(open) => setOpenFinanceDialog(open ? req.id : null)}>
+                          <DialogTrigger asChild>
+                            <Button size="sm" className="h-7 px-3 text-[11px] bg-amber-600 hover:bg-amber-700 text-white font-semibold uppercase tracking-tight shadow-none">
+                              Release Funds
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent>
+                            <DialogHeader>
+                              <DialogTitle>Release Funds for Work Order {req.workOrderNumber}</DialogTitle>
+                              <DialogDescription>
+                                Specify the amount to release to the Fuel Admin's wallet.
+                              </DialogDescription>
+                            </DialogHeader>
+                            <div className="grid gap-4 py-4">
+                              <div className="grid gap-2">
+                                <Label>Amount (ETB)</Label>
+                                <Input type="number" value={releaseAmount} onChange={(e) => setReleaseAmount(e.target.value)} placeholder="0.00" />
+                              </div>
+                              <div className="grid gap-2">
+                                <Label>Remark</Label>
+                                <Input value={releaseRemark} onChange={(e) => setReleaseRemark(e.target.value)} placeholder="Optional remark" />
+                              </div>
+                            </div>
+                            <DialogFooter>
+                              <Button onClick={() => handleReleaseFunds(req.id)} disabled={isPending} className="bg-lime-600 hover:bg-lime-700 text-white">Confirm Release</Button>
+                            </DialogFooter>
+                          </DialogContent>
+                        </Dialog>
+                      )}
+                      {req.status === 'FUNDS_RELEASED' && (userRole === 'FLEET_ADMIN' || userRole === 'ADMIN') && (
+                        <Dialog open={openPurchaseDialog === req.id} onOpenChange={(open) => setOpenPurchaseDialog(open ? req.id : null)}>
+                          <DialogTrigger asChild>
+                            <Button size="sm" className="h-7 px-3 text-[11px] bg-blue-600 hover:bg-blue-700 text-white font-semibold uppercase tracking-tight shadow-none">
+                              Purchase & Assign
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent>
+                            <DialogHeader>
+                              <DialogTitle>Purchase Fuel & Assign Technician</DialogTitle>
+                              <DialogDescription>
+                                Enter purchase details to deduct from your wallet and assign a technician for delivery.
+                              </DialogDescription>
+                            </DialogHeader>
+                            <div className="grid gap-4 py-4">
+                              <div className="grid gap-2">
+                                <Label>Purchased Amount (ETB)</Label>
+                                <Input type="number" value={purchaseAmount} onChange={(e) => setPurchaseAmount(e.target.value)} placeholder="0.00" />
+                              </div>
+                              <div className="grid gap-2">
+                                <Label>Fuel Station</Label>
+                                <Input value={purchaseStation} onChange={(e) => setPurchaseStation(e.target.value)} placeholder="e.g. NOC Station" />
+                              </div>
+                              <div className="grid gap-2">
+                                <Label>Technician ID (e.g. 1)</Label>
+                                <Input type="number" value={purchaseTech} onChange={(e) => setPurchaseTech(e.target.value)} placeholder="Technician DB ID" />
+                              </div>
+                            </div>
+                            <DialogFooter>
+                              <Button onClick={() => handlePurchaseAndAssign(req.id)} disabled={isPending} className="bg-lime-600 hover:bg-lime-700 text-white">Confirm Purchase</Button>
+                            </DialogFooter>
+                          </DialogContent>
+                        </Dialog>
+                      )}
+                      {req.status === 'DELIVERED' && (userRole === 'FLEET_ADMIN' || userRole === 'ADMIN') && (
+                        <Button size="sm" onClick={() => handleVerifyDelivery(req.id)} disabled={isPending}
+                          className="h-7 px-3 text-[11px] bg-lime-600 hover:bg-lime-700 text-white font-semibold uppercase tracking-tight shadow-none">
+                          Verify Delivery
+                        </Button>
+                      )}
+                      {req.status === 'ASSIGNED_TO_TECH' && (userRole === 'TECHNICIAN' || userRole === 'ADMIN') && (
                         <Button 
                           size="sm" 
                           onClick={() => router.push(`/dashboard/fuel-delivery?siteId=${req.siteId}&requestId=${req.id}&workOrder=${req.workOrderNumber}&open=true`)}

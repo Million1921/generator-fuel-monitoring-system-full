@@ -19,6 +19,7 @@
     "@dnd-kit/utilities": "^3.2.2",
     "@hookform/resolvers": "^3.9.1",
     "@prisma/client": "5.22.0",
+    "@radix-ui/react-dialog": "^1.1.21",
     "@radix-ui/react-slot": "^1.2.4",
     "@tabler/icons-react": "^3.40.0",
     "@tanstack/react-query": "^5.62.0",

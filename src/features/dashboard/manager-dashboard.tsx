@@ -48,14 +48,14 @@ async function getManagerDashboardData(region?: string, topSitesPage: number = 1
 
   const pendingMyApproval = await prisma.fuelRequest.count({
     where: {
-      status: "PENDING_MANAGER",
+      status: "PENDING_MANAGER_APPROVAL",
       ...fuelRequestFilter,
     },
   })
 
   const pendingApprovalList = await prisma.fuelRequest.findMany({
     where: {
-      status: "PENDING_MANAGER",
+      status: "PENDING_MANAGER_APPROVAL",
       ...fuelRequestFilter,
     },
     include: { site: true, technician: true },
