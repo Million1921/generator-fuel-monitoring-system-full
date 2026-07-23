@@ -21,7 +21,7 @@ export default async function FuelJournalPage(props: {
   const { data, total } = await getFuelJournalData(region, page, 10, sortBy, sortOrder);
 
   return (
-    <div className="flex flex-1 flex-col gap-2 px-6 pb-6 mt-5">
+    <div className="flex flex-1 flex-col gap-2 px-6 pb-6 mt-5 min-w-0">
         {/* Header bar with export button — fixed width, never scrolls with table */}
         <div className="flex items-center justify-end mb-2">
           <FuelJournalExportButton region={region} sortBy={sortBy} sortOrder={sortOrder} />
