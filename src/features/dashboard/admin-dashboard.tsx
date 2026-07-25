@@ -117,7 +117,7 @@ export async function AdminDashboard({ region }: { region?: string }) {
       title: "Total Sites",
       value: data.totalSites,
       sub: "Monitored generator sites",
-      icon: Building2,
+      icon: <Building2 />,
       color: "text-lime-600",
       bg: "bg-lime-50",
       delta: 4, // placeholder trend
@@ -126,7 +126,7 @@ export async function AdminDashboard({ region }: { region?: string }) {
       title: "Total Regions",
       value: data.totalRegions,
       sub: "Coverage regions",
-      icon: MapPin,
+      icon: <MapPin />,
       color: "text-lime-700",
       bg: "bg-lime-100/50",
     },
@@ -134,7 +134,7 @@ export async function AdminDashboard({ region }: { region?: string }) {
       title: "Total Technicians",
       value: data.totalTechnicians,
       sub: "Registered field staff",
-      icon: Users,
+      icon: <Users />,
       color: "text-lime-600",
       bg: "bg-lime-50",
       delta: 12,
@@ -143,7 +143,7 @@ export async function AdminDashboard({ region }: { region?: string }) {
       title: "Pending Final Approval",
       value: data.pendingFinalApproval,
       sub: "Requests awaiting admin sign-off",
-      icon: ShieldCheck,
+      icon: <ShieldCheck />,
       color: "text-amber-500",
       bg: "bg-amber-50",
       delta: -2,
@@ -151,9 +151,9 @@ export async function AdminDashboard({ region }: { region?: string }) {
     {
       title: "Paid This Month",
       value: data.paidThisMonth,
-      formatValue: (v: number | string) => typeof v === 'number' ? `${v.toLocaleString()} ETB` : `${v} ETB`,
+      valueSuffix: " ETB",
       sub: `${data.transactionsThisMonthCount} transactions logged`,
-      icon: Wallet,
+      icon: <Wallet />,
       color: "text-lime-700",
       bg: "bg-lime-100/50",
       delta: 8,
@@ -162,7 +162,7 @@ export async function AdminDashboard({ region }: { region?: string }) {
       title: "High Consumption Alerts",
       value: data.highConsumptionCount,
       sub: "Generators above average",
-      icon: Zap,
+      icon: <Zap />,
       color: "text-red-500",
       bg: "bg-red-50",
       sparklineData: data.monthlyTrend,
@@ -188,7 +188,7 @@ export async function AdminDashboard({ region }: { region?: string }) {
             key={card.title}
             title={card.title}
             value={card.value}
-            formatValue={card.formatValue}
+            valueSuffix={card.valueSuffix}
             sub={card.sub}
             icon={card.icon}
             color={card.color}
@@ -252,3 +252,4 @@ export async function AdminDashboard({ region }: { region?: string }) {
     </div>
   )
 }
+

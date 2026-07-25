@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { LucideIcon, TrendingUp, TrendingDown, Minus } from "lucide-react";
+import React, { useEffect, useState, useRef } from "react";
+import { TrendingUp, TrendingDown, Minus } from "lucide-react";
 import { ResponsiveContainer, LineChart, Line } from "recharts";
 import { cn } from "@/lib/utils";
 
@@ -9,10 +10,10 @@ interface MetricCardProps {
   title: string;
   value: number | string;
   sub?: string;
-  icon: LucideIcon;
+  icon: React.ReactNode;
   color?: string; // e.g., "text-lime-600"
   bg?: string; // e.g., "bg-lime-50"
-  formatValue?: (val: number | string) => string;
+  valueSuffix?: string;
   delta?: number; // percentage, e.g. 12 for +12%, -5 for -5%
   sparklineData?: any[]; // array of objects for recharts
   sparklineKey?: string; // the data key for the line
@@ -77,7 +78,7 @@ export function MetricCard({
   icon: Icon,
   color = "text-slate-600",
   bg = "bg-slate-50",
-  formatValue = (v) => v.toString(),
+  valueSuffix = "",
   delta,
   sparklineData,
   sparklineKey = "value",
@@ -104,7 +105,7 @@ export function MetricCard({
             bg
           )}
         >
-          <Icon className={cn("h-5 w-5", color)} strokeWidth={2.5} />
+          {React.isValidElement(Icon) ? React.cloneElement(Icon as React.ReactElement<any>, { className: cn("h-5 w-5", color), strokeWidth: 2.5 }) : Icon}
         </div>
       </div>
 
@@ -112,7 +113,7 @@ export function MetricCard({
         <div className="flex items-end justify-between">
           <div>
             <div className="text-3xl font-black tracking-tight text-gray-900">
-              {formatValue(animatedValue)}
+              {typeof animatedValue === 'number' ? animatedValue.toLocaleString() : animatedValue}{valueSuffix}
             </div>
             {sub && (
               <p className="mt-2 text-xs font-medium text-gray-500 line-clamp-1">

@@ -107,7 +107,7 @@ export async function TechnicianDashboard({ email }: { email: string | null }) {
       title: "My Pending Requests",
       value: myPending,
       sub: "Awaiting approval at any stage",
-      icon: ClipboardList,
+      icon: <ClipboardList />,
       color: "text-amber-500",
       bg: "bg-amber-50",
     },
@@ -115,7 +115,7 @@ export async function TechnicianDashboard({ email }: { email: string | null }) {
       title: "Completed This Month",
       value: myCompletedThisMonth,
       sub: "Fuel requests fulfilled",
-      icon: CheckCircle2,
+      icon: <CheckCircle2 />,
       color: "text-lime-600",
       bg: "bg-lime-50",
       delta: 1,
@@ -123,9 +123,9 @@ export async function TechnicianDashboard({ email }: { email: string | null }) {
     {
       title: "Delivered This Month",
       value: myDeliveredThisMonth,
-      formatValue: (v: number | string) => typeof v === 'number' ? `${v.toLocaleString()} L` : `${v} L`,
+      valueSuffix: " L",
       sub: "Fuel volume you recorded",
-      icon: Fuel,
+      icon: <Fuel />,
       color: "text-lime-500",
       bg: "bg-lime-50",
       delta: 5,
@@ -134,7 +134,7 @@ export async function TechnicianDashboard({ email }: { email: string | null }) {
       title: "Assigned Region",
       value: technician.region?.name ?? "Unassigned",
       sub: technician.department ?? "No department on file",
-      icon: MapPin,
+      icon: <MapPin />,
       color: "text-lime-700",
       bg: "bg-lime-100/50",
     },
@@ -155,7 +155,7 @@ export async function TechnicianDashboard({ email }: { email: string | null }) {
             key={card.title}
             title={card.title}
             value={card.value}
-            formatValue={card.formatValue}
+            valueSuffix={card.valueSuffix}
             sub={card.sub}
             icon={card.icon}
             color={card.color}
@@ -239,3 +239,4 @@ export async function TechnicianDashboard({ email }: { email: string | null }) {
     </div>
   )
 }
+

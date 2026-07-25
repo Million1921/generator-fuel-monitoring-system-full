@@ -172,7 +172,7 @@ export async function ManagerDashboard({ region, topSitesPage }: { region?: stri
       title: "Total Sites",
       value: data.totalSites,
       sub: "Monitored generator sites",
-      icon: Building2,
+      icon: <Building2 />,
       color: "text-lime-600",
       bg: "bg-lime-50 dark:bg-lime-900/20",
       delta: 2,
@@ -181,16 +181,16 @@ export async function ManagerDashboard({ region, topSitesPage }: { region?: stri
       title: "Total Regions",
       value: data.totalRegions,
       sub: "Coverage regions",
-      icon: MapPin,
+      icon: <MapPin />,
       color: "text-lime-700",
       bg: "bg-lime-100/50 dark:bg-lime-900/30",
     },
     {
       title: "Refueled This Month",
       value: data.refueledThisMonth,
-      formatValue: (v: number | string) => typeof v === 'number' ? `${v.toLocaleString()} L` : `${v} L`,
+      valueSuffix: " L",
       sub: "Liters delivered (completed)",
-      icon: Fuel,
+      icon: <Fuel />,
       color: "text-lime-500",
       bg: "bg-lime-50 dark:bg-blue-950",
       sparklineData: data.monthlyTrend,
@@ -201,7 +201,7 @@ export async function ManagerDashboard({ region, topSitesPage }: { region?: stri
       title: "Pending My Approval",
       value: data.pendingMyApproval,
       sub: "Requests awaiting manager approval",
-      icon: TrendingUp,
+      icon: <TrendingUp />,
       color: "text-amber-500",
       bg: "bg-amber-50 dark:bg-amber-950",
       delta: -5,
@@ -210,7 +210,7 @@ export async function ManagerDashboard({ region, topSitesPage }: { region?: stri
       title: "High Consumption Generators",
       value: data.highConsumptionCount,
       sub: `Above avg ${data.avgConsumption.toFixed(1)} L/hr`,
-      icon: Zap,
+      icon: <Zap />,
       color: "text-red-500",
       bg: "bg-red-50 dark:bg-red-950",
       delta: -1,
@@ -233,7 +233,7 @@ export async function ManagerDashboard({ region, topSitesPage }: { region?: stri
             key={card.title}
             title={card.title}
             value={card.value}
-            formatValue={card.formatValue}
+            valueSuffix={card.valueSuffix}
             sub={card.sub}
             icon={card.icon}
             color={card.color}
@@ -358,3 +358,4 @@ export async function ManagerDashboard({ region, topSitesPage }: { region?: stri
     </div>
   )
 }
+

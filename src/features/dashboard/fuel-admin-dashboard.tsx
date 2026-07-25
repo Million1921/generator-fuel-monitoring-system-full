@@ -62,9 +62,9 @@ export async function FuelAdminDashboard({ userId, region }: { userId: string, r
     {
       title: "Available Funds",
       value: data.balance,
-      formatValue: (v: number | string) => typeof v === 'number' ? `${v.toLocaleString()} ETB` : `${v} ETB`,
+      valueSuffix: " ETB",
       sub: "Current Wallet Balance",
-      icon: Wallet,
+      icon: <Wallet />,
       color: "text-emerald-600",
       bg: "bg-emerald-50",
     },
@@ -72,7 +72,7 @@ export async function FuelAdminDashboard({ userId, region }: { userId: string, r
       title: "Approved Requests",
       value: data.approvedRequests.length,
       sub: "Needs Work Order Creation",
-      icon: ClipboardCheck,
+      icon: <ClipboardCheck />,
       color: "text-amber-500",
       bg: "bg-amber-50",
     },
@@ -80,7 +80,7 @@ export async function FuelAdminDashboard({ userId, region }: { userId: string, r
       title: "Funded Orders",
       value: data.fundedRequests.length,
       sub: "Ready for Fuel Purchase",
-      icon: Fuel,
+      icon: <Fuel />,
       color: "text-blue-500",
       bg: "bg-blue-50",
     },
@@ -88,7 +88,7 @@ export async function FuelAdminDashboard({ userId, region }: { userId: string, r
       title: "Deliveries to Verify",
       value: data.deliveredRequests.length,
       sub: "Awaiting final completion",
-      icon: CheckCircle2,
+      icon: <CheckCircle2 />,
       color: "text-lime-600",
       bg: "bg-lime-50",
     },
@@ -145,7 +145,7 @@ export async function FuelAdminDashboard({ userId, region }: { userId: string, r
             key={card.title}
             title={card.title}
             value={card.value}
-            formatValue={card.formatValue}
+            valueSuffix={card.valueSuffix}
             sub={card.sub}
             icon={card.icon}
             color={card.color}
@@ -206,3 +206,4 @@ export async function FuelAdminDashboard({ userId, region }: { userId: string, r
     </div>
   )
 }
+

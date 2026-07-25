@@ -51,7 +51,7 @@ export async function FinanceDashboard({ region }: { region?: string }) {
       title: "Pending Funding",
       value: data.pendingFinance,
       sub: "Work Orders awaiting funds",
-      icon: DollarSign,
+      icon: <DollarSign />,
       color: "text-amber-500",
       bg: "bg-amber-50",
       delta: -3,
@@ -59,9 +59,9 @@ export async function FinanceDashboard({ region }: { region?: string }) {
     {
       title: "Total Funds Released",
       value: data.totalReleasedFunds,
-      formatValue: (v: number | string) => typeof v === 'number' ? `${v.toLocaleString()} ETB` : `${v} ETB`,
+      valueSuffix: " ETB",
       sub: "Total deposited to Fuel Admin",
-      icon: Wallet,
+      icon: <Wallet />,
       color: "text-lime-600",
       bg: "bg-lime-50",
       delta: 10,
@@ -70,7 +70,7 @@ export async function FinanceDashboard({ region }: { region?: string }) {
       title: "Financial Activity",
       value: "Healthy" as string | number,
       sub: "System reconciliation status",
-      icon: Activity,
+      icon: <Activity />,
       color: "text-blue-500",
       bg: "bg-blue-50",
     },
@@ -94,7 +94,7 @@ export async function FinanceDashboard({ region }: { region?: string }) {
             key={card.title}
             title={card.title}
             value={card.value}
-            formatValue={card.formatValue}
+            valueSuffix={card.valueSuffix}
             sub={card.sub}
             icon={card.icon}
             color={card.color}
@@ -150,3 +150,4 @@ export async function FinanceDashboard({ region }: { region?: string }) {
     </div>
   )
 }
+

@@ -96,7 +96,7 @@ export async function SupervisorDashboard({ region }: { region?: string }) {
       title: "Pending My Approval",
       value: data.pendingMyApproval,
       sub: region ? `In ${region}` : "Across all regions",
-      icon: ClipboardCheck,
+      icon: <ClipboardCheck />,
       color: "text-amber-500",
       bg: "bg-amber-50",
       delta: 3,
@@ -105,7 +105,7 @@ export async function SupervisorDashboard({ region }: { region?: string }) {
       title: "Sites in View",
       value: data.totalSites,
       sub: region ? `Sites in ${region}` : "All monitored sites",
-      icon: Building2,
+      icon: <Building2 />,
       color: "text-lime-600",
       bg: "bg-lime-50",
     },
@@ -113,7 +113,7 @@ export async function SupervisorDashboard({ region }: { region?: string }) {
       title: "Technicians",
       value: data.totalTechnicians,
       sub: region ? `Assigned to ${region}` : "All technicians",
-      icon: Users,
+      icon: <Users />,
       color: "text-lime-700",
       bg: "bg-lime-100/50",
     },
@@ -121,7 +121,7 @@ export async function SupervisorDashboard({ region }: { region?: string }) {
       title: "High Consumption Alerts",
       value: data.highConsumptionCount,
       sub: "Generators above regional average",
-      icon: Zap,
+      icon: <Zap />,
       color: "text-red-500",
       bg: "bg-red-50",
       delta: -1,
@@ -203,3 +203,4 @@ export async function SupervisorDashboard({ region }: { region?: string }) {
     </div>
   )
 }
+
