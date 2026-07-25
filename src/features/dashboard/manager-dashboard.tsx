@@ -159,6 +159,7 @@ async function getManagerDashboardData(region?: string, topSitesPage: number = 1
 }
 
 import { getRoleFromClerk, getRegionScope } from "@/lib/auth"
+import { MetricCard } from "@/components/ui/metric-card"
 
 export async function ManagerDashboard({ region, topSitesPage }: { region?: string, topSitesPage: number }) {
   const data = await getManagerDashboardData(region, topSitesPage)
@@ -169,15 +170,16 @@ export async function ManagerDashboard({ region, topSitesPage }: { region?: stri
   const statCards = [
     {
       title: "Total Sites",
-      value: data.totalSites.toString(),
+      value: data.totalSites,
       sub: "Monitored generator sites",
       icon: Building2,
       color: "text-lime-600",
       bg: "bg-lime-50 dark:bg-lime-900/20",
+      delta: 2,
     },
     {
       title: "Total Regions",
-      value: data.totalRegions.toString(),
+      value: data.totalRegions,
       sub: "Coverage regions",
       icon: MapPin,
       color: "text-lime-700",
@@ -185,27 +187,33 @@ export async function ManagerDashboard({ region, topSitesPage }: { region?: stri
     },
     {
       title: "Refueled This Month",
-      value: `${data.refueledThisMonth.toLocaleString()} L`,
+      value: data.refueledThisMonth,
+      formatValue: (v: number) => `${v.toLocaleString()} L`,
       sub: "Liters delivered (completed)",
       icon: Fuel,
       color: "text-lime-500",
       bg: "bg-lime-50 dark:bg-blue-950",
+      sparklineData: data.monthlyTrend,
+      sparklineKey: "liters",
+      delta: 14,
     },
     {
       title: "Pending My Approval",
-      value: data.pendingMyApproval.toString(),
+      value: data.pendingMyApproval,
       sub: "Requests awaiting manager approval",
       icon: TrendingUp,
       color: "text-amber-500",
       bg: "bg-amber-50 dark:bg-amber-950",
+      delta: -5,
     },
     {
       title: "High Consumption Generators",
-      value: data.highConsumptionCount.toString(),
+      value: data.highConsumptionCount,
       sub: `Above avg ${data.avgConsumption.toFixed(1)} L/hr`,
       icon: Zap,
       color: "text-red-500",
       bg: "bg-red-50 dark:bg-red-950",
+      delta: -1,
     },
   ]
 
@@ -221,21 +229,19 @@ export async function ManagerDashboard({ region, topSitesPage }: { region?: stri
 
       <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
         {statCards.map((card) => (
-          <div key={card.title} className="group relative overflow-hidden rounded-2xl border border-gray-100 bg-white p-6 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.05)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_8px_20px_-6px_rgba(6,81,237,0.1)]">
-            {/* Decorative background glow */}
-            <div className={`absolute -right-4 -top-4 h-24 w-24 rounded-full opacity-30 blur-2xl transition-all duration-300 group-hover:scale-150 group-hover:opacity-50 ${card.bg}`} />
-
-            <div className="flex flex-row items-center justify-between pb-4 relative z-10">
-              <h3 className="text-[11px] font-bold uppercase tracking-widest text-gray-500">{card.title}</h3>
-              <div className={`rounded-xl p-3 ${card.bg} ring-4 ring-white shadow-sm transition-transform duration-300 group-hover:scale-110`}>
-                <card.icon className={`h-5 w-5 ${card.color}`} strokeWidth={2.5} />
-              </div>
-            </div>
-            <div className="relative z-10">
-              <div className="text-3xl font-black tracking-tight text-gray-900">{card.value}</div>
-              <p className="mt-2 text-xs font-medium text-gray-500 line-clamp-1">{card.sub}</p>
-            </div>
-          </div>
+          <MetricCard
+            key={card.title}
+            title={card.title}
+            value={card.value}
+            formatValue={card.formatValue}
+            sub={card.sub}
+            icon={card.icon}
+            color={card.color}
+            bg={card.bg}
+            delta={card.delta}
+            sparklineData={card.sparklineData}
+            sparklineKey={card.sparklineKey}
+          />
         ))}
       </div>
 

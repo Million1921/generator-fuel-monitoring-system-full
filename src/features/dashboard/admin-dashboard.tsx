@@ -13,6 +13,7 @@ import prisma from "@/lib/db"
 import { ConsumptionChart } from "@/features/analytics/components/ConsumptionChart"
 import { APP_CONFIG } from "@/lib/config"
 import { RegionFilter } from "@/components/ui/RegionFilter"
+import { MetricCard } from "@/components/ui/metric-card"
 
 async function getAdminDashboardData(region?: string) {
   const now = new Date()
@@ -114,15 +115,16 @@ export async function AdminDashboard({ region }: { region?: string }) {
   const statCards = [
     {
       title: "Total Sites",
-      value: data.totalSites.toString(),
+      value: data.totalSites,
       sub: "Monitored generator sites",
       icon: Building2,
       color: "text-lime-600",
       bg: "bg-lime-50",
+      delta: 4, // placeholder trend
     },
     {
       title: "Total Regions",
-      value: data.totalRegions.toString(),
+      value: data.totalRegions,
       sub: "Coverage regions",
       icon: MapPin,
       color: "text-lime-700",
@@ -130,35 +132,41 @@ export async function AdminDashboard({ region }: { region?: string }) {
     },
     {
       title: "Total Technicians",
-      value: data.totalTechnicians.toString(),
+      value: data.totalTechnicians,
       sub: "Registered field staff",
       icon: Users,
       color: "text-lime-600",
       bg: "bg-lime-50",
+      delta: 12,
     },
     {
       title: "Pending Final Approval",
-      value: data.pendingFinalApproval.toString(),
+      value: data.pendingFinalApproval,
       sub: "Requests awaiting admin sign-off",
       icon: ShieldCheck,
       color: "text-amber-500",
       bg: "bg-amber-50",
+      delta: -2,
     },
     {
       title: "Paid This Month",
-      value: `${data.paidThisMonth.toLocaleString()} ETB`,
+      value: data.paidThisMonth,
+      formatValue: (v: number) => `${v.toLocaleString()} ETB`,
       sub: `${data.transactionsThisMonthCount} transactions logged`,
       icon: Wallet,
       color: "text-lime-700",
       bg: "bg-lime-100/50",
+      delta: 8,
     },
     {
       title: "High Consumption Alerts",
-      value: data.highConsumptionCount.toString(),
+      value: data.highConsumptionCount,
       sub: "Generators above average",
       icon: Zap,
       color: "text-red-500",
       bg: "bg-red-50",
+      sparklineData: data.monthlyTrend,
+      sparklineKey: "liters",
     },
   ]
 
@@ -176,21 +184,19 @@ export async function AdminDashboard({ region }: { region?: string }) {
 
       <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
         {statCards.map((card) => (
-          <div key={card.title} className="group relative overflow-hidden rounded-2xl border border-gray-100 bg-white p-6 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.05)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_8px_20px_-6px_rgba(6,81,237,0.1)]">
-            {/* Decorative background glow */}
-            <div className={`absolute -right-4 -top-4 h-24 w-24 rounded-full opacity-30 blur-2xl transition-all duration-300 group-hover:scale-150 group-hover:opacity-50 ${card.bg}`} />
-            
-            <div className="flex flex-row items-center justify-between pb-4 relative z-10">
-              <h3 className="text-[11px] font-bold uppercase tracking-widest text-gray-500">{card.title}</h3>
-              <div className={`rounded-xl p-3 ${card.bg} ring-4 ring-white shadow-sm transition-transform duration-300 group-hover:scale-110`}>
-                <card.icon className={`h-5 w-5 ${card.color}`} strokeWidth={2.5} />
-              </div>
-            </div>
-            <div className="relative z-10">
-              <div className="text-3xl font-black tracking-tight text-gray-900">{card.value}</div>
-              <p className="mt-2 text-xs font-medium text-gray-500 line-clamp-1">{card.sub}</p>
-            </div>
-          </div>
+          <MetricCard
+            key={card.title}
+            title={card.title}
+            value={card.value}
+            formatValue={card.formatValue}
+            sub={card.sub}
+            icon={card.icon}
+            color={card.color}
+            bg={card.bg}
+            delta={card.delta}
+            sparklineData={card.sparklineData}
+            sparklineKey={card.sparklineKey}
+          />
         ))}
       </div>
 

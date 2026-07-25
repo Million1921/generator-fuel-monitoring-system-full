@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
 import prisma from "@/lib/db"
+import { MetricCard } from "@/components/ui/metric-card"
 
 async function getTechnicianDashboardData(email: string | null) {
   if (!email) return null
@@ -104,7 +105,7 @@ export async function TechnicianDashboard({ email }: { email: string | null }) {
   const statCards = [
     {
       title: "My Pending Requests",
-      value: myPending.toString(),
+      value: myPending,
       sub: "Awaiting approval at any stage",
       icon: ClipboardList,
       color: "text-amber-500",
@@ -112,19 +113,22 @@ export async function TechnicianDashboard({ email }: { email: string | null }) {
     },
     {
       title: "Completed This Month",
-      value: myCompletedThisMonth.toString(),
+      value: myCompletedThisMonth,
       sub: "Fuel requests fulfilled",
       icon: CheckCircle2,
       color: "text-lime-600",
       bg: "bg-lime-50",
+      delta: 1,
     },
     {
       title: "Delivered This Month",
-      value: `${myDeliveredThisMonth.toLocaleString()} L`,
+      value: myDeliveredThisMonth,
+      formatValue: (v: number | string) => typeof v === 'number' ? `${v.toLocaleString()} L` : `${v} L`,
       sub: "Fuel volume you recorded",
       icon: Fuel,
       color: "text-lime-500",
       bg: "bg-lime-50",
+      delta: 5,
     },
     {
       title: "Assigned Region",
@@ -147,21 +151,17 @@ export async function TechnicianDashboard({ email }: { email: string | null }) {
 
       <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-4">
         {statCards.map((card) => (
-          <div key={card.title} className="group relative overflow-hidden rounded-2xl border border-gray-100 bg-white p-6 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.05)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_8px_20px_-6px_rgba(6,81,237,0.1)]">
-            {/* Decorative background glow */}
-            <div className={`absolute -right-4 -top-4 h-24 w-24 rounded-full opacity-30 blur-2xl transition-all duration-300 group-hover:scale-150 group-hover:opacity-50 ${card.bg}`} />
-            
-            <div className="flex flex-row items-center justify-between pb-4 relative z-10">
-              <h3 className="text-[11px] font-bold uppercase tracking-widest text-gray-500">{card.title}</h3>
-              <div className={`rounded-xl p-3 ${card.bg} ring-4 ring-white shadow-sm transition-transform duration-300 group-hover:scale-110`}>
-                <card.icon className={`h-5 w-5 ${card.color}`} strokeWidth={2.5} />
-              </div>
-            </div>
-            <div className="relative z-10">
-              <div className="text-3xl font-black tracking-tight text-gray-900">{card.value}</div>
-              <p className="mt-2 text-xs font-medium text-gray-500 line-clamp-1">{card.sub}</p>
-            </div>
-          </div>
+          <MetricCard
+            key={card.title}
+            title={card.title}
+            value={card.value}
+            formatValue={card.formatValue}
+            sub={card.sub}
+            icon={card.icon}
+            color={card.color}
+            bg={card.bg}
+            delta={card.delta}
+          />
         ))}
       </div>
 
