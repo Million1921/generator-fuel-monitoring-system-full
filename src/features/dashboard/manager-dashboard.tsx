@@ -188,7 +188,7 @@ export async function ManagerDashboard({ region, topSitesPage }: { region?: stri
     {
       title: "Refueled This Month",
       value: data.refueledThisMonth,
-      formatValue: (v: number) => `${v.toLocaleString()} L`,
+      formatValue: (v: number | string) => typeof v === 'number' ? `${v.toLocaleString()} L` : `${v} L`,
       sub: "Liters delivered (completed)",
       icon: Fuel,
       color: "text-lime-500",

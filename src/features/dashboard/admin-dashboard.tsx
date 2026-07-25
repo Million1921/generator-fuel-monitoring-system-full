@@ -151,7 +151,7 @@ export async function AdminDashboard({ region }: { region?: string }) {
     {
       title: "Paid This Month",
       value: data.paidThisMonth,
-      formatValue: (v: number) => `${v.toLocaleString()} ETB`,
+      formatValue: (v: number | string) => typeof v === 'number' ? `${v.toLocaleString()} ETB` : `${v} ETB`,
       sub: `${data.transactionsThisMonthCount} transactions logged`,
       icon: Wallet,
       color: "text-lime-700",

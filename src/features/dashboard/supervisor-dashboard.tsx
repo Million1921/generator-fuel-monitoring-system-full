@@ -8,7 +8,6 @@ import {
   TableRow,
   TableCell
 } from "@/components/ui/table"
-import { priorityBadge } from "./components/priority-badge"
 import { MetricCard } from "@/components/ui/metric-card"
 import { Button } from "@/components/ui/button"
 import prisma from "@/lib/db"
