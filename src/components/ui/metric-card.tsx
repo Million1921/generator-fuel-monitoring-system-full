@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
 import React, { useEffect, useState, useRef } from "react";
 import { TrendingUp, TrendingDown, Minus } from "lucide-react";
 import { ResponsiveContainer, LineChart, Line } from "recharts";
@@ -11,61 +10,42 @@ interface MetricCardProps {
   value: number | string;
   sub?: string;
   icon: React.ReactNode;
-  color?: string; // e.g., "text-lime-600"
-  bg?: string; // e.g., "bg-lime-50"
+  color?: string;
+  bg?: string;
   valueSuffix?: string;
-  delta?: number; // percentage, e.g. 12 for +12%, -5 for -5%
-  sparklineData?: any[]; // array of objects for recharts
-  sparklineKey?: string; // the data key for the line
+  delta?: number;
+  sparklineData?: Record<string, unknown>[];
+  sparklineKey?: string;
 }
 
-// Custom hook for counting up
-function useCountUp(end: number | string, duration: number = 1000) {
-  const [count, setCount] = useState<number | string>(0);
-  const countRef = useRef<number | string>(0);
+function useCountUp(end: number | string, duration: number = 1500) {
+  const [count, setCount] = useState<number | string>(typeof end === "number" ? 0 : end);
   const startTime = useRef<number | null>(null);
+  const frameRef = useRef<number>(0);
 
   useEffect(() => {
-    if (typeof end === 'string') {
+    if (typeof end === "string") {
       setCount(end);
       return;
     }
 
-    let animationFrameId: number;
     startTime.current = null;
-    countRef.current = 0;
     setCount(0);
 
     const animate = (timestamp: number) => {
-      if (typeof end !== 'number') return;
       if (!startTime.current) startTime.current = timestamp;
-      const progress = timestamp - startTime.current;
-      
-      // Easing function (easeOutExpo)
-      const easeOutExpo = (x: number): number => {
-        return x === 1 ? 1 : 1 - Math.pow(2, -10 * x);
-      };
-
-      const percentage = Math.min(progress / duration, 1);
-      const easedProgress = easeOutExpo(percentage);
-      
-      const currentCount = Math.floor(easedProgress * end);
-      
-      if (countRef.current !== currentCount) {
-        countRef.current = currentCount;
-        setCount(currentCount);
-      }
-
-      if (percentage < 1) {
-        animationFrameId = requestAnimationFrame(animate);
+      const progress = Math.min((timestamp - startTime.current) / duration, 1);
+      const eased = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress);
+      setCount(Math.floor(eased * (end as number)));
+      if (progress < 1) {
+        frameRef.current = requestAnimationFrame(animate);
       } else {
-        setCount(end); // Ensure we end exactly on the target
+        setCount(end as number);
       }
     };
 
-    animationFrameId = requestAnimationFrame(animate);
-
-    return () => cancelAnimationFrame(animationFrameId);
+    frameRef.current = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(frameRef.current);
   }, [end, duration]);
 
   return count;
@@ -75,7 +55,7 @@ export function MetricCard({
   title,
   value,
   sub,
-  icon: Icon,
+  icon,
   color = "text-slate-600",
   bg = "bg-slate-50",
   valueSuffix = "",
@@ -105,7 +85,12 @@ export function MetricCard({
             bg
           )}
         >
-          {React.isValidElement(Icon) ? React.cloneElement(Icon as React.ReactElement<any>, { className: cn("h-5 w-5", color), strokeWidth: 2.5 }) : Icon}
+          {React.isValidElement(icon)
+            ? React.cloneElement(icon as React.ReactElement<{ className?: string; strokeWidth?: number }>, {
+                className: cn("h-5 w-5", color),
+                strokeWidth: 2.5,
+              })
+            : icon}
         </div>
       </div>
 
@@ -113,7 +98,10 @@ export function MetricCard({
         <div className="flex items-end justify-between">
           <div>
             <div className="text-3xl font-black tracking-tight text-gray-900">
-              {typeof animatedValue === 'number' ? animatedValue.toLocaleString() : animatedValue}{valueSuffix}
+              {typeof animatedValue === "number"
+                ? animatedValue.toLocaleString()
+                : animatedValue}
+              {valueSuffix}
             </div>
             {sub && (
               <p className="mt-2 text-xs font-medium text-gray-500 line-clamp-1">
@@ -154,7 +142,7 @@ export function MetricCard({
                 <Line
                   type="monotone"
                   dataKey={sparklineKey}
-                  stroke={delta && delta < 0 ? "#f43f5e" : "#10b981"} // rose-500 or emerald-500
+                  stroke={delta && delta < 0 ? "#f43f5e" : "#10b981"}
                   strokeWidth={2}
                   dot={false}
                   isAnimationActive={true}
