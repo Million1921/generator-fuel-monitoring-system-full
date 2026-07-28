@@ -44,7 +44,10 @@ export function defineAbilitiesFor(role: AppRole): AppAbility {
       can('read', 'FuelRequest');
       can('read', 'Site');
       can('read', 'Generator');
-      can('update', 'FuelRequest'); // scope enforced in createWorkOrder action via requireRole
+      // WARNING: Do not rely solely on requireAbility('update', 'FuelRequest') for general
+      // updates. FLEET_ADMIN should only perform update through createWorkOrder. The actions
+      // verify the specific role constraint directly.
+      can('update', 'FuelRequest');
       cannot('create', 'FuelRequest');
       cannot('delete', 'all');
       break;

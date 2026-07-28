@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache"
 import { requireRole, requireAbility, getRegionScope } from "@/lib/auth"
 import prisma from "@/lib/db"
+import { Prisma } from "@prisma/client"
 import { logger } from "@/lib/server-utils"
 import { z } from "zod"
 
@@ -43,7 +44,9 @@ export async function getTechnicians(
         user: true,
         region: true,
       },
-      orderBy: safeSortBy === 'region' ? { region: { name: sortOrder } } : { [safeSortBy]: sortOrder },
+      orderBy: safeSortBy === 'region' 
+        ? { region: { name: sortOrder } } 
+        : ({ [safeSortBy]: sortOrder } as Prisma.TechnicianOrderByWithRelationInput),
       skip,
       take: limit,
     }),

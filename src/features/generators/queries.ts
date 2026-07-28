@@ -16,11 +16,13 @@ export async function getGenerators(
   const safeSortBy = ALLOWED_SORT.includes(sortBy as any) ? sortBy : 'genId';
 
   // Map UI sort keys to Prisma fields if necessary
-  let orderBy: any = { [safeSortBy]: sortOrder };
+  let orderBy: Prisma.GeneratorOrderByWithRelationInput;
   if (safeSortBy === 'siteName') {
     orderBy = { site: { name: sortOrder } };
   } else if (safeSortBy === 'siteId') {
-     orderBy = { site: { siteId: sortOrder } };
+    orderBy = { site: { siteId: sortOrder } };
+  } else {
+    orderBy = { [safeSortBy]: sortOrder } as Prisma.GeneratorOrderByWithRelationInput;
   }
 
   const whereClause: Prisma.GeneratorWhereInput = {

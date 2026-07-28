@@ -1,4 +1,5 @@
 import prisma from "@/lib/db"
+import { Prisma } from "@prisma/client"
 import { APP_CONFIG } from "@/lib/config"
 
 export async function getAnalyticalReport(
@@ -11,12 +12,13 @@ export async function getAnalyticalReport(
   const skip = (page - 1) * limit;
   const where = region ? { region } : {};
 
-  let orderBy: any = { [sortBy]: sortOrder };
-  if (sortBy === 'siteNumber') {
-    orderBy = { siteId: sortOrder };
-  } else if (sortBy === 'location') {
-    orderBy = { name: sortOrder };
-  }
+  // Validate sortBy to prevent arbitrary SQL/Prisma field injection
+  const ALLOWED_SORT = ['siteNumber', 'location'] as const;
+  const safeSortBy = ALLOWED_SORT.includes(sortBy as any) ? sortBy : 'siteNumber';
+
+  const orderBy: Prisma.SiteOrderByWithRelationInput = safeSortBy === 'siteNumber'
+    ? { siteId: sortOrder }
+    : { name: sortOrder };
 
   const [sites, total] = await Promise.all([
     prisma.site.findMany({
@@ -144,11 +146,34 @@ function mapRefillToJournalRow(refill: JournalRefill, sn: number) {
   };
 }
 
-function journalOrderBy(sortBy: string, sortOrder: 'asc' | 'desc') {
-  if (sortBy === 'currRefuelDate') return { refillDate: sortOrder };
-  if (sortBy === 'siteId') return { site: { siteId: sortOrder } };
-  if (sortBy === 'siteName') return { site: { name: sortOrder } };
-  return { [sortBy]: sortOrder } as any;
+function journalOrderBy(sortBy: string, sortOrder: 'asc' | 'desc'): Prisma.FuelRefillOrderByWithRelationInput {
+  switch (sortBy) {
+    case 'currRefuelDate':
+      return { refillDate: sortOrder };
+    case 'siteId':
+      return { site: { siteId: sortOrder } };
+    case 'siteName':
+      return { site: { name: sortOrder } };
+    case 'employeeCreatedWO':
+      return { technicianName: sortOrder };
+    case 'employeeIdWOCreate':
+      return { technicianIdStr: sortOrder };
+    case 'workOrderNumber':
+      return { workOrderNumber: sortOrder };
+    case 'region':
+      return { site: { region: sortOrder } };
+    case 'tankerCapacity':
+      return { site: { tankerCapacity: sortOrder } };
+    case 'standard':
+      return { site: { generator: { stdFuelConsumption: sortOrder } } };
+    case 'unitPrice':
+      return { unitPrice: sortOrder };
+    case 'currRefuelLiters':
+      return { fuelDelivered: sortOrder };
+    default:
+      // safe fallback
+      return { refillDate: sortOrder };
+  }
 }
 
 export async function getFuelJournalData(
