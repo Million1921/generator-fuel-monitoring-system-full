@@ -3,6 +3,7 @@ import prisma from "@/lib/db"
 import { requireRole, requireAbility, getRegionScope } from "@/lib/auth"
 import { apiErrorResponse } from "@/lib/server-utils"
 import { NextRequest, NextResponse } from "next/server"
+import { Prisma } from "@prisma/client"
 import { z } from "zod"
 
 const PostSchema = z.object({
@@ -21,7 +22,7 @@ export async function GET(req: NextRequest) {
     const scopedRegion = await getRegionScope(role)
     const regionIdParam = req.nextUrl.searchParams.get("regionId")
 
-    let whereClause: any = {}
+    const whereClause: Prisma.TechnicianWhereInput = {}
     if (regionIdParam) {
       const parsedRegionId = parseInt(regionIdParam)
       if (isNaN(parsedRegionId)) return NextResponse.json({ error: "Invalid regionId" }, { status: 400 })

@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache"
 import { requireRole } from "@/lib/auth"
 import prisma from "@/lib/db"
+import { logger } from "@/lib/server-utils"
 import { z } from "zod"
 
 const GeneratorSchema = z.object({
@@ -30,25 +31,32 @@ export async function createGenerator(data: {
   }
   const validated = parsed.data
 
-  // Create with a placeholder genId, then derive the display id from the
-  // row's own DB-assigned autoincrement id (atomic, no count() race).
-  const generator = await prisma.generator.create({
-    data: {
-      genId: `GEN-PENDING-${Date.now()}`,
-      model: validated.model,
-      serialNumber: validated.serialNumber,
-      capacityKVA: validated.capacityKVA,
-      stdFuelConsumption: validated.stdFuelConsumption,
-      lastRunningHours: validated.lastRunningHours,
-      siteId: validated.siteId,
-    }
-  })
-  const finalGenerator = await prisma.generator.update({
-    where: { id: generator.id },
-    data: { genId: `GEN-${validated.siteId}-${generator.id}` },
-  })
-  revalidatePath("/dashboard/generators")
-  return finalGenerator
+  try {
+    // Wrap creation and display ID update in a transaction to prevent partial GEN-PENDING records.
+    const finalGenerator = await prisma.$transaction(async (tx) => {
+      const generator = await tx.generator.create({
+        data: {
+          genId: `GEN-PENDING-${Date.now()}`,
+          model: validated.model,
+          serialNumber: validated.serialNumber,
+          capacityKVA: validated.capacityKVA,
+          stdFuelConsumption: validated.stdFuelConsumption,
+          lastRunningHours: validated.lastRunningHours,
+          siteId: validated.siteId,
+        }
+      })
+      return await tx.generator.update({
+        where: { id: generator.id },
+        data: { genId: `GEN-${validated.siteId}-${generator.id}` },
+      })
+    })
+
+    revalidatePath("/dashboard/generators")
+    return finalGenerator
+  } catch (error: any) {
+    logger.error("createGenerator failed", { data, error: error?.message })
+    throw new Error("Failed to create generator")
+  }
 }
 
 const GeneratorUpdateSchema = z.object({
@@ -74,24 +82,37 @@ export async function updateGenerator(id: number, data: {
   }
   const validated = parsed.data
 
-  const generator = await prisma.generator.update({
-    where: { id },
-    data: {
-      model: validated.model,
-      serialNumber: validated.serialNumber,
-      capacityKVA: validated.capacityKVA,
-      stdFuelConsumption: validated.stdFuelConsumption,
-      lastRunningHours: validated.lastRunningHours,
-    }
-  })
-  revalidatePath("/dashboard/generators")
-  return generator
+  try {
+    const generator = await prisma.generator.update({
+      where: { id },
+      data: {
+        model: validated.model,
+        serialNumber: validated.serialNumber,
+        capacityKVA: validated.capacityKVA,
+        stdFuelConsumption: validated.stdFuelConsumption,
+        lastRunningHours: validated.lastRunningHours,
+      }
+    })
+    revalidatePath("/dashboard/generators")
+    return generator
+  } catch (error: any) {
+    logger.error("updateGenerator failed", { id, data, error: error?.message })
+    throw new Error("Failed to update generator")
+  }
 }
 
 export async function deleteGenerator(id: number) {
   await requireRole(["ADMIN", "MANAGER"])
 
-  await prisma.generator.delete({ where: { id } })
-  revalidatePath("/dashboard/generators")
-  return { success: true }
+  try {
+    await prisma.generator.delete({ where: { id } })
+    revalidatePath("/dashboard/generators")
+    return { success: true }
+  } catch (error: any) {
+    logger.error("deleteGenerator failed", { id, error: error?.message })
+    if (error?.code === "P2003" || error?.message?.includes("foreign key")) {
+      throw new Error("Cannot delete generator: this generator is linked to dependent records (like fuel refills or requests).")
+    }
+    throw new Error("Failed to delete generator")
+  }
 }

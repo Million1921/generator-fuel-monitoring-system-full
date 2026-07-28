@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache"
 import { requireRole, requireAbility, getRegionScope } from "@/lib/auth"
 import prisma from "@/lib/db"
+import { logger } from "@/lib/server-utils"
 import { z } from "zod"
 
 export async function getTechnicians(
@@ -31,6 +32,10 @@ export async function getTechnicians(
     ]
   }
 
+  // Validate sortBy to prevent arbitrary SQL or Prisma field injection
+  const ALLOWED_SORT = ['name', 'email', 'phone', 'department', 'region'] as const;
+  const safeSortBy = ALLOWED_SORT.includes(sortBy as any) ? sortBy : 'name';
+
   const [technicians, total] = await Promise.all([
     prisma.technician.findMany({
       where,
@@ -38,7 +43,7 @@ export async function getTechnicians(
         user: true,
         region: true,
       },
-      orderBy: sortBy === 'region' ? { region: { name: sortOrder } } : { [sortBy]: sortOrder },
+      orderBy: safeSortBy === 'region' ? { region: { name: sortOrder } } : { [safeSortBy]: sortOrder },
       skip,
       take: limit,
     }),
@@ -69,34 +74,39 @@ export async function createTechnician(data: {
   if (!parsed.success) {
     throw new Error(`Invalid technician data: ${parsed.error.issues.map(i => i.message).join(", ")}`)
   }
-  data = parsed.data as typeof data
+  const validated = parsed.data
 
-  let finalRegionId: number | null = null;
-  if (data.regionId) {
-    const parsed = parseInt(data.regionId);
-    if (!isNaN(parsed)) {
-      finalRegionId = parsed;
-    } else {
-      const regionRecord = await prisma.region.findUnique({
-        where: { name: data.regionId }
-      });
-      if (regionRecord) {
-        finalRegionId = regionRecord.id;
+  try {
+    let finalRegionId: number | null = null;
+    if (validated.regionId) {
+      const parsedInt = parseInt(validated.regionId);
+      if (!isNaN(parsedInt)) {
+        finalRegionId = parsedInt;
+      } else {
+        const regionRecord = await prisma.region.findUnique({
+          where: { name: validated.regionId }
+        });
+        if (regionRecord) {
+          finalRegionId = regionRecord.id;
+        }
       }
     }
-  }
 
-  const technician = await prisma.technician.create({
-    data: {
-      name: data.name,
-      department: data.department,
-      phone: data.phone,
-      email: data.email,
-      regionId: finalRegionId,
-    }
-  })
-  revalidatePath("/dashboard/technicians")
-  return technician
+    const technician = await prisma.technician.create({
+      data: {
+        name: validated.name,
+        department: validated.department,
+        phone: validated.phone,
+        email: validated.email,
+        regionId: finalRegionId,
+      }
+    })
+    revalidatePath("/dashboard/technicians")
+    return technician
+  } catch (error: any) {
+    logger.error("createTechnician failed", { data, error: error?.message });
+    throw new Error("Failed to create technician");
+  }
 }
 
 export async function updateTechnician(id: number, data: {
@@ -112,40 +122,54 @@ export async function updateTechnician(id: number, data: {
   if (!parsed.success) {
     throw new Error(`Invalid technician data: ${parsed.error.issues.map(i => i.message).join(", ")}`)
   }
-  data = parsed.data as typeof data
+  const validated = parsed.data
 
-  let finalRegionId: number | null = null;
-  if (data.regionId) {
-    const parsed = parseInt(data.regionId);
-    if (!isNaN(parsed)) {
-      finalRegionId = parsed;
-    } else {
-      const regionRecord = await prisma.region.findUnique({
-        where: { name: data.regionId }
-      });
-      if (regionRecord) {
-        finalRegionId = regionRecord.id;
+  try {
+    let finalRegionId: number | null = null;
+    if (validated.regionId) {
+      const parsedInt = parseInt(validated.regionId);
+      if (!isNaN(parsedInt)) {
+        finalRegionId = parsedInt;
+      } else {
+        const regionRecord = await prisma.region.findUnique({
+          where: { name: validated.regionId }
+        });
+        if (regionRecord) {
+          finalRegionId = regionRecord.id;
+        }
       }
     }
-  }
 
-  const technician = await prisma.technician.update({
-    where: { id },
-    data: {
-      name: data.name,
-      department: data.department,
-      phone: data.phone,
-      email: data.email,
-      regionId: finalRegionId,
-    }
-  })
-  revalidatePath("/dashboard/technicians")
-  return technician
+    const technician = await prisma.technician.update({
+      where: { id },
+      data: {
+        name: validated.name,
+        department: validated.department,
+        phone: validated.phone,
+        email: validated.email,
+        regionId: finalRegionId,
+      }
+    })
+    revalidatePath("/dashboard/technicians")
+    return technician
+  } catch (error: any) {
+    logger.error("updateTechnician failed", { id, data, error: error?.message });
+    throw new Error("Failed to update technician");
+  }
 }
 
 export async function deleteTechnician(id: number) {
   await requireRole(["ADMIN", "MANAGER"])
 
-  await prisma.technician.delete({ where: { id } })
-  revalidatePath("/dashboard/technicians")
+  try {
+    await prisma.technician.delete({ where: { id } })
+    revalidatePath("/dashboard/technicians")
+    return { success: true }
+  } catch (error: any) {
+    logger.error("deleteTechnician failed", { id, error: error?.message });
+    if (error?.code === "P2003" || error?.message?.includes("foreign key")) {
+      throw new Error("Cannot delete technician: this technician has linked fuel requests, refills, or transactions.");
+    }
+    throw new Error("Failed to delete technician");
+  }
 }

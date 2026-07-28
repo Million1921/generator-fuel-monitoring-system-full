@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache"
 import { requireRole, requireAbility, getRegionScope } from "@/lib/auth"
 import prisma from "@/lib/db"
+import { logger } from "@/lib/server-utils"
 import { z } from "zod"
 
 export async function getSites(region?: string) {
@@ -35,32 +36,37 @@ export async function createSite(data: { siteId: string; name: string; region: s
   }
   const validated = parsed.data
 
-  let actualRegionId = validated.regionId ? parseInt(validated.regionId) : undefined;
-  if (actualRegionId !== undefined && isNaN(actualRegionId)) actualRegionId = undefined;
+  try {
+    let actualRegionId = validated.regionId ? parseInt(validated.regionId) : undefined;
+    if (actualRegionId !== undefined && isNaN(actualRegionId)) actualRegionId = undefined;
 
-  if (!actualRegionId && validated.region) {
-    const regionRecord = await prisma.region.findUnique({
-      where: { name: validated.region }
-    });
-    if (regionRecord) {
-      actualRegionId = regionRecord.id;
+    if (!actualRegionId && validated.region) {
+      const regionRecord = await prisma.region.findUnique({
+        where: { name: validated.region }
+      });
+      if (regionRecord) {
+        actualRegionId = regionRecord.id;
+      }
     }
+
+    const site = await prisma.site.create({
+      data: {
+        siteId: validated.siteId,
+        name: validated.name,
+        region: validated.region,
+        tankerCapacity: validated.tankerCapacity,
+        dgCapacity: validated.dgCapacity,
+        dgType: validated.dgType,
+        gpsCoordinates: validated.gpsCoordinates,
+        regionId: actualRegionId,
+      }
+    })
+    revalidatePath("/dashboard/sites")
+    return site
+  } catch (error: any) {
+    logger.error("createSite failed", { data, error: error?.message })
+    throw new Error("Failed to create site")
   }
-
-  const site = await prisma.site.create({
-    data: {
-      siteId: validated.siteId,
-      name: validated.name,
-      region: validated.region,
-      tankerCapacity: validated.tankerCapacity,
-      dgCapacity: validated.dgCapacity,
-      dgType: validated.dgType,
-      gpsCoordinates: validated.gpsCoordinates,
-      regionId: actualRegionId,
-    }
-  })
-  revalidatePath("/dashboard/sites")
-  return site
 }
 
 export async function updateSite(id: number, data: { siteId: string; name: string; region: string; tankerCapacity: string; dgCapacity?: string; dgType?: string; gpsCoordinates?: string; regionId?: string }) {
@@ -72,38 +78,52 @@ export async function updateSite(id: number, data: { siteId: string; name: strin
   }
   const validated = parsed.data
 
-  let actualRegionId = validated.regionId ? parseInt(validated.regionId) : undefined;
-  if (actualRegionId !== undefined && isNaN(actualRegionId)) actualRegionId = undefined;
+  try {
+    let actualRegionId = validated.regionId ? parseInt(validated.regionId) : undefined;
+    if (actualRegionId !== undefined && isNaN(actualRegionId)) actualRegionId = undefined;
 
-  if (!actualRegionId && validated.region) {
-    const regionRecord = await prisma.region.findUnique({
-      where: { name: validated.region }
-    });
-    if (regionRecord) {
-      actualRegionId = regionRecord.id;
+    if (!actualRegionId && validated.region) {
+      const regionRecord = await prisma.region.findUnique({
+        where: { name: validated.region }
+      });
+      if (regionRecord) {
+        actualRegionId = regionRecord.id;
+      }
     }
+
+    const site = await prisma.site.update({
+      where: { id },
+      data: {
+        siteId: validated.siteId,
+        name: validated.name,
+        region: validated.region,
+        tankerCapacity: validated.tankerCapacity,
+        dgCapacity: validated.dgCapacity,
+        dgType: validated.dgType,
+        gpsCoordinates: validated.gpsCoordinates,
+        regionId: actualRegionId,
+      }
+    })
+    revalidatePath("/dashboard/sites")
+    return site
+  } catch (error: any) {
+    logger.error("updateSite failed", { id, data, error: error?.message })
+    throw new Error("Failed to update site")
   }
-
-  const site = await prisma.site.update({
-    where: { id },
-    data: {
-      siteId: validated.siteId,
-      name: validated.name,
-      region: validated.region,
-      tankerCapacity: validated.tankerCapacity,
-      dgCapacity: validated.dgCapacity,
-      dgType: validated.dgType,
-      gpsCoordinates: validated.gpsCoordinates,
-      regionId: actualRegionId,
-    }
-  })
-  revalidatePath("/dashboard/sites")
-  return site
 }
 
 export async function deleteSite(id: number) {
   await requireRole(["ADMIN", "MANAGER"])
 
-  await prisma.site.delete({ where: { id } })
-  revalidatePath("/dashboard/sites")
+  try {
+    await prisma.site.delete({ where: { id } })
+    revalidatePath("/dashboard/sites")
+    return { success: true }
+  } catch (error: any) {
+    logger.error("deleteSite failed", { id, error: error?.message })
+    if (error?.code === "P2003" || error?.message?.includes("foreign key")) {
+      throw new Error("Cannot delete site: this site has linked generators, fuel requests, refills, or transactions.")
+    }
+    throw new Error("Failed to delete site")
+  }
 }

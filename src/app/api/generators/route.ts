@@ -1,8 +1,9 @@
 export const dynamic = "force-dynamic";
 import prisma from "@/lib/db"
 import { requireRole, requireAbility, getRegionScope } from "@/lib/auth"
-import { apiErrorResponse, displayNumberFromId } from "@/lib/server-utils"
+import { apiErrorResponse } from "@/lib/server-utils"
 import { NextRequest, NextResponse } from "next/server"
+import { Prisma } from "@prisma/client"
 import { z } from "zod"
 
 const PostSchema = z.object({
@@ -21,7 +22,7 @@ export async function GET(req: NextRequest) {
     const scopedRegion = await getRegionScope(role)
     const siteIdParam = req.nextUrl.searchParams.get("siteId")
 
-    let whereClause: any = {}
+    const whereClause: Prisma.GeneratorWhereInput = {}
     if (siteIdParam) {
       const parsedSiteId = parseInt(siteIdParam)
       if (isNaN(parsedSiteId)) return NextResponse.json({ error: "Invalid siteId" }, { status: 400 })
@@ -55,23 +56,26 @@ export async function POST(req: NextRequest) {
     const data = parsed.data
 
     // Create with a placeholder genId, then derive the display id from the
-    // row's own DB-assigned autoincrement id (atomic, no count() race).
-    const generator = await prisma.generator.create({
-      data: {
-        genId: `GEN-PENDING-${Date.now()}`,
-        model: data.model ?? null,
-        serialNumber: data.serialNumber ?? null,
-        capacityKVA: data.capacityKVA,
-        stdFuelConsumption: data.stdFuelConsumption,
-        lastRunningHours: data.lastRunningHours,
-        siteId: data.siteId,
-      },
+    // row's own DB-assigned autoincrement id (atomic transaction, no partial creation).
+    const finalGenerator = await prisma.$transaction(async (tx) => {
+      const generator = await tx.generator.create({
+        data: {
+          genId: `GEN-PENDING-${Date.now()}`,
+          model: data.model ?? null,
+          serialNumber: data.serialNumber ?? null,
+          capacityKVA: data.capacityKVA,
+          stdFuelConsumption: data.stdFuelConsumption,
+          lastRunningHours: data.lastRunningHours,
+          siteId: data.siteId,
+        },
+      })
+      const genId = `GEN-${data.siteId}-${generator.id}`
+      return await tx.generator.update({
+        where: { id: generator.id },
+        data: { genId },
+      })
     })
-    const genId = `GEN-${data.siteId}-${generator.id}`
-    const finalGenerator = await prisma.generator.update({
-      where: { id: generator.id },
-      data: { genId },
-    })
+
     return NextResponse.json(finalGenerator, { status: 201 })
   } catch (e) {
     return apiErrorResponse(e, "POST /api/generators")

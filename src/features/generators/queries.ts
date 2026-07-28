@@ -1,4 +1,5 @@
 import prisma from "@/lib/db"
+import { Prisma } from "@prisma/client"
 
 export async function getGenerators(
   region?: string, 
@@ -10,15 +11,19 @@ export async function getGenerators(
 ) {
   const skip = (page - 1) * limit
   
+  // Validate sortBy to prevent arbitrary SQL or Prisma field injection
+  const ALLOWED_SORT = ['genId', 'capacityKVA', 'stdFuelConsumption', 'lastRunningHours', 'siteName', 'siteId'] as const;
+  const safeSortBy = ALLOWED_SORT.includes(sortBy as any) ? sortBy : 'genId';
+
   // Map UI sort keys to Prisma fields if necessary
-  let orderBy: any = { [sortBy]: sortOrder };
-  if (sortBy === 'siteName') {
+  let orderBy: any = { [safeSortBy]: sortOrder };
+  if (safeSortBy === 'siteName') {
     orderBy = { site: { name: sortOrder } };
-  } else if (sortBy === 'siteId') {
+  } else if (safeSortBy === 'siteId') {
      orderBy = { site: { siteId: sortOrder } };
   }
 
-  const whereClause: any = {
+  const whereClause: Prisma.GeneratorWhereInput = {
     ...(region && { site: { region } }),
     ...(search && {
       OR: [
