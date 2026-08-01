@@ -1,22 +1,38 @@
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server'
+import { NextResponse } from 'next/server'
 
 const isPublicRoute = createRouteMatcher(['/login(.*)', '/sign-in(.*)', '/sign-up(.*)'])
 
 export default clerkMiddleware(async (auth, request) => {
+  // 1. Handle CORS preflight requests
+  if (request.method === 'OPTIONS') {
+    return new NextResponse(null, {
+      status: 204,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization, Accept',
+      },
+    })
+  }
+
+  // 2. Protect non-public routes
   if (!isPublicRoute(request)) {
     await auth.protect()
   }
+
+  // 3. Add CORS headers to all successful responses
+  const res = NextResponse.next()
+  res.headers.set('Access-Control-Allow-Origin', '*')
+  res.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS')
+  res.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept')
+
+  return res
 })
 
 export const config = {
   matcher: [
-    // Skip Next.js internals and all static files, unless found in search params.
-    // NOTE: `js(?!on)` is intentional — it matches ".js" but NOT ".json", so
-    // "*.json" requests are NOT treated as static assets and still go through
-    // Clerk auth. Do not "simplify" this to a plain `js` alternation; that
-    // would accidentally exempt .json routes from auth.
     '/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
-    // Always run for API routes
     '/(api|trpc)(.*)',
   ],
 }
