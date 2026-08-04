@@ -1,10 +1,11 @@
 export const dynamic = "force-dynamic";
 import prisma from "@/lib/db"
 import type { Prisma } from "@prisma/client"
-import { requireRole, requireAbility } from "@/lib/auth"
+import { requireAbility } from "@/lib/auth"
 import { apiErrorResponse } from "@/lib/server-utils"
 import { NextRequest, NextResponse } from "next/server"
 import { z } from "zod"
+import { deleteFuelDelivery } from "@/features/fuel-requests/actions"
 
 const PutSchema = z.object({
   fuelDelivered: z.coerce.number().positive().optional(),
@@ -41,7 +42,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
 // PUT /api/fuel-refills/[id]
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    await requireRole(["ADMIN", "MANAGER", "SUPERVISOR"])
+    await requireAbility("update", "FuelRefill")
 
     const { id } = await params;
     const parsedId = parseInt(id)
@@ -92,15 +93,15 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 // DELETE /api/fuel-refills/[id]
 export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    await requireRole(["ADMIN", "MANAGER"])
-
     const { id } = await params;
     const parsedId = parseInt(id)
     if (isNaN(parsedId)) return NextResponse.json({ error: "Invalid id" }, { status: 400 })
 
-    await prisma.fuelRefill.delete({ where: { id: parsedId } })
+    // deleteFuelDelivery action handles CASL/ability checks
+    await deleteFuelDelivery(parsedId)
     return NextResponse.json({ success: true })
   } catch (e) {
     return apiErrorResponse(e, "DELETE /api/fuel-refills/[id]")
   }
 }
+

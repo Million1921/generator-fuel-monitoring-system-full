@@ -1,7 +1,7 @@
 export const dynamic = "force-dynamic";
 import prisma from "@/lib/db"
 import type { Prisma } from "@prisma/client"
-import { requireRole, requireAbility, getRegionScope } from "@/lib/auth"
+import { requireAbility, getRegionScope } from "@/lib/auth"
 import { apiErrorResponse } from "@/lib/server-utils"
 import { NextRequest, NextResponse } from "next/server"
 import { z } from "zod"
@@ -54,7 +54,7 @@ export async function GET(req: NextRequest) {
 // POST /api/fuel-refills — record a new refill and update generator's lastRunningHours
 export async function POST(req: NextRequest) {
   try {
-    await requireRole(["ADMIN", "MANAGER", "SUPERVISOR", "TECHNICIAN"])
+    await requireAbility("create", "FuelRefill")
 
     const body = await req.json()
     const parsed = PostSchema.safeParse(body)

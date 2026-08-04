@@ -1,6 +1,6 @@
 export const dynamic = "force-dynamic";
 import prisma from "@/lib/db"
-import { requireRole, requireAbility } from "@/lib/auth"
+import { requireAbility } from "@/lib/auth"
 import { apiErrorResponse } from "@/lib/server-utils"
 import { NextRequest, NextResponse } from "next/server"
 import { z } from "zod"
@@ -26,7 +26,7 @@ export async function GET() {
 // POST /api/regions — add a new region
 export async function POST(req: NextRequest) {
   try {
-    await requireRole(["ADMIN", "MANAGER"])
+    await requireAbility("create", "Site")
 
     const body = await req.json()
     const parsed = PostSchema.safeParse(body)

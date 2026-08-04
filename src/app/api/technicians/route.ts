@@ -1,6 +1,6 @@
 export const dynamic = "force-dynamic";
 import prisma from "@/lib/db"
-import { requireRole, requireAbility, getRegionScope } from "@/lib/auth"
+import { requireAbility, getRegionScope } from "@/lib/auth"
 import { apiErrorResponse } from "@/lib/server-utils"
 import { NextRequest, NextResponse } from "next/server"
 import { Prisma } from "@prisma/client"
@@ -46,7 +46,7 @@ export async function GET(req: NextRequest) {
 // POST /api/technicians — add a new technician
 export async function POST(req: NextRequest) {
   try {
-    await requireRole(["ADMIN", "MANAGER"])
+    await requireAbility("create", "Technician")
 
     const body = await req.json()
     const parsed = PostSchema.safeParse(body)

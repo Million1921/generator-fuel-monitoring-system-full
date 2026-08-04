@@ -75,7 +75,9 @@ export async function requireAbility(action: Actions, subject: Subjects) {
     throw new AuthError("Forbidden", 403);
   }
 
-  return { role, ability };
+  const { userId } = await auth();
+
+  return { role, ability, session: { user: { id: userId! } } };
 }
 
 export function authErrorResponse(error: unknown) {

@@ -1,6 +1,6 @@
 export const dynamic = "force-dynamic";
 import prisma from "@/lib/db"
-import { requireRole, requireAbility } from "@/lib/auth"
+import { requireAbility } from "@/lib/auth"
 import { apiErrorResponse } from "@/lib/server-utils"
 import { NextRequest, NextResponse } from "next/server"
 import { z } from "zod"
@@ -39,7 +39,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
 // PUT /api/sites/[id]
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    await requireRole(["ADMIN", "MANAGER"])
+    await requireAbility("update", "Site")
 
     const { id } = await params;
     const parsedId = parseInt(id)
@@ -74,7 +74,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 // DELETE /api/sites/[id]
 export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    await requireRole(["ADMIN", "MANAGER"])
+    await requireAbility("delete", "Site")
 
     const { id } = await params;
     const parsedId = parseInt(id)
