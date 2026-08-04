@@ -212,6 +212,11 @@ Or run migrations:
 npx prisma migrate dev
 ```
 
+> ⚠️ **MIGRATION WARNING**: The initial squashed migration (`20260701142624_init`) was generated using SQLite syntax but the current schema uses PostgreSQL. To deploy this to a fresh PostgreSQL database:
+> 1. Run `npx prisma db push` to create the initial tables.
+> 2. Run `npx prisma migrate resolve --applied 20260701142624_init` to mark the SQLite init migration as resolved without running its invalid syntax.
+> 3. Run `npx prisma migrate deploy` to safely apply the subsequent incremental migrations (like `20260804000000_add_missing_fields`).
+
 Open Prisma Studio:
 
 ```bash
