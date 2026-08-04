@@ -44,10 +44,11 @@ export function defineAbilitiesFor(role: AppRole): AppAbility {
       can('read', 'FuelRequest');
       can('read', 'Site');
       can('read', 'Generator');
-      // WARNING: Do not rely solely on requireAbility('update', 'FuelRequest') for general
-      // updates. FLEET_ADMIN should only perform update through createWorkOrder. The actions
-      // verify the specific role constraint directly.
-      can('update', 'FuelRequest');
+      // FLEET_ADMIN updates are constrained to specific statuses in the lifecycle.
+      // They can only act on requests that have been approved or are in progress.
+      can('update', 'FuelRequest', {
+        status: { $in: ['APPROVED_REQUEST', 'PENDING_MANAGER_APPROVAL', 'FUNDS_RELEASED', 'ASSIGNED_TO_TECH'] }
+      });
       cannot('create', 'FuelRequest');
       cannot('delete', 'all');
       break;
