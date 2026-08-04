@@ -1,7 +1,7 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
-import { requireRole, requireAbility, AuthError } from "@/lib/auth"
+import { requireAbility, AuthError } from "@/lib/auth"
 import { subject } from "@casl/ability"
 import prisma from "@/lib/db"
 import type { Prisma } from "@prisma/client"
@@ -91,7 +91,7 @@ const FuelDeliveryServerSchema = z.object({
 })
 
 export async function createFuelDelivery(data: FuelDeliveryData) {
-  await requireRole(["ADMIN", "MANAGER", "SUPERVISOR", "TECHNICIAN"])
+  await requireAbility("create", "FuelRefill")
 
   const parsed = FuelDeliveryServerSchema.safeParse(data)
   if (!parsed.success) {
@@ -194,7 +194,7 @@ const FuelRequestServerSchema = z.object({
 })
 
 export async function createFuelRequest(data: FuelRequestData) {
-  await requireRole(["ADMIN", "MANAGER", "SUPERVISOR", "TECHNICIAN"])
+  await requireAbility("create", "FuelRequest")
 
   const parsed = FuelRequestServerSchema.safeParse(data)
   if (!parsed.success) {
@@ -387,7 +387,7 @@ export async function verifyAndCompleteDelivery(id: number) {
 
 
 export async function deleteFuelRequest(id: number) {
-  await requireRole(["ADMIN", "MANAGER"])
+  await requireAbility("delete", "FuelRequest")
 
   await prisma.fuelRequest.delete({
     where: { id }
@@ -397,7 +397,7 @@ export async function deleteFuelRequest(id: number) {
 }
 
 export async function deleteFuelDelivery(id: number) {
-  await requireRole(["ADMIN", "MANAGER"])
+  await requireAbility("delete", "FuelRefill")
 
   await prisma.fuelRefill.delete({
     where: { id }
@@ -426,7 +426,7 @@ const UpdateFuelDeliveryServerSchema = z.object({
 })
 
 export async function updateFuelDelivery(id: number, data: Partial<FuelDeliveryData>) {
-  await requireRole(["ADMIN", "MANAGER", "SUPERVISOR"])
+  await requireAbility("update", "FuelRefill")
 
   const parsed = UpdateFuelDeliveryServerSchema.safeParse(data)
   if (!parsed.success) {

@@ -1,7 +1,7 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
-import { requireRole, requireAbility, getRegionScope } from "@/lib/auth"
+import { requireAbility, getRegionScope } from "@/lib/auth"
 import prisma from "@/lib/db"
 import { Prisma } from "@prisma/client"
 import { logger } from "@/lib/server-utils"
@@ -71,7 +71,7 @@ export async function createTechnician(data: {
   email: string
   regionId?: string
 }) {
-  await requireRole(["ADMIN", "MANAGER"])
+  await requireAbility("create", "Technician")
 
   const parsed = TechnicianSchema.safeParse(data)
   if (!parsed.success) {
@@ -119,7 +119,7 @@ export async function updateTechnician(id: number, data: {
   email: string
   regionId?: string
 }) {
-  await requireRole(["ADMIN", "MANAGER"])
+  await requireAbility("update", "Technician")
 
   const parsed = TechnicianSchema.safeParse(data)
   if (!parsed.success) {
@@ -162,7 +162,7 @@ export async function updateTechnician(id: number, data: {
 }
 
 export async function deleteTechnician(id: number) {
-  await requireRole(["ADMIN", "MANAGER"])
+  await requireAbility("delete", "Technician")
 
   try {
     await prisma.technician.delete({ where: { id } })

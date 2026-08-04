@@ -1,7 +1,7 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
-import { requireRole } from "@/lib/auth"
+import { requireAbility } from "@/lib/auth"
 import prisma from "@/lib/db"
 import { logger } from "@/lib/server-utils"
 import { z } from "zod"
@@ -23,7 +23,7 @@ export async function createGenerator(data: {
   lastRunningHours: string
   siteId: string
 }) {
-  await requireRole(["ADMIN", "MANAGER"])
+  await requireAbility("create", "Generator")
 
   const parsed = GeneratorSchema.safeParse(data)
   if (!parsed.success) {
@@ -74,7 +74,7 @@ export async function updateGenerator(id: number, data: {
   stdFuelConsumption?: string
   lastRunningHours?: string
 }) {
-  await requireRole(["ADMIN", "MANAGER"])
+  await requireAbility("update", "Generator")
 
   const parsed = GeneratorUpdateSchema.safeParse(data)
   if (!parsed.success) {
@@ -102,7 +102,7 @@ export async function updateGenerator(id: number, data: {
 }
 
 export async function deleteGenerator(id: number) {
-  await requireRole(["ADMIN", "MANAGER"])
+  await requireAbility("delete", "Generator")
 
   try {
     await prisma.generator.delete({ where: { id } })

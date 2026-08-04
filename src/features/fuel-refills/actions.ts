@@ -1,7 +1,7 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
-import { requireRole, requireAbility, getRegionScope } from "@/lib/auth"
+import { requireAbility, getRegionScope } from "@/lib/auth"
 import prisma from "@/lib/db"
 import type { Prisma } from "@prisma/client"
 import { z } from "zod"
@@ -32,7 +32,7 @@ export async function createFuelRefill(data: {
   driverName?: string;
   technicianId?: number;
 }) {
-  await requireRole(["ADMIN", "MANAGER", "SUPERVISOR", "TECHNICIAN"])
+  await requireAbility("create", "FuelRefill")
 
   const parsed = FuelRefillSchema.safeParse(data)
   if (!parsed.success) {

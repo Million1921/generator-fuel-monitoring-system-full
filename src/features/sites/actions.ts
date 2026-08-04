@@ -1,7 +1,7 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
-import { requireRole, requireAbility, getRegionScope } from "@/lib/auth"
+import { requireAbility, getRegionScope } from "@/lib/auth"
 import prisma from "@/lib/db"
 import { logger } from "@/lib/server-utils"
 import { z } from "zod"
@@ -28,7 +28,7 @@ const SiteSchema = z.object({
 })
 
 export async function createSite(data: { siteId: string; name: string; region: string; tankerCapacity: string; dgCapacity?: string; dgType?: string; gpsCoordinates?: string; regionId?: string }) {
-  await requireRole(["ADMIN", "MANAGER"])
+  await requireAbility("create", "Site")
 
   const parsed = SiteSchema.safeParse(data)
   if (!parsed.success) {
@@ -70,7 +70,7 @@ export async function createSite(data: { siteId: string; name: string; region: s
 }
 
 export async function updateSite(id: number, data: { siteId: string; name: string; region: string; tankerCapacity: string; dgCapacity?: string; dgType?: string; gpsCoordinates?: string; regionId?: string }) {
-  await requireRole(["ADMIN", "MANAGER"])
+  await requireAbility("update", "Site")
 
   const parsed = SiteSchema.safeParse(data)
   if (!parsed.success) {
@@ -113,7 +113,7 @@ export async function updateSite(id: number, data: { siteId: string; name: strin
 }
 
 export async function deleteSite(id: number) {
-  await requireRole(["ADMIN", "MANAGER"])
+  await requireAbility("delete", "Site")
 
   try {
     await prisma.site.delete({ where: { id } })

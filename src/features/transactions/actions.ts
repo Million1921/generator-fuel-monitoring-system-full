@@ -1,13 +1,13 @@
 "use server"
 
 import prisma from "@/lib/db"
-import { requireRole } from "@/lib/auth"
+import { requireAbility } from "@/lib/auth"
 import { revalidatePath } from "next/cache"
 import { logger } from "@/lib/server-utils"
 import { z } from "zod"
 
 export async function deleteTransaction(id: number) {
-  await requireRole(["ADMIN", "MANAGER", "FINANCE"])
+  await requireAbility("delete", "Transaction")
 
   try {
     await prisma.transaction.delete({
@@ -38,7 +38,7 @@ const TransactionUpdateSchema = z.object({
 })
 
 export async function updateTransaction(id: number, data: unknown) {
-  await requireRole(["ADMIN", "MANAGER", "FINANCE"])
+  await requireAbility("update", "Transaction")
 
   const parsed = TransactionUpdateSchema.safeParse(data)
   if (!parsed.success) {
@@ -74,7 +74,7 @@ export async function updateTransaction(id: number, data: unknown) {
 }
 
 export async function getTransactions() {
-  await requireRole(["ADMIN", "MANAGER", "FINANCE"])
+  await requireAbility("read", "Transaction")
   return await prisma.transaction.findMany({
     orderBy: { createdAt: 'desc' },
     include: { site: true }
