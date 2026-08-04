@@ -1,6 +1,7 @@
 import prisma from "@/lib/db"
 import { Prisma } from "@prisma/client"
 import { APP_CONFIG } from "@/lib/config"
+import { classifyDeviation } from "@/lib/anomaly"
 
 export async function getAnalyticalReport(
   region?: string, 
@@ -51,8 +52,10 @@ export async function getAnalyticalReport(
 
     const amountInBirr = totalRefueled * APP_CONFIG.FUEL_UNIT_PRICE;
 
-    const expectedConsumption = site.generator ? ((site.generator.stdFuelConsumption || 0) * totalRunningHours) : 0;
-    const variance = totalRefueled - expectedConsumption;
+    const stdConsumption = site.generator?.stdFuelConsumption || 0;
+    const expectedConsumption = stdConsumption * totalRunningHours;
+    const { deviation: variance, anomalyLevel, reason: anomalyReason } =
+      classifyDeviation(totalRefueled, stdConsumption, totalRunningHours);
 
     return {
       siteNumber: site.siteId,
@@ -60,7 +63,10 @@ export async function getAnalyticalReport(
       totalRefueled,
       totalRunningHours,
       amountInBirr,
-      variance
+      variance,
+      expectedConsumption,
+      anomalyLevel,
+      anomalyReason,
     };
   });
 
@@ -118,6 +124,9 @@ function mapRefillToJournalRow(refill: JournalRefill, sn: number) {
 
   const actualRefueled = refill.fuelDelivered || 0;
   const unitPrice = refill.unitPrice || APP_CONFIG.FUEL_UNIT_PRICE;
+  const stdConsumption = site.generator?.stdFuelConsumption || 0;
+  const { deviation, deviationPct, anomalyLevel, reason: anomalyReason } =
+    classifyDeviation(actualRefueled, stdConsumption, runningHrs);
 
   return {
     sn,
@@ -128,7 +137,7 @@ function mapRefillToJournalRow(refill: JournalRefill, sn: number) {
     siteName: site.name,
     region: site.region || "-",
     tankerCapacity: site.tankerCapacity || 0,
-    standard: site.generator?.stdFuelConsumption || 0,
+    standard: stdConsumption,
     prevRefuelDate: prevRefill ? prevRefill.refillDate.toLocaleDateString() : "-",
     prevRefuelLiters: prevRefill ? prevRefill.fuelDelivered : 0,
     prevRefuelBirr: prevRefill ? prevRefill.fuelDelivered * unitPrice : 0,
@@ -140,7 +149,10 @@ function mapRefillToJournalRow(refill: JournalRefill, sn: number) {
     runningHourDifference: runningHrs,
     runningHrPerLit: actualRefueled > 0 ? (runningHrs / actualRefueled) : 0,
     maintOpSeq: "-",
-    deviation: (actualRefueled - (site.generator?.stdFuelConsumption || 0) * runningHrs),
+    deviation,
+    deviationPct,
+    anomalyLevel,
+    anomalyReason,
     unitPrice: unitPrice,
     remark: "",
   };

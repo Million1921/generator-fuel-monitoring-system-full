@@ -35,6 +35,9 @@ export interface FuelJournalRow {
     runningHrPerLit: number;
     maintOpSeq: string;
     deviation: number;
+    deviationPct?: number;
+    anomalyLevel?: 'normal' | 'warning' | 'critical';
+    anomalyReason?: string;
     unitPrice: number;
     remark: string;
 }
@@ -166,7 +169,26 @@ export function GeneratorFuelJournalTable({
                                             <TableCell className="border-r border-slate-400 text-right tabular-nums text-slate-900 px-3">{row.runningHourDifference?.toLocaleString()}</TableCell>
                                             <TableCell className="border-r border-slate-400 text-right tabular-nums text-slate-600 px-3 ">{row.runningHrPerLit?.toLocaleString(undefined, { maximumFractionDigits: 2 })}</TableCell>
                                             <TableCell className="border-r border-slate-400 text-center font-normal">{row.maintOpSeq || '-'}</TableCell>
-                                            <TableCell className="border-r border-slate-400 text-center font-medium text-red-500">{row.deviation || '-'}</TableCell>
+                                            <TableCell className="border-r border-slate-400 text-center px-2">
+                                                {row.anomalyLevel && row.anomalyLevel !== 'normal' ? (
+                                                    <span
+                                                        title={row.anomalyReason}
+                                                        className={cn(
+                                                            "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold cursor-help",
+                                                            row.anomalyLevel === 'critical'
+                                                                ? "bg-red-100 text-red-700 border border-red-200"
+                                                                : "bg-amber-100 text-amber-700 border border-amber-200"
+                                                        )}
+                                                    >
+                                                        {row.anomalyLevel === 'critical' ? '🚨' : '⚠️'}
+                                                        {row.deviation > 0 ? '+' : ''}{row.deviation?.toFixed(1)} L
+                                                    </span>
+                                                ) : (
+                                                    <span className="text-slate-400 text-xs tabular-nums">
+                                                        {row.deviation != null ? `${row.deviation > 0 ? '+' : ''}${row.deviation.toFixed(1)}` : '-'}
+                                                    </span>
+                                                )}
+                                            </TableCell>
                                             <TableCell className="border-r border-slate-400 text-right tabular-nums text-slate-900 px-4">{row.unitPrice?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
                                             <TableCell className="text-center italic text-slate-400 px-4">{row.remark || '-'}</TableCell>
                                         </TableRow>
