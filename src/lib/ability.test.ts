@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { defineAbilitiesFor } from './ability'
+import { subject } from '@casl/ability'
 
 describe('CASL Ability Definitions', () => {
 
@@ -91,6 +92,19 @@ describe('CASL Ability Definitions', () => {
       expect(ability.can('read', 'FuelRequest')).toBe(true)
       expect(ability.can('read', 'Site')).toBe(true)
       expect(ability.can('read', 'Generator')).toBe(true)
+    })
+
+    it('can update FuelRequests only if they are in specific statuses (condition test)', () => {
+      // Allowed statuses
+      expect(ability.can('update', subject('FuelRequest', { status: 'APPROVED_REQUEST' } as any))).toBe(true)
+      expect(ability.can('update', subject('FuelRequest', { status: 'PENDING_MANAGER_APPROVAL' } as any))).toBe(true)
+      expect(ability.can('update', subject('FuelRequest', { status: 'FUNDS_RELEASED' } as any))).toBe(true)
+      expect(ability.can('update', subject('FuelRequest', { status: 'ASSIGNED_TO_TECH' } as any))).toBe(true)
+
+      // Disallowed statuses
+      expect(ability.can('update', subject('FuelRequest', { status: 'COMPLETED' } as any))).toBe(false)
+      expect(ability.can('update', subject('FuelRequest', { status: 'PENDING' } as any))).toBe(false)
+      expect(ability.can('update', subject('FuelRequest', { status: 'REJECTED' } as any))).toBe(false)
     })
 
     it('cannot create fuel requests', () => {
