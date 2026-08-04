@@ -1,14 +1,13 @@
-import { AbilityBuilder, PureAbility, AbilityClass } from '@casl/ability';
+import { AbilityBuilder, createMongoAbility, MongoAbility } from '@casl/ability';
 import { AppRole } from './auth';
 
 export type Actions = 'create' | 'read' | 'update' | 'delete' | 'manage';
 export type Subjects = 'Site' | 'Generator' | 'Technician' | 'FuelRequest' | 'FuelRefill' | 'Transaction' | 'all';
 
-export type AppAbility = PureAbility<[Actions, Subjects]>;
-export const AppAbility = PureAbility as AbilityClass<AppAbility>;
+export type AppAbility = MongoAbility<[Actions, Subjects]>;
 
 export function defineAbilitiesFor(role: AppRole): AppAbility {
-  const { can, cannot, build } = new AbilityBuilder<AppAbility>(AppAbility);
+  const { can, cannot, build } = new AbilityBuilder<AppAbility>(createMongoAbility);
 
   switch (role) {
     case 'ADMIN':

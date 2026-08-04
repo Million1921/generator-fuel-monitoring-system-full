@@ -98,7 +98,24 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       } else if (data.status === "COMPLETED") {
         await verifyAndCompleteDelivery(id)
       } else {
-        // Handle generic or simpler rejections
+        // SAFETY: This fallback handles statuses with NO financial side-effects
+        // (no wallet transactions, no balance changes). If a new status is added
+        // that touches money, it MUST get its own dedicated branch above that
+        // delegates to a server action with proper $transaction logic.
+        const SAFE_FALLBACK_STATUSES = [
+          "REJECTED",
+          "PENDING_SUPERVISOR",
+          "PENDING",
+          "APPROVED_FOR_FUEL",
+        ] as const;
+
+        if (!(SAFE_FALLBACK_STATUSES as readonly string[]).includes(data.status!)) {
+          return NextResponse.json(
+            { error: `Status '${data.status}' requires a dedicated workflow action and cannot be set directly.` },
+            { status: 400 }
+          )
+        }
+
         const extra: Record<string, any> = {}
         if (data.status === "APPROVED_FOR_FUEL" && !oldRequest.workOrderNumber && !data.workOrderNumber) {
           extra.workOrderNumber = `WO-${1000 + id}`
