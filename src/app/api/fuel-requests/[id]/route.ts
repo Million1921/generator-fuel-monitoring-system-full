@@ -1,9 +1,19 @@
 export const dynamic = "force-dynamic";
 import prisma from "@/lib/db"
-import { requireRole, requireAbility } from "@/lib/auth"
+import { requireAbility } from "@/lib/auth"
+import { subject } from "@casl/ability"
 import { apiErrorResponse } from "@/lib/server-utils"
 import { NextRequest, NextResponse } from "next/server"
 import { z } from "zod"
+import { 
+  approveFuelRequest,
+  createWorkOrder,
+  approveToFinance,
+  releaseFunds,
+  purchaseAndAssignFuel,
+  verifyAndCompleteDelivery,
+  deleteFuelRequest
+} from "@/features/fuel-requests/actions"
 
 const PutSchema = z.object({
   status: z.string().optional(),
@@ -13,12 +23,18 @@ const PutSchema = z.object({
   notes: z.string().optional().nullable(),
   rejectionReason: z.string().optional().nullable(),
   workOrderNumber: z.string().optional(),
+  
+  // Extra fields needed for specific state transitions
+  amount: z.coerce.number().positive().optional(),
+  financeRemark: z.string().optional(),
+  fuelStation: z.string().optional(),
+  purchasedAmount: z.coerce.number().positive().optional(),
 })
 
 // GET /api/fuel-requests/[id]
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    await requireAbility("read", "FuelRequest")
+    const { ability } = await requireAbility("read", "FuelRequest")
     const { id } = await params;
     const parsedId = parseInt(id)
     if (isNaN(parsedId)) return NextResponse.json({ error: "Invalid id" }, { status: 400 })
@@ -28,6 +44,11 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
       include: { site: true, technician: true },
     })
     if (!request) return NextResponse.json({ error: "Not found" }, { status: 404 })
+    
+    if (!ability.can('read', subject('FuelRequest', request) as any)) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+    }
+
     return NextResponse.json(request)
   } catch (e) {
     return apiErrorResponse(e, "GET /api/fuel-requests/[id]")
@@ -37,8 +58,6 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
 // PUT /api/fuel-requests/[id] — general update (status, approval, etc.)
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    await requireRole(["ADMIN", "MANAGER", "SUPERVISOR"])
-
     const { id: paramId } = await params;
     const id = parseInt(paramId)
     if (isNaN(id)) return NextResponse.json({ error: "Invalid id" }, { status: 400 })
@@ -50,28 +69,73 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     }
     const data = parsed.data
 
-    // Auto-generate work order number when moving to APPROVED_FOR_FUEL.
-    // Derived from the request's own (already unique) id — atomic, no
-    // count()-based race or reuse on delete.
-    const extra: Record<string, any> = {}
-    if (data.status === "APPROVED_FOR_FUEL" && !data.workOrderNumber) {
-      extra.workOrderNumber = `WO-${1000 + id}`
+    const oldRequest = await prisma.fuelRequest.findUnique({ where: { id } })
+    if (!oldRequest) return NextResponse.json({ error: "Not found" }, { status: 404 })
+
+    const { ability, session } = await requireAbility("update", "FuelRequest")
+    if (!ability.can('update', subject('FuelRequest', oldRequest) as any)) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
 
-    const updated = await prisma.fuelRequest.update({
-      where: { id },
-      data: {
-        status: data.status ?? undefined,
-        priority: data.priority ?? undefined,
-        actualRefueled: data.actualRefueled,
-        technicianId: data.technicianId,
-        notes: data.notes ?? undefined,
-        rejectionReason: data.rejectionReason ?? undefined,
-        approvedAt: data.status?.startsWith("APPROVED") ? new Date() : undefined,
-        rejectedAt: data.status === "REJECTED" ? new Date() : undefined,
-        ...extra,
-      },
-    })
+    // If status is changing, enforce the specific state transition logic
+    if (data.status && data.status !== oldRequest.status) {
+      if (data.status === "APPROVED_REQUEST") {
+        await approveFuelRequest(id)
+      } else if (data.status === "PENDING_MANAGER_APPROVAL") {
+        await createWorkOrder(id)
+      } else if (data.status === "PENDING_FINANCE") {
+        await approveToFinance(id)
+      } else if (data.status === "FUNDS_RELEASED") {
+        if (!data.amount || !data.financeRemark) {
+          return NextResponse.json({ error: "Missing amount or financeRemark for FUNDS_RELEASED" }, { status: 400 })
+        }
+        await releaseFunds(id, data.amount, data.financeRemark, session.user.id)
+      } else if (data.status === "ASSIGNED_TO_TECH") {
+        if (!data.technicianId || !data.fuelStation || !data.purchasedAmount) {
+          return NextResponse.json({ error: "Missing technicianId, fuelStation, or purchasedAmount for ASSIGNED_TO_TECH" }, { status: 400 })
+        }
+        await purchaseAndAssignFuel(id, session.user.id, data.technicianId, data.fuelStation, data.purchasedAmount)
+      } else if (data.status === "COMPLETED") {
+        await verifyAndCompleteDelivery(id)
+      } else {
+        // Handle generic or simpler rejections
+        const extra: Record<string, any> = {}
+        if (data.status === "APPROVED_FOR_FUEL" && !oldRequest.workOrderNumber && !data.workOrderNumber) {
+          extra.workOrderNumber = `WO-${1000 + id}`
+        }
+
+        await prisma.fuelRequest.update({
+          where: { id },
+          data: {
+            status: data.status,
+            approvedAt: data.status?.startsWith("APPROVED") ? new Date() : undefined,
+            rejectedAt: data.status === "REJECTED" ? new Date() : undefined,
+            rejectionReason: data.status === "REJECTED" ? data.rejectionReason : undefined,
+            ...extra,
+          }
+        })
+      }
+    }
+
+    // After state transition (if any), update other editable fields if provided
+    const updateData: Record<string, any> = {}
+    if (data.priority !== undefined) updateData.priority = data.priority
+    if (data.actualRefueled !== undefined) updateData.actualRefueled = data.actualRefueled
+    // If not transitioning to ASSIGNED_TO_TECH, allow general technicianId update
+    if (data.technicianId !== undefined && data.status !== "ASSIGNED_TO_TECH") {
+      updateData.technicianId = data.technicianId
+    }
+    if (data.notes !== undefined) updateData.notes = data.notes
+    if (data.workOrderNumber !== undefined) updateData.workOrderNumber = data.workOrderNumber
+
+    let updated = await prisma.fuelRequest.findUnique({ where: { id } })
+    if (Object.keys(updateData).length > 0) {
+      updated = await prisma.fuelRequest.update({
+        where: { id },
+        data: updateData
+      })
+    }
+    
     return NextResponse.json(updated)
   } catch (e) {
     return apiErrorResponse(e, "PUT /api/fuel-requests/[id]")
@@ -81,13 +145,12 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 // DELETE /api/fuel-requests/[id]
 export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    await requireRole(["ADMIN", "MANAGER"])
+    const { id: paramId } = await params;
+    const id = parseInt(paramId)
+    if (isNaN(id)) return NextResponse.json({ error: "Invalid id" }, { status: 400 })
 
-    const { id } = await params;
-    const parsedId = parseInt(id)
-    if (isNaN(parsedId)) return NextResponse.json({ error: "Invalid id" }, { status: 400 })
-
-    await prisma.fuelRequest.delete({ where: { id: parsedId } })
+    // deleteFuelRequest action handles CASL/ability checks
+    await deleteFuelRequest(id)
     return NextResponse.json({ success: true })
   } catch (e) {
     return apiErrorResponse(e, "DELETE /api/fuel-requests/[id]")

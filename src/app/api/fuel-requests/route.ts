@@ -1,17 +1,25 @@
 export const dynamic = "force-dynamic";
 import prisma from "@/lib/db"
-import { requireRole, requireAbility, getRegionScope } from "@/lib/auth"
+import { requireAbility, getRegionScope } from "@/lib/auth"
 import { apiErrorResponse } from "@/lib/server-utils"
 import { NextRequest, NextResponse } from "next/server"
 import { z } from "zod"
+import { createFuelRequest } from "@/features/fuel-requests/actions"
 
 const PostSchema = z.object({
-  siteId: z.coerce.number().int().positive(),
+  siteId: z.coerce.string(),
   status: z.string().optional(),
   priority: z.string().optional().nullable(),
-  literRequired: z.coerce.number().positive().optional().nullable(),
-  technicianId: z.coerce.number().int().positive().optional().nullable(),
+  literRequired: z.union([z.number(), z.string()]).optional().nullable(),
+  technicianId: z.coerce.string().optional().nullable(),
   notes: z.string().optional().nullable(),
+  runningHour: z.coerce.number().optional().nullable(),
+  securityName: z.string().optional(),
+  route: z.string().optional(),
+  driverName: z.string().optional(),
+  driverType: z.string().optional(),
+  driverPhone: z.string().optional(),
+  employeeId: z.string().optional(),
 })
 
 // GET /api/fuel-requests — list all (optional ?region=, ?status=)
@@ -40,8 +48,6 @@ export async function GET(req: NextRequest) {
 // POST /api/fuel-requests — create a new fuel request
 export async function POST(req: NextRequest) {
   try {
-    await requireRole(["ADMIN", "MANAGER", "SUPERVISOR", "TECHNICIAN"])
-
     const body = await req.json()
     const parsed = PostSchema.safeParse(body)
     if (!parsed.success) {
@@ -49,23 +55,19 @@ export async function POST(req: NextRequest) {
     }
     const data = parsed.data;
 
-    // Create the record with a placeholder number, then derive the display
-    // number from the row's own DB-assigned autoincrement id (atomic).
-    const request = await prisma.fuelRequest.create({
-      data: {
-        siteId: data.siteId,
-        status: data.status ?? "PENDING_SUPERVISOR",
-        priority: data.priority ?? null,
-        literRequired: data.literRequired ?? null,
-        technicianId: data.technicianId ?? null,
-        notes: data.notes ?? null,
-      },
-    })
-
-    const workRequestNumber = `REQ-${1000 + request.id}`
-    const finalRequest = await prisma.fuelRequest.update({
-      where: { id: request.id },
-      data: { workRequestNumber }
+    const finalRequest = await createFuelRequest({
+      siteId: data.siteId,
+      priority: data.priority || undefined,
+      literRequired: data.literRequired || undefined,
+      technicianId: data.technicianId || undefined,
+      remark: data.notes || undefined,
+      runningHour: data.runningHour || undefined,
+      securityName: data.securityName || undefined,
+      route: data.route || undefined,
+      driverName: data.driverName || undefined,
+      driverType: data.driverType || undefined,
+      driverPhone: data.driverPhone || undefined,
+      employeeId: data.employeeId || undefined,
     })
 
     return NextResponse.json(finalRequest, { status: 201 })

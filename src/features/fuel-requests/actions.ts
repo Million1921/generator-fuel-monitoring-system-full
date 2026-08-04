@@ -234,7 +234,6 @@ export async function createFuelRequest(data: FuelRequestData) {
 }
 
 export async function approveFuelRequest(id: number) {
-  await requireRole(["ADMIN", "SUPERVISOR"])
   const { ability } = await requireAbility("update", "FuelRequest")
   const request = await prisma.fuelRequest.findUniqueOrThrow({ where: { id } })
   if (!ability.can('update', subject('FuelRequest', request) as any)) {
@@ -250,7 +249,6 @@ export async function approveFuelRequest(id: number) {
 }
 
 export async function createWorkOrder(id: number) {
-  await requireRole(["ADMIN", "FLEET_ADMIN"])
   const { ability } = await requireAbility("update", "FuelRequest")
   const request = await prisma.fuelRequest.findUniqueOrThrow({ where: { id } })
   if (!ability.can('update', subject('FuelRequest', request) as any)) {
@@ -270,7 +268,6 @@ export async function createWorkOrder(id: number) {
 }
 
 export async function approveToFinance(id: number) {
-  await requireRole(["ADMIN", "MANAGER"])
   const { ability } = await requireAbility("update", "FuelRequest")
   const request = await prisma.fuelRequest.findUniqueOrThrow({ where: { id } })
   if (!ability.can('update', subject('FuelRequest', request) as any)) {
@@ -286,7 +283,6 @@ export async function approveToFinance(id: number) {
 }
 
 export async function releaseFunds(id: number, amount: number, remark: string, adminUserId: string) {
-  await requireRole(["ADMIN", "FINANCE"])
   const { ability } = await requireAbility("update", "FuelRequest")
   const requestRecord = await prisma.fuelRequest.findUniqueOrThrow({ where: { id } })
   if (!ability.can('update', subject('FuelRequest', requestRecord) as any)) {
@@ -323,7 +319,6 @@ export async function releaseFunds(id: number, amount: number, remark: string, a
 }
 
 export async function purchaseAndAssignFuel(id: number, adminUserId: string, technicianId: number, fuelStation: string, purchasedAmount: number) {
-  await requireRole(["ADMIN", "FLEET_ADMIN"])
   const { ability } = await requireAbility("update", "FuelRequest")
   const requestRecord = await prisma.fuelRequest.findUniqueOrThrow({ where: { id } })
   if (!ability.can('update', subject('FuelRequest', requestRecord) as any)) {
@@ -369,7 +364,6 @@ export async function purchaseAndAssignFuel(id: number, adminUserId: string, tec
 }
 
 export async function verifyAndCompleteDelivery(id: number) {
-  await requireRole(["ADMIN", "FLEET_ADMIN"])
   const { ability } = await requireAbility("update", "FuelRequest")
   const request = await prisma.fuelRequest.findUniqueOrThrow({ where: { id } })
   if (!ability.can('update', subject('FuelRequest', request) as any)) {
