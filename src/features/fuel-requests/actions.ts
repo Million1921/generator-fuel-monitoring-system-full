@@ -1,7 +1,8 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
-import { requireRole, requireAbility } from "@/lib/auth"
+import { requireRole, requireAbility, AuthError } from "@/lib/auth"
+import { subject } from "@casl/ability"
 import prisma from "@/lib/db"
 import type { Prisma } from "@prisma/client"
 import { logger } from "@/lib/server-utils"
@@ -234,6 +235,11 @@ export async function createFuelRequest(data: FuelRequestData) {
 
 export async function approveFuelRequest(id: number) {
   await requireRole(["ADMIN", "SUPERVISOR"])
+  const { ability } = await requireAbility("update", "FuelRequest")
+  const request = await prisma.fuelRequest.findUniqueOrThrow({ where: { id } })
+  if (!ability.can('update', subject('FuelRequest', request) as any)) {
+    throw new AuthError('Forbidden', 403)
+  }
 
   await prisma.fuelRequest.update({
     where: { id },
@@ -245,6 +251,11 @@ export async function approveFuelRequest(id: number) {
 
 export async function createWorkOrder(id: number) {
   await requireRole(["ADMIN", "FLEET_ADMIN"])
+  const { ability } = await requireAbility("update", "FuelRequest")
+  const request = await prisma.fuelRequest.findUniqueOrThrow({ where: { id } })
+  if (!ability.can('update', subject('FuelRequest', request) as any)) {
+    throw new AuthError('Forbidden', 403)
+  }
 
   // Derived from the request's own (already unique) id — atomic, no
   // count()-based race or reuse on delete.
@@ -260,6 +271,11 @@ export async function createWorkOrder(id: number) {
 
 export async function approveToFinance(id: number) {
   await requireRole(["ADMIN", "MANAGER"])
+  const { ability } = await requireAbility("update", "FuelRequest")
+  const request = await prisma.fuelRequest.findUniqueOrThrow({ where: { id } })
+  if (!ability.can('update', subject('FuelRequest', request) as any)) {
+    throw new AuthError('Forbidden', 403)
+  }
 
   await prisma.fuelRequest.update({
     where: { id },
@@ -271,6 +287,11 @@ export async function approveToFinance(id: number) {
 
 export async function releaseFunds(id: number, amount: number, remark: string, adminUserId: string) {
   await requireRole(["ADMIN", "FINANCE"])
+  const { ability } = await requireAbility("update", "FuelRequest")
+  const requestRecord = await prisma.fuelRequest.findUniqueOrThrow({ where: { id } })
+  if (!ability.can('update', subject('FuelRequest', requestRecord) as any)) {
+    throw new AuthError('Forbidden', 403)
+  }
 
   const request = await prisma.fuelRequest.update({
     where: { id },
@@ -303,6 +324,11 @@ export async function releaseFunds(id: number, amount: number, remark: string, a
 
 export async function purchaseAndAssignFuel(id: number, adminUserId: string, technicianId: number, fuelStation: string, purchasedAmount: number) {
   await requireRole(["ADMIN", "FLEET_ADMIN"])
+  const { ability } = await requireAbility("update", "FuelRequest")
+  const requestRecord = await prisma.fuelRequest.findUniqueOrThrow({ where: { id } })
+  if (!ability.can('update', subject('FuelRequest', requestRecord) as any)) {
+    throw new AuthError('Forbidden', 403)
+  }
 
   const wallet = await prisma.fuelAdminWallet.findUnique({ where: { userId: adminUserId } })
   if (!wallet || wallet.balance < purchasedAmount) {
@@ -344,6 +370,11 @@ export async function purchaseAndAssignFuel(id: number, adminUserId: string, tec
 
 export async function verifyAndCompleteDelivery(id: number) {
   await requireRole(["ADMIN", "FLEET_ADMIN"])
+  const { ability } = await requireAbility("update", "FuelRequest")
+  const request = await prisma.fuelRequest.findUniqueOrThrow({ where: { id } })
+  if (!ability.can('update', subject('FuelRequest', request) as any)) {
+    throw new AuthError('Forbidden', 403)
+  }
 
   await prisma.fuelRequest.update({
     where: { id },
