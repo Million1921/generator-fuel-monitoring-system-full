@@ -110,7 +110,7 @@ export function FuelRequestTable({
         toast.error("Approval failed")
       }
     })
-  }
+
 
   const handleApproveToFinance = (id: number) => {
     startTransition(async () => {

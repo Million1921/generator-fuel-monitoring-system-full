@@ -117,27 +117,27 @@ export default async function FuelRequestPage(props: {
   ] = await Promise.all([
     prisma.fuelRequest.findMany({
       orderBy,
-      where: { status: { in: ['PENDING', 'PENDING_SUPERVISOR', 'PENDING_MANAGER_APPROVAL', 'PENDING_FINANCE'] }, ...whereBase },
+      where: { status: { in: ['PENDING', 'PENDING_SUPERVISOR', 'PENDING_MANAGER_APPROVAL'] }, ...whereBase },
       include: { site: true, technician: true },
       skip, take: limit
     }),
-    prisma.fuelRequest.count({ where: { status: { in: ['PENDING', 'PENDING_SUPERVISOR', 'PENDING_MANAGER_APPROVAL', 'PENDING_FINANCE'] }, ...whereBase } }),
+    prisma.fuelRequest.count({ where: { status: { in: ['PENDING', 'PENDING_SUPERVISOR', 'PENDING_MANAGER_APPROVAL'] }, ...whereBase } }),
 
     prisma.fuelRequest.findMany({
       orderBy,
-      where: { status: 'PENDING_ADMIN', ...whereBase },
+      where: { status: 'APPROVED_REQUEST', ...whereBase },
       include: { site: true, technician: true },
       skip, take: limit
     }),
-    prisma.fuelRequest.count({ where: { status: 'PENDING_ADMIN', ...whereBase } }),
+    prisma.fuelRequest.count({ where: { status: 'APPROVED_REQUEST', ...whereBase } }),
 
     prisma.fuelRequest.findMany({
       orderBy,
-      where: { status: 'APPROVED_FOR_FUEL', ...whereBase },
+      where: { status: 'PENDING_FINANCE', ...whereBase },
       include: { site: true, technician: true },
       skip, take: limit
     }),
-    prisma.fuelRequest.count({ where: { status: 'APPROVED_FOR_FUEL', ...whereBase } }),
+    prisma.fuelRequest.count({ where: { status: 'PENDING_FINANCE', ...whereBase } }),
 
     prisma.fuelRequest.findMany({
       orderBy,
