@@ -12,13 +12,24 @@ import { Button } from "@/components/ui/button"
 import prisma from "@/lib/db"
 import { MetricCard } from "@/components/ui/metric-card"
 
-async function getTechnicianDashboardData(email: string | null) {
-  if (!email) return null
 
-  const technician = await prisma.technician.findFirst({
-    where: { email },
-    include: { region: true },
-  })
+
+async function getTechnicianDashboardData(email: string | null, userId?: string | null) {
+  let technician = null
+
+  if (userId) {
+    technician = await prisma.technician.findFirst({
+      where: { userId },
+      include: { region: true },
+    })
+  }
+
+  if (!technician && email) {
+    technician = await prisma.technician.findFirst({
+      where: { email },
+      include: { region: true },
+    })
+  }
 
   if (!technician) return { technician: null } as const
 
@@ -29,7 +40,7 @@ async function getTechnicianDashboardData(email: string | null) {
     prisma.fuelRequest.count({
       where: {
         technicianId: technician.id,
-        status: { in: ["PENDING_SUPERVISOR", "PENDING_MANAGER", "PENDING_ADMIN"] },
+        status: { in: ["PENDING_SUPERVISOR", "PENDING_MANAGER_APPROVAL", "PENDING_FINANCE", "FUNDS_RELEASED", "ASSIGNED_TO_TECH"] },
       },
     }),
     prisma.fuelRequest.count({
@@ -81,8 +92,8 @@ function statusBadge(status: string) {
   )
 }
 
-export async function TechnicianDashboard({ email }: { email: string | null }) {
-  const data = await getTechnicianDashboardData(email)
+export async function TechnicianDashboard({ email, userId }: { email: string | null; userId?: string | null }) {
+  const data = await getTechnicianDashboardData(email, userId)
 
   // Removed quick actions per request
 

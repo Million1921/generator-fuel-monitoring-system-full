@@ -280,7 +280,7 @@ export function FuelRequestTable({
                       {req.status === 'PENDING_MANAGER_APPROVAL' && (userRole === 'MANAGER' || userRole === 'ADMIN') && (
                         <Button size="sm" onClick={() => handleApproveToFinance(req.id)} disabled={isPending}
                           className="h-7 px-3 text-[11px] bg-lime-600 hover:bg-lime-700 text-white font-semibold uppercase tracking-tight shadow-none">
-                          Send to Finance
+                          Approve
                         </Button>
                       )}
                       {req.status === 'PENDING_FINANCE' && (userRole === 'FINANCE' || userRole === 'ADMIN') && (

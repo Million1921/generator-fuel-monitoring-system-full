@@ -38,7 +38,9 @@ describe('Technicians Actions', () => {
     
     const result = await createTechnician({
       name: 'John Doe',
-      phone: '123'
+      department: 'Wireless',
+      phone: '123',
+      email: 'john@example.com'
     })
 
     expect(requireAbility).toHaveBeenCalledWith('create', 'Technician')
@@ -53,8 +55,9 @@ describe('Technicians Actions', () => {
     
     const result = await updateTechnician(1, {
       name: 'Jane Doe',
+      department: 'Wireless',
       phone: '456',
-      status: 'ACTIVE'
+      email: 'jane@example.com'
     })
 
     expect(requireAbility).toHaveBeenCalledWith('update', 'Technician')

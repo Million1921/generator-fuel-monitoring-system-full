@@ -47,7 +47,7 @@ export function defineAbilitiesFor(role: AppRole): AppAbility {
       // They can only act on requests that have been approved or are in progress.
       can('update', 'FuelRequest', {
         status: { $in: ['APPROVED_REQUEST', 'PENDING_MANAGER_APPROVAL', 'FUNDS_RELEASED', 'ASSIGNED_TO_TECH'] }
-      });
+      } as any);
       cannot('create', 'FuelRequest');
       cannot('delete', 'all');
       break;

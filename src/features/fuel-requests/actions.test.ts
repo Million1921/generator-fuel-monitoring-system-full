@@ -91,7 +91,7 @@ describe('Fuel Request Workflow State Machine', () => {
     expect(result.workRequestNumber).toBe('REQ-1001')
   })
 
-  it('approveFuelRequest transitions to APPROVED_REQUEST', async () => {
+  it('approveFuelRequest transitions to PENDING_MANAGER_APPROVAL', async () => {
     const mockRecord = { id: 1, status: 'PENDING_SUPERVISOR' }
     // @ts-ignore
     prisma.fuelRequest.findUniqueOrThrow.mockResolvedValue(mockRecord)
@@ -101,11 +101,26 @@ describe('Fuel Request Workflow State Machine', () => {
     expect(requireAbility).toHaveBeenCalledWith('update', 'FuelRequest')
     expect(prisma.fuelRequest.update).toHaveBeenCalledWith({
       where: { id: 1 },
+      data: expect.objectContaining({
+        status: 'PENDING_MANAGER_APPROVAL',
+      })
+    })
+  })
+
+  it('approveToFinance (manager) transitions to APPROVED_REQUEST', async () => {
+    const mockRecord = { id: 1, status: 'PENDING_MANAGER_APPROVAL' }
+    // @ts-ignore
+    prisma.fuelRequest.findUniqueOrThrow.mockResolvedValue(mockRecord)
+    
+    await approveToFinance(1)
+    
+    expect(prisma.fuelRequest.update).toHaveBeenCalledWith({
+      where: { id: 1 },
       data: { status: 'APPROVED_REQUEST' }
     })
   })
 
-  it('createWorkOrder transitions to PENDING_MANAGER_APPROVAL', async () => {
+  it('createWorkOrder (fleet admin) transitions to PENDING_FINANCE', async () => {
     const mockRecord = { id: 1, status: 'APPROVED_REQUEST' }
     // @ts-ignore
     prisma.fuelRequest.findUniqueOrThrow.mockResolvedValue(mockRecord)
@@ -115,22 +130,9 @@ describe('Fuel Request Workflow State Machine', () => {
     expect(prisma.fuelRequest.update).toHaveBeenCalledWith({
       where: { id: 1 },
       data: { 
-        status: 'PENDING_MANAGER_APPROVAL',
+        status: 'PENDING_FINANCE',
         workOrderNumber: 'WO-1001'
       }
-    })
-  })
-
-  it('approveToFinance transitions to PENDING_FINANCE', async () => {
-    const mockRecord = { id: 1, status: 'PENDING_MANAGER_APPROVAL' }
-    // @ts-ignore
-    prisma.fuelRequest.findUniqueOrThrow.mockResolvedValue(mockRecord)
-    
-    await approveToFinance(1)
-    
-    expect(prisma.fuelRequest.update).toHaveBeenCalledWith({
-      where: { id: 1 },
-      data: { status: 'PENDING_FINANCE' }
     })
   })
 

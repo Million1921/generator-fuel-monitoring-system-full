@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { createGenerator, updateGenerator, deleteGenerator, getGenerators } from './actions'
+import { createGenerator, updateGenerator, deleteGenerator } from './actions'
 
 // Mock auth and CASL
 vi.mock('@/lib/auth', () => ({

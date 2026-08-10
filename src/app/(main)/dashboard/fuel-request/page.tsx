@@ -117,11 +117,11 @@ export default async function FuelRequestPage(props: {
   ] = await Promise.all([
     prisma.fuelRequest.findMany({
       orderBy,
-      where: { status: { in: ['PENDING', 'PENDING_SUPERVISOR', 'PENDING_MANAGER'] }, ...whereBase },
+      where: { status: { in: ['PENDING', 'PENDING_SUPERVISOR', 'PENDING_MANAGER_APPROVAL', 'PENDING_FINANCE'] }, ...whereBase },
       include: { site: true, technician: true },
       skip, take: limit
     }),
-    prisma.fuelRequest.count({ where: { status: { in: ['PENDING', 'PENDING_SUPERVISOR', 'PENDING_MANAGER'] }, ...whereBase } }),
+    prisma.fuelRequest.count({ where: { status: { in: ['PENDING', 'PENDING_SUPERVISOR', 'PENDING_MANAGER_APPROVAL', 'PENDING_FINANCE'] }, ...whereBase } }),
 
     prisma.fuelRequest.findMany({
       orderBy,

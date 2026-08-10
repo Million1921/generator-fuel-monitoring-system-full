@@ -79,12 +79,15 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 
     // If status is changing, enforce the specific state transition logic
     if (data.status && data.status !== oldRequest.status) {
-      if (data.status === "APPROVED_REQUEST") {
+      if (data.status === "PENDING_MANAGER_APPROVAL") {
+        // Supervisor approves → Manager
         await approveFuelRequest(id)
-      } else if (data.status === "PENDING_MANAGER_APPROVAL") {
-        await createWorkOrder(id)
-      } else if (data.status === "PENDING_FINANCE") {
+      } else if (data.status === "APPROVED_REQUEST") {
+        // Manager approves → Fleet Admin
         await approveToFinance(id)
+      } else if (data.status === "PENDING_FINANCE") {
+        // Fleet Admin creates Work Order → Finance
+        await createWorkOrder(id)
       } else if (data.status === "FUNDS_RELEASED") {
         if (!data.amount || !data.financeRemark) {
           return NextResponse.json({ error: "Missing amount or financeRemark for FUNDS_RELEASED" }, { status: 400 })

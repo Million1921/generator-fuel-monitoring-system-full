@@ -233,7 +233,27 @@ export async function createFuelRequest(data: FuelRequestData) {
   return finalRequest
 }
 
+// Step 1: Supervisor approves → goes to Manager
 export async function approveFuelRequest(id: number) {
+  const { ability } = await requireAbility("update", "FuelRequest")
+  const request = await prisma.fuelRequest.findUniqueOrThrow({ where: { id } })
+  if (!ability.can('update', subject('FuelRequest', request) as any)) {
+    throw new AuthError('Forbidden', 403)
+  }
+
+  await prisma.fuelRequest.update({
+    where: { id },
+    data: { 
+      status: "PENDING_MANAGER_APPROVAL",
+      approvedAt: new Date(),
+    }
+  })
+  revalidatePath("/dashboard/fuel-request")
+  revalidatePath("/dashboard")
+}
+
+// Step 2: Manager approves → goes to Fleet Admin
+export async function approveToFinance(id: number) {
   const { ability } = await requireAbility("update", "FuelRequest")
   const request = await prisma.fuelRequest.findUniqueOrThrow({ where: { id } })
   if (!ability.can('update', subject('FuelRequest', request) as any)) {
@@ -248,6 +268,7 @@ export async function approveFuelRequest(id: number) {
   revalidatePath("/dashboard")
 }
 
+// Step 3: Fleet Admin creates Work Order → goes to Finance
 export async function createWorkOrder(id: number) {
   const { ability } = await requireAbility("update", "FuelRequest")
   const request = await prisma.fuelRequest.findUniqueOrThrow({ where: { id } })
@@ -261,22 +282,7 @@ export async function createWorkOrder(id: number) {
 
   await prisma.fuelRequest.update({
     where: { id },
-    data: { status: "PENDING_MANAGER_APPROVAL", workOrderNumber }
-  })
-  revalidatePath("/dashboard/fuel-request")
-  revalidatePath("/dashboard")
-}
-
-export async function approveToFinance(id: number) {
-  const { ability } = await requireAbility("update", "FuelRequest")
-  const request = await prisma.fuelRequest.findUniqueOrThrow({ where: { id } })
-  if (!ability.can('update', subject('FuelRequest', request) as any)) {
-    throw new AuthError('Forbidden', 403)
-  }
-
-  await prisma.fuelRequest.update({
-    where: { id },
-    data: { status: "PENDING_FINANCE" }
+    data: { status: "PENDING_FINANCE", workOrderNumber }
   })
   revalidatePath("/dashboard/fuel-request")
   revalidatePath("/dashboard")
