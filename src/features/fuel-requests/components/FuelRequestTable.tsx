@@ -313,7 +313,7 @@ export function FuelRequestTable({
                           </DialogContent>
                         </Dialog>
                       )}
-                      {req.status === 'FUNDS_RELEASED' && userRole === 'ADMIN' && (
+                      {req.status === 'FUNDS_RELEASED' && (userRole === 'FLEET_ADMIN' || userRole === 'ADMIN') && (
                         <Dialog open={openPurchaseDialog === req.id} onOpenChange={(open) => setOpenPurchaseDialog(open ? req.id : null)}>
                           <DialogTrigger asChild>
                             <Button size="sm" className="h-7 px-3 text-[11px] bg-blue-600 hover:bg-blue-700 text-white font-semibold uppercase tracking-tight shadow-none">
