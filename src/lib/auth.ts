@@ -36,7 +36,8 @@ export async function getRoleFromClerk(): Promise<AppRole> {
     return "GUEST";
   }
 
-  return role as AppRole;
+  const normalizedRole = role.toUpperCase().replace(/\s+/g, '_');
+  return normalizedRole as AppRole;
 }
 
 export async function requireRole(allowedRoles: AppRole[]) {

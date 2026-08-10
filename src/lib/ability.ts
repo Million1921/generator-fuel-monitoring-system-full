@@ -36,6 +36,17 @@ export function defineAbilitiesFor(role: AppRole): AppAbility {
       cannot('delete', 'all');
       break;
 
+    case 'MANAGER':
+      can('read', 'all');
+      // Manager reviews requests after the supervisor and approves them to the admin (Finance)
+      can('update', 'FuelRequest', {
+        status: { $in: ['PENDING_MANAGER_APPROVAL'] }
+      } as any);
+      can('update', 'FuelRefill');
+      cannot('create', 'FuelRequest');
+      cannot('delete', 'all');
+      break;
+
     case 'FLEET_ADMIN':
       // Fleet Department: only responsible for issuing the Work Order once a
       // fuel request has cleared Supervisor -> Manager -> Admin approval.
