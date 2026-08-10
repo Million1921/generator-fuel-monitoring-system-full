@@ -105,18 +105,18 @@ export function FuelRequestTable({
     startTransition(async () => {
       try {
         await approveFuelRequest(id)
-        toast.success("Approved Fuel Request")
+        toast.success("Approved – forwarded to Manager")
       } catch (error) {
         toast.error("Approval failed")
       }
     })
-
+  }
 
   const handleApproveToFinance = (id: number) => {
     startTransition(async () => {
       try {
         await approveToFinance(id)
-        toast.success("Approved and forwarded to Finance")
+        toast.success("Approved – forwarded to Fleet Admin")
       } catch (error) {
         toast.error("Approval failed")
       }
