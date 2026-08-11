@@ -12,22 +12,22 @@ datasource db {
 }
 
 model User {
-  id                String       @id @default(cuid())
-  email             String       @unique
+  id                String      @id @default(cuid())
+  email             String      @unique
   name              String?
-  emailVerified     Boolean      @default(false)
+  emailVerified     Boolean     @default(false)
   image             String?
-  role              String   @default("TECHNICIAN")
+  role              String      @default("TECHNICIAN")
   technicianProfile Technician?
-  createdAt         DateTime     @default(now())
-  updatedAt         DateTime     @updatedAt
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
 
   @@map("user")
 }
 
 model Department {
   id          Int          @id @default(autoincrement())
-  name        String       // e.g. "Wireless Infrastructure", "Fleet"
+  name        String // e.g. "Wireless Infrastructure", "Fleet"
   type        String       @default("GENERAL") // WIRELESS_INFRASTRUCTURE | FLEET | GENERAL
   regionId    Int?
   region      Region?      @relation(fields: [regionId], references: [id])
@@ -35,7 +35,6 @@ model Department {
 
   @@unique([name, regionId])
 }
-
 
 model Region {
   id          Int          @id @default(autoincrement())
@@ -46,66 +45,68 @@ model Region {
 }
 
 model Site {
-  id               Int      @id @default(autoincrement())
-  siteId           String   @unique // External ID (e.g. "111006")
+  id               Int           @id @default(autoincrement())
+  siteId           String        @unique // External ID (e.g. "111006")
   name             String
   tankerCapacity   Float?
   dgCapacity       String?
   dgType           String?
   gpsCoordinates   String?
-  region           String?  // The app expects a 'region' field string in some places
+  region           String? // The app expects a 'region' field string in some places
   installationDate DateTime?
-  regionModel      Region?  @relation(fields: [regionId], references: [id])
+  regionModel      Region?       @relation(fields: [regionId], references: [id])
   regionId         Int?
   generator        Generator?
   fuelRefills      FuelRefill[]
   fuelRequests     FuelRequest[]
   transactions     Transaction[]
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
 }
 
 model Generator {
-  id                 Int      @id @default(autoincrement())
-  genId              String   @unique
+  id                 Int       @id @default(autoincrement())
+  genId              String    @unique
   model              String?
   capacity           String?
-  capacityKVA        Float?   @default(0)
-  stdFuelConsumption Float?   @default(0) // Renamed from stdConsumption
+  capacityKVA        Float?    @default(0)
+  stdFuelConsumption Float?    @default(0) // Renamed from stdConsumption
   serialNumber       String?
-  lastRunningHours   Float?   @default(0) // Renamed from currentRunningHour
+  lastRunningHours   Float?    @default(0) // Renamed from currentRunningHour
   installationDate   DateTime?
   displayHistory     String?
-  site               Site     @relation(fields: [siteId], references: [id])
-  siteId             Int      @unique
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
+  site               Site      @relation(fields: [siteId], references: [id])
+  siteId             Int       @unique
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
 }
 
 model Technician {
-  id           Int      @id @default(autoincrement())
-  userId       String?  @unique
-  user         User?    @relation(fields: [userId], references: [id])
-  name         String?
-  department   String?  // legacy free-text department label, kept for backward compatibility
-  departmentId Int?
-  departmentRef Department? @relation(fields: [departmentId], references: [id])
-  regionId     Int?
-  region       Region?  @relation(fields: [regionId], references: [id])
-  phone        String?
-  email        String?
-  fuelRequests FuelRequest[]
-  fuelRefills  FuelRefill[]
-  transactions Transaction[]
+  id            Int           @id @default(autoincrement())
+  userId        String?       @unique
+  user          User?         @relation(fields: [userId], references: [id])
+  name          String?
+  department    String? // legacy free-text department label, kept for backward compatibility
+  departmentId  Int?
+  departmentRef Department?   @relation(fields: [departmentId], references: [id])
+  regionId      Int?
+  region        Region?       @relation(fields: [regionId], references: [id])
+  phone         String?
+  email         String?
+  employeeId    String? // Added for ID NO
+  jobTitle      String? // Added for Title
+  fuelRequests  FuelRequest[]
+  fuelRefills   FuelRefill[]
+  transactions  Transaction[]
 }
 
 model FuelRequest {
-  id                Int      @id @default(autoincrement())
-  workRequestNumber String?  @unique
-  workOrderNumber   String?  @unique
-  status            String   @default("PENDING") // e.g., COMPLETED, PENDING_SUPERVISOR, etc.
-  priority          String?  // e.g., EMERGENCY, URGENT, HIGH
-  actualRefueled    Float?   @default(0)
+  id                Int         @id @default(autoincrement())
+  workRequestNumber String?     @unique
+  workOrderNumber   String?     @unique
+  status            String      @default("PENDING") // e.g., COMPLETED, PENDING_SUPERVISOR, etc.
+  priority          String? // e.g., EMERGENCY, URGENT, HIGH
+  actualRefueled    Float?      @default(0)
   literRequired     Float?
   requestedAmount   Float?
   runningHour       Float?
@@ -115,13 +116,13 @@ model FuelRequest {
   driverType        String?
   driverPhone       String?
   employeeId        String?
-  site              Site     @relation(fields: [siteId], references: [id])
+  site              Site        @relation(fields: [siteId], references: [id])
   siteId            Int
   technician        Technician? @relation(fields: [technicianId], references: [id])
   technicianId      Int?
   supervisorId      Int?
   managerId         Int?
-  submittedAt       DateTime @default(now())
+  submittedAt       DateTime    @default(now())
   approvedAt        DateTime?
   rejectedAt        DateTime?
   rejectionReason   String?
@@ -129,83 +130,83 @@ model FuelRequest {
   fuelStation       String?
   purchasedAmount   Float?
   financeRemark     String?
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
   fuelRefill        FuelRefill?
 }
 
 model FuelAdminWallet {
-  id          Int       @id @default(autoincrement())
-  userId      String    @unique
-  balance     Float     @default(0)
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id           Int                 @id @default(autoincrement())
+  userId       String              @unique
+  balance      Float               @default(0)
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
   transactions WalletTransaction[]
 }
 
 model WalletTransaction {
-  id              Int       @id @default(autoincrement())
-  walletId        Int
-  wallet          FuelAdminWallet @relation(fields: [walletId], references: [id])
-  type            String    // DEPOSIT (by Finance) or WITHDRAWAL (Fuel Purchase)
-  amount          Float
-  fuelRequestId   Int?
-  fuelStation     String?
-  description     String?
-  createdAt       DateTime  @default(now())
+  id            Int             @id @default(autoincrement())
+  walletId      Int
+  wallet        FuelAdminWallet @relation(fields: [walletId], references: [id])
+  type          String // DEPOSIT (by Finance) or WITHDRAWAL (Fuel Purchase)
+  amount        Float
+  fuelRequestId Int?
+  fuelStation   String?
+  description   String?
+  createdAt     DateTime        @default(now())
 }
 
 model FuelRefill {
-  id             Int      @id @default(autoincrement())
-  refillDate     DateTime @default(now())
-  fuelDelivered  Float
-  beforeLevel    Float
-  afterLevel     Float
-  beforeHours    Float
-  afterHours     Float
-  tankerVehicle  String?
-  driverName     String?
-  driverId       String?
-  technicianName String?
+  id              Int      @id @default(autoincrement())
+  refillDate      DateTime @default(now())
+  fuelDelivered   Float
+  beforeLevel     Float
+  afterLevel      Float
+  beforeHours     Float
+  afterHours      Float
+  tankerVehicle   String?
+  driverName      String?
+  driverId        String?
+  technicianName  String?
   technicianIdStr String?
-  employmentType String?
-  eepu           Float?
-  remark         String?
-  department     String?
-  
-  site           Site     @relation(fields: [siteId], references: [id])
-  siteId         Int
-  technician     Technician? @relation(fields: [technicianId], references: [id])
-  technicianId   Int?
-  
-  fuelRequestId  Int?         @unique
-  fuelRequest    FuelRequest? @relation(fields: [fuelRequestId], references: [id])
-  
+  employmentType  String?
+  eepu            Float?
+  remark          String?
+  department      String?
+
+  site         Site        @relation(fields: [siteId], references: [id])
+  siteId       Int
+  technician   Technician? @relation(fields: [technicianId], references: [id])
+  technicianId Int?
+
+  fuelRequestId Int?         @unique
+  fuelRequest   FuelRequest? @relation(fields: [fuelRequestId], references: [id])
+
   workOrderNumber String?
-  unitPrice       Float?       @default(0)
-  
-  createdAt      DateTime     @default(now())
+  unitPrice       Float?  @default(0)
+
+  createdAt DateTime @default(now())
 }
 
 model Transaction {
-  id                Int      @id @default(autoincrement())
-  receiptNo         String?  @unique
-  senderAccount     String?
-  receiverAccount   String?
-  paidAmount        Float?   @default(0)
-  senderAmount      Float?   @default(0)
-  payerName         String?
-  location          String?
-  fuelStation       String?
-  fuelType          String   @default("Diesel")
-  type              String   // e.g., BARREL, DIRECT, etc.
-  remark            String?
-  errors            String?
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
-  
-  siteId            Int?
-  site              Site?    @relation(fields: [siteId], references: [id])
-  technicianId      Int?
-  technician        Technician? @relation(fields: [technicianId], references: [id])
+  id              Int      @id @default(autoincrement())
+  receiptNo       String?  @unique
+  senderAccount   String?
+  receiverAccount String?
+  paidAmount      Float?   @default(0)
+  senderAmount    Float?   @default(0)
+  payerName       String?
+  location        String?
+  fuelStation     String?
+  fuelType        String   @default("Diesel")
+  type            String // e.g., BARREL, DIRECT, etc.
+  remark          String?
+  errors          String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  siteId       Int?
+  site         Site?       @relation(fields: [siteId], references: [id])
+  technicianId Int?
+  technician   Technician? @relation(fields: [technicianId], references: [id])
 }

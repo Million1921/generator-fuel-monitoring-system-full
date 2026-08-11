@@ -11,6 +11,7 @@ import {
 import { Button } from "@/components/ui/button"
 import prisma from "@/lib/db"
 import { MetricCard } from "@/components/ui/metric-card"
+import { TechnicianOnboardingForm } from "@/features/technicians/components/TechnicianOnboardingForm"
 
 
 
@@ -127,6 +128,14 @@ export async function TechnicianDashboard({ email, userId, name }: { email: stri
   }
 
   const { technician, myPending, myCompletedThisMonth, myDeliveredThisMonth, recentRequests, recentDeliveries } = data
+
+  // Check if onboarding is required
+  const needsOnboarding = !technician.phone || !technician.regionId || !technician.employeeId || !technician.jobTitle;
+
+  if (needsOnboarding && userId) {
+    const regions = await prisma.region.findMany({ orderBy: { name: 'asc' } });
+    return <TechnicianOnboardingForm userId={userId} initialName={technician.name || name} regions={regions} />;
+  }
 
   const statCards = [
     {

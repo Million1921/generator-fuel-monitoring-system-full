@@ -176,3 +176,24 @@ export async function deleteTechnician(id: number) {
     throw new Error("Failed to delete technician");
   }
 }
+
+export async function completeTechnicianProfile(userId: string, data: { phone: string; department: string; regionId: number; employeeId: string; jobTitle: string; name: string }) {
+  try {
+    const technician = await prisma.technician.updateMany({
+      where: { userId },
+      data: {
+        name: data.name,
+        phone: data.phone,
+        department: data.department,
+        regionId: data.regionId,
+        employeeId: data.employeeId,
+        jobTitle: data.jobTitle,
+      }
+    });
+    revalidatePath('/dashboard');
+    return { success: true, technician };
+  } catch (error: any) {
+    logger.error("completeTechnicianProfile failed", { userId, error: error?.message });
+    throw new Error("Failed to complete technician profile");
+  }
+}
