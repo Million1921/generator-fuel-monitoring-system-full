@@ -34,6 +34,18 @@ async function getTechnicianDashboardData(email: string | null, userId?: string 
 
   if (!technician && userId) {
     try {
+      // Ensure the User exists to satisfy foreign key constraints
+      await prisma.user.upsert({
+        where: { id: userId },
+        update: {},
+        create: {
+          id: userId,
+          email: email || `${userId}@placeholder.com`,
+          name: name || "New Technician",
+          role: "TECHNICIAN"
+        }
+      });
+
       technician = await prisma.technician.create({
         data: {
           userId,
