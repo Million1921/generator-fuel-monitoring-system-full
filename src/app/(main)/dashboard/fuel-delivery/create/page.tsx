@@ -59,8 +59,16 @@ export default function NewFuelDeliveryPage() {
     getTransactions().then(res => {
       setTransactions(res)
       
-      // Auto-fill if tx param exists in URL
+      // Auto-fill from URL params
       const params = new URLSearchParams(window.location.search);
+      const paramSiteId = params.get("siteId");
+      const paramRequestId = params.get("requestId");
+      const paramWorkOrder = params.get("workOrder");
+
+      if (paramSiteId) setValue("siteId", paramSiteId);
+      if (paramRequestId) setValue("requestId", paramRequestId);
+      if (paramWorkOrder) setValue("workOrderNumber", paramWorkOrder);
+
       const txId = params.get("tx");
       if (txId) {
         const tx = res.find(t => t.id.toString() === txId);

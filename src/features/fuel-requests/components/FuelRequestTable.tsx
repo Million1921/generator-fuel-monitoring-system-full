@@ -353,7 +353,7 @@ export function FuelRequestTable({
                           Verify Delivery
                         </Button>
                       )}
-                      {req.status === 'ASSIGNED_TO_TECH' && (userRole === 'TECHNICIAN' || userRole === 'ADMIN') && (
+                      {(req.status === 'ASSIGNED_TO_TECH' || req.status === 'FUNDS_RELEASED') && (userRole === 'TECHNICIAN' || userRole === 'ADMIN') && (
                         <Button 
                           size="sm" 
                           onClick={() => router.push(`/dashboard/fuel-delivery?siteId=${req.siteId}&requestId=${req.id}&workOrder=${req.workOrderNumber}&open=true`)}

@@ -39,7 +39,7 @@ export async function getApprovedRequests(siteId?: number) {
   await requireAbility("read", "FuelRequest")
   return await prisma.fuelRequest.findMany({
     where: {
-      status: "APPROVED_FOR_FUEL",
+      status: { in: ["ASSIGNED_TO_TECH", "FUNDS_RELEASED"] },
       ...(siteId ? { siteId } : {})
     },
     include: { site: true },
