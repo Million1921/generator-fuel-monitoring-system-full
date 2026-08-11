@@ -20,7 +20,8 @@ export default async function DashboardPage(props: { searchParams: Promise<{ reg
   if (role === "TECHNICIAN") {
     const user = await currentUser()
     const email = user?.primaryEmailAddress?.emailAddress ?? user?.emailAddresses?.[0]?.emailAddress ?? null
-    return <TechnicianDashboard email={email} userId={user?.id} />
+    const name = user?.fullName || user?.firstName || email?.split('@')[0] || "Technician"
+    return <TechnicianDashboard email={email} userId={user?.id} name={name} />
   }
 
   if (role === "SUPERVISOR") {

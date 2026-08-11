@@ -14,7 +14,7 @@ import { MetricCard } from "@/components/ui/metric-card"
 
 
 
-async function getTechnicianDashboardData(email: string | null, userId?: string | null) {
+async function getTechnicianDashboardData(email: string | null, userId?: string | null, name?: string) {
   let technician = null
 
   if (userId) {
@@ -29,6 +29,21 @@ async function getTechnicianDashboardData(email: string | null, userId?: string 
       where: { email },
       include: { region: true },
     })
+  }
+
+  if (!technician && userId) {
+    try {
+      technician = await prisma.technician.create({
+        data: {
+          userId,
+          email: email || undefined,
+          name: name || "New Technician",
+        },
+        include: { region: true }
+      })
+    } catch (error) {
+      console.error("Failed to auto-create technician:", error)
+    }
   }
 
   if (!technician) return { technician: null } as const
@@ -92,8 +107,8 @@ function statusBadge(status: string) {
   )
 }
 
-export async function TechnicianDashboard({ email, userId }: { email: string | null; userId?: string | null }) {
-  const data = await getTechnicianDashboardData(email, userId)
+export async function TechnicianDashboard({ email, userId, name }: { email: string | null; userId?: string | null; name?: string }) {
+  const data = await getTechnicianDashboardData(email, userId, name)
 
   // Removed quick actions per request
 
