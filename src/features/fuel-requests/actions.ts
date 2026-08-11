@@ -320,6 +320,19 @@ export async function releaseFunds(id: number, amount: number, remark: string, a
     }
   })
 
+  // Integrate with Transaction table
+  await prisma.transaction.create({
+    data: {
+      type: "FUND_RELEASE",
+      paidAmount: amount,
+      remark: remark || `Funds released for ${request.workOrderNumber}`,
+      receiptNo: `FR-${Date.now()}-${id}`, // Ensure uniqueness
+      siteId: requestRecord.siteId,
+      technicianId: requestRecord.technicianId,
+      payerName: "Finance Department",
+    }
+  })
+
   revalidatePath("/dashboard/fuel-request")
   revalidatePath("/dashboard")
 }
