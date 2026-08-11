@@ -38,6 +38,11 @@ export function FuelDeliverySheet() {
   const [actualRefueled, setActualRefueled] = React.useState<string>("")
   const [workOrderNumber, setWorkOrderNumber] = React.useState<string>("")
   const [requestId, setRequestId] = React.useState<string>("")
+  const [technicianName, setTechnicianName] = React.useState<string>("")
+  const [technicianIdInput, setTechnicianIdInput] = React.useState<string>("")
+  const [department, setDepartment] = React.useState<string>("")
+  const [driverName, setDriverName] = React.useState<string>("")
+  const [driverIdInput, setDriverIdInput] = React.useState<string>("")
   const router = useRouter()
 
   const selectedSite = sites.find((s: any) => s.id.toString() === selectedSiteId)
@@ -66,7 +71,22 @@ export function FuelDeliverySheet() {
   React.useEffect(() => {
     if (open) {
       getDeliverySites().then(setSites)
-      getApprovedRequests().then(setApprovedRequests)
+      getApprovedRequests().then((reqs) => {
+        setApprovedRequests(reqs)
+        const reqId = searchParams.get("requestId")
+        if (reqId) {
+          const req = reqs.find((r: any) => r.id.toString() === reqId)
+          if (req?.technician) {
+            setTechnicianName(req.technician.name || "")
+            setTechnicianIdInput(req.technician.userId || req.technician.id.toString() || "")
+            setDepartment(req.technician.department || "")
+          }
+          if (req) {
+            if (req.driverName) setDriverName(req.driverName)
+            if (req.employeeId) setDriverIdInput(req.employeeId)
+          }
+        }
+      })
       if (!searchParams.get("siteId") && !searchParams.get("workOrder")) {
         setSelectedSiteId("")
         setBegRunningHour("")
@@ -74,6 +94,11 @@ export function FuelDeliverySheet() {
         setActualRefueled("")
         setWorkOrderNumber("")
         setRequestId("")
+        setTechnicianName("")
+        setTechnicianIdInput("")
+        setDepartment("")
+        setDriverName("")
+        setDriverIdInput("")
       }
     }
   }, [open, searchParams])
@@ -84,6 +109,13 @@ export function FuelDeliverySheet() {
     if (req) {
       setWorkOrderNumber(req.workOrderNumber)
       setSelectedSiteId(req.siteId.toString())
+      if (req.technician) {
+        setTechnicianName(req.technician.name || "")
+        setTechnicianIdInput(req.technician.userId || req.technician.id.toString() || "")
+        setDepartment(req.technician.department || "")
+      }
+      if (req.driverName) setDriverName(req.driverName)
+      if (req.employeeId) setDriverIdInput(req.employeeId)
     }
   }
 
@@ -336,27 +368,27 @@ export function FuelDeliverySheet() {
                   <Label htmlFor="technicianName" className="text-sm font-semibold text-gray-700 flex items-center gap-1.5">
                     <Wrench className="w-3.5 h-3.5 text-gray-400" /> Technician Name <span className="text-red-500">*</span>
                   </Label>
-                  <Input id="technicianName" name="technicianName" placeholder="Full name" className="h-10 border-gray-200 focus:ring-lime-500" required />
+                  <Input id="technicianName" name="technicianName" value={technicianName} onChange={(e) => setTechnicianName(e.target.value)} placeholder="Full name" className="h-10 border-gray-200 focus:ring-lime-500" required />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="technicianId" className="text-sm font-semibold text-gray-700">Technician ID <span className="text-red-500">*</span></Label>
-                  <Input id="technicianId" name="technicianId" placeholder="e.g. TECH-01" className="h-10 border-gray-200 focus:ring-lime-500" required />
+                  <Input id="technicianId" name="technicianId" value={technicianIdInput} onChange={(e) => setTechnicianIdInput(e.target.value)} placeholder="e.g. TECH-01" className="h-10 border-gray-200 focus:ring-lime-500" required />
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="driverName" className="text-sm font-semibold text-gray-700 flex items-center gap-1.5">
                     <Truck className="w-3.5 h-3.5 text-gray-400" /> Driver Name <span className="text-red-500">*</span>
                   </Label>
-                  <Input id="driverName" name="driverName" placeholder="Full name" className="h-10 border-gray-200 focus:ring-lime-500" required />
+                  <Input id="driverName" name="driverName" value={driverName} onChange={(e) => setDriverName(e.target.value)} placeholder="Full name" className="h-10 border-gray-200 focus:ring-lime-500" required />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="driverId" className="text-sm font-semibold text-gray-700">Driver ID / License <span className="text-red-500">*</span></Label>
-                  <Input id="driverId" name="driverId" placeholder="e.g. DRV-01" className="h-10 border-gray-200 focus:ring-lime-500" required />
+                  <Input id="driverId" name="driverId" value={driverIdInput} onChange={(e) => setDriverIdInput(e.target.value)} placeholder="e.g. DRV-01" className="h-10 border-gray-200 focus:ring-lime-500" required />
                 </div>
 
                 <div className="space-y-2 sm:col-span-2">
                   <Label htmlFor="department" className="text-sm font-semibold text-gray-700">Department</Label>
-                  <Input id="department" name="department" placeholder="e.g. NAZO&M" className="h-10 border-gray-200 focus:ring-lime-500" />
+                  <Input id="department" name="department" value={department} onChange={(e) => setDepartment(e.target.value)} placeholder="e.g. NAZO&M" className="h-10 border-gray-200 focus:ring-lime-500" />
                 </div>
               </div>
             </div>

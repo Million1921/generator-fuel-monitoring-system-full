@@ -14,7 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { createFuelDelivery, getPendingRequests, getDeliverySites } from "@/features/fuel-requests/actions"
+import { createFuelDelivery, getApprovedRequests, getDeliverySites } from "@/features/fuel-requests/actions"
 import { getTransactions } from "@/features/transactions/actions"
 import { toast } from "sonner"
 import { FuelDeliveryFormSchema, FuelDeliveryFormValues } from "@/schemas/fuel"
@@ -54,7 +54,7 @@ export default function NewFuelDeliveryPage() {
   const unitPriceValue = watch("unitPrice")
 
   React.useEffect(() => {
-    getPendingRequests().then(setRequests)
+    getApprovedRequests().then(setRequests)
     getDeliverySites().then(setSites)
     getTransactions().then(res => {
       setTransactions(res)
@@ -157,7 +157,18 @@ export default function NewFuelDeliveryPage() {
                 name="requestId"
                 control={control}
                 render={({ field }) => (
-                  <Select onValueChange={field.onChange} value={field.value}>
+                  <Select onValueChange={(val) => {
+                    field.onChange(val);
+                    if (val && val !== "none") {
+                      const req = requests.find(r => r.id.toString() === val);
+                      if (req) {
+                        if (req.siteId) setValue("siteId", req.siteId.toString());
+                        if (req.workOrderNumber) setValue("workOrderNumber", req.workOrderNumber);
+                        if (req.driverName) setValue("guardName", req.driverName);
+                        if (req.employeeId) setValue("guardSource", req.employeeId);
+                      }
+                    }
+                  }} value={field.value}>
                     <SelectTrigger>
                       <SelectValue placeholder="Link to a pending request" />
                     </SelectTrigger>

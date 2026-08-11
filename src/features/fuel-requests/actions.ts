@@ -42,7 +42,7 @@ export async function getApprovedRequests(siteId?: number) {
       status: { in: ["ASSIGNED_TO_TECH", "FUNDS_RELEASED"] },
       ...(siteId ? { siteId } : {})
     },
-    include: { site: true },
+    include: { site: true, technician: true },
     orderBy: { createdAt: 'desc' }
   })
 }
