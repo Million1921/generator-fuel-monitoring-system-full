@@ -289,52 +289,57 @@ export async function createWorkOrder(id: number) {
 }
 
 export async function releaseFunds(id: number, amount: number, remark: string, adminUserId: string) {
-  const { ability } = await requireAbility("update", "FuelRequest")
-  const requestRecord = await prisma.fuelRequest.findUniqueOrThrow({ where: { id } })
-  if (!ability.can('update', subject('FuelRequest', requestRecord) as any)) {
-    throw new AuthError('Forbidden', 403)
+  try {
+    const { ability } = await requireAbility("update", "FuelRequest")
+    const requestRecord = await prisma.fuelRequest.findUniqueOrThrow({ where: { id } })
+    if (!ability.can('update', subject('FuelRequest', requestRecord) as any)) {
+      throw new AuthError('Forbidden', 403)
+    }
+
+    const request = await prisma.fuelRequest.update({
+      where: { id },
+      data: { 
+        status: "FUNDS_RELEASED",
+        financeRemark: remark
+      }
+    })
+
+    // Update Fuel Admin's Wallet
+    const wallet = await prisma.fuelAdminWallet.upsert({
+      where: { userId: adminUserId },
+      update: { balance: { increment: amount } },
+      create: { userId: adminUserId, balance: amount }
+    })
+
+    await prisma.walletTransaction.create({
+      data: {
+        walletId: wallet.id,
+        type: "DEPOSIT",
+        amount,
+        fuelRequestId: id,
+        description: `Funds released for Work Order ${request.workOrderNumber}`
+      }
+    })
+
+    // Integrate with Transaction table
+    await prisma.transaction.create({
+      data: {
+        type: "FUND_RELEASE",
+        paidAmount: amount,
+        remark: remark || `Funds released for ${request.workOrderNumber}`,
+        receiptNo: `FR-${Date.now()}-${id}`, // Ensure uniqueness
+        siteId: requestRecord.siteId,
+        technicianId: requestRecord.technicianId,
+        payerName: "Finance Department",
+      }
+    })
+
+    revalidatePath("/dashboard/fuel-request")
+    revalidatePath("/dashboard")
+  } catch (err: any) {
+    logger.error("releaseFunds failed", { id, error: err?.message, stack: err?.stack });
+    throw new Error(`Failed to release funds: ${err?.message}`);
   }
-
-  const request = await prisma.fuelRequest.update({
-    where: { id },
-    data: { 
-      status: "FUNDS_RELEASED",
-      financeRemark: remark
-    }
-  })
-
-  // Update Fuel Admin's Wallet
-  const wallet = await prisma.fuelAdminWallet.upsert({
-    where: { userId: adminUserId },
-    update: { balance: { increment: amount } },
-    create: { userId: adminUserId, balance: amount }
-  })
-
-  await prisma.walletTransaction.create({
-    data: {
-      walletId: wallet.id,
-      type: "DEPOSIT",
-      amount,
-      fuelRequestId: id,
-      description: `Funds released for Work Order ${request.workOrderNumber}`
-    }
-  })
-
-  // Integrate with Transaction table
-  await prisma.transaction.create({
-    data: {
-      type: "FUND_RELEASE",
-      paidAmount: amount,
-      remark: remark || `Funds released for ${request.workOrderNumber}`,
-      receiptNo: `FR-${Date.now()}-${id}`, // Ensure uniqueness
-      siteId: requestRecord.siteId,
-      technicianId: requestRecord.technicianId,
-      payerName: "Finance Department",
-    }
-  })
-
-  revalidatePath("/dashboard/fuel-request")
-  revalidatePath("/dashboard")
 }
 
 export async function purchaseAndAssignFuel(id: number, adminUserId: string, technicianId: number, fuelStation: string, purchasedAmount: number) {

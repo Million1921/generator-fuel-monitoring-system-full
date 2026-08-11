@@ -131,8 +131,8 @@ export function FuelRequestTable({
         await releaseFunds(id, parseFloat(releaseAmount), releaseRemark, user?.id || "")
         toast.success("Funds released successfully")
         setOpenFinanceDialog(null)
-      } catch (error) {
-        toast.error("Failed to release funds")
+      } catch (error: any) {
+        toast.error(error.message || "Failed to release funds")
       }
     })
   }

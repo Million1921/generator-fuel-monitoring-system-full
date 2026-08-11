@@ -66,6 +66,9 @@ export function defineAbilitiesFor(role: AppRole): AppAbility {
     case 'FINANCE':
       can('read', 'all');
       can('manage', 'Transaction');
+      can('update', 'FuelRequest', {
+        status: { $in: ['PENDING_FINANCE'] }
+      } as any);
       cannot('create', 'Site');
       cannot('create', 'Generator');
       cannot('create', 'Technician');
