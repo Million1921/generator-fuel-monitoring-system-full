@@ -89,6 +89,28 @@ export function FuelRequestTable({
   const [purchaseTech, setPurchaseTech] = useState("")
   const [openPurchaseDialog, setOpenPurchaseDialog] = useState<number | null>(null)
 
+  // Work Order form state
+  const [openWODialog, setOpenWODialog] = useState<number | null>(null)
+  const [woPlanner, setWoPlanner] = useState("")
+  const [woAssetNumber, setWoAssetNumber] = useState("")
+  const [woAssetGroup, setWoAssetGroup] = useState("GENERATOR")
+  const [woWbClass, setWoWbClass] = useState("O&M_DIESEL")
+  const [woScheduledStart, setWoScheduledStart] = useState("")
+  const [woScheduledEnd, setWoScheduledEnd] = useState("")
+  const [woDuration, setWoDuration] = useState("2")
+  const [woType, setWoType] = useState("Preventive")
+  const [woPriority, setWoPriority] = useState("Medium")
+  const [woDescription, setWoDescription] = useState("")
+  const [woDepartment, setWoDepartment] = useState("")
+  const [woDeptDesc, setWoDeptDesc] = useState("")
+  const [woAssetActivity, setWoAssetActivity] = useState("FUEL REFILL")
+  const [woFirm, setWoFirm] = useState("No")
+  const [woStatus, setWoStatus] = useState("Draft")
+
+  // Verify Delivery form state
+  const [openVerifyDialog, setOpenVerifyDialog] = useState<number | null>(null)
+  const [verifyRemark, setVerifyRemark] = useState("")
+
   const handleDelete = (id: number) => {
     startTransition(async () => {
       try {
@@ -152,23 +174,57 @@ export function FuelRequestTable({
   }
 
   const handleVerifyDelivery = (id: number) => {
+    setOpenVerifyDialog(id)
+  }
+
+  const handleSubmitVerification = (id: number) => {
     startTransition(async () => {
       try {
-        await verifyAndCompleteDelivery(id)
-        toast.success("Delivery verified and Work Order completed")
+        await verifyAndCompleteDelivery(id, verifyRemark)
+        toast.success("Delivery verified — Work Order COMPLETED")
+        setOpenVerifyDialog(null)
+        setVerifyRemark("")
       } catch (error) {
         toast.error("Verification failed")
       }
     })
   }
 
-  const handleCreateWorkOrder = (id: number) => {
+  const handleCreateWorkOrder = (id: number, req: any) => {
+    // Pre-fill from existing request data
+    setWoAssetNumber(req.site?.siteId || "")
+    setWoDescription(`DG fuel required for site ${req.site?.siteId}, total amount ${req.literRequired || 0} liters.`)
+    setWoDepartment(req.site?.region || "")
+    const now = new Date().toISOString().slice(0, 16)
+    setWoScheduledStart(now)
+    setWoScheduledEnd(now)
+    setOpenWODialog(id)
+  }
+
+  const handleSubmitWorkOrder = (id: number) => {
     startTransition(async () => {
       try {
-        await createWorkOrder(id)
-        toast.success("Work Order created successfully")
-      } catch (error) {
-        toast.error("Failed to create Work Order")
+        await createWorkOrder(id, {
+          planner: woPlanner,
+          assetNumber: woAssetNumber,
+          assetGroup: woAssetGroup,
+          wbAccountingClass: woWbClass,
+          scheduledStart: woScheduledStart,
+          scheduledEnd: woScheduledEnd,
+          durationHrs: parseFloat(woDuration) || 2,
+          workOrderType: woType,
+          priority: woPriority,
+          description: woDescription,
+          department: woDepartment,
+          departmentDescription: woDeptDesc,
+          assetActivity: woAssetActivity,
+          firm: woFirm,
+          status: woStatus,
+        })
+        toast.success("Work Order created and sent to Finance")
+        setOpenWODialog(null)
+      } catch (error: any) {
+        toast.error(error.message || "Failed to create Work Order")
       }
     })
   }
@@ -272,10 +328,115 @@ export function FuelRequestTable({
                         </Button>
                       )}
                       {req.status === 'APPROVED_REQUEST' && (userRole === 'FLEET_ADMIN' || userRole === 'ADMIN') && (
-                        <Button size="sm" onClick={() => handleCreateWorkOrder(req.id)} disabled={isPending}
-                          className="h-7 px-3 text-[11px] bg-lime-600 hover:bg-lime-700 text-white font-semibold uppercase tracking-tight shadow-none">
-                          Create WO
-                        </Button>
+                        <Dialog open={openWODialog === req.id} onOpenChange={(open) => { if (!open) setOpenWODialog(null); else handleCreateWorkOrder(req.id, req) }}>
+                          <DialogTrigger asChild>
+                            <Button size="sm"
+                              className="h-7 px-3 text-[11px] bg-lime-600 hover:bg-lime-700 text-white font-semibold uppercase tracking-tight shadow-none">
+                              Create WO
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                            <DialogHeader className="border-b pb-3">
+                              <DialogTitle className="text-lg font-bold">Create Work Order</DialogTitle>
+                              <DialogDescription className="text-xs text-gray-500">
+                                Fields marked with <span className="text-red-500">*</span> are required.
+                              </DialogDescription>
+                            </DialogHeader>
+                            <div className="space-y-5 py-3">
+                              {/* Work Order Information */}
+                              <div className="border border-gray-100 rounded-lg p-4 space-y-4">
+                                <h3 className="text-xs font-bold text-lime-700 uppercase tracking-widest flex items-center gap-2">
+                                  <span className="w-4 h-4 bg-lime-600 text-white rounded text-[10px] flex items-center justify-center">W</span>
+                                  Work Order Information
+                                </h3>
+                                <div className="grid grid-cols-2 gap-3">
+                                  <div className="space-y-1">
+                                    <Label className="text-xs font-semibold">Work Order <span className="text-gray-400">(auto)</span></Label>
+                                    <Input readOnly value={`WO-${1000 + req.id}`} className="h-8 text-sm bg-gray-50 font-mono" />
+                                  </div>
+                                  <div className="space-y-1">
+                                    <Label className="text-xs font-semibold">Planner</Label>
+                                    <Input value={woPlanner} onChange={e => setWoPlanner(e.target.value)} className="h-8 text-sm" placeholder="Planner name" />
+                                  </div>
+                                  <div className="space-y-1">
+                                    <Label className="text-xs font-semibold">Asset Number <span className="text-red-500">*</span></Label>
+                                    <Input value={woAssetNumber} onChange={e => setWoAssetNumber(e.target.value)} className="h-8 text-sm" placeholder="e.g. G-11186" />
+                                  </div>
+                                  <div className="space-y-1">
+                                    <Label className="text-xs font-semibold">Description</Label>
+                                    <Input value={woDescription} onChange={e => setWoDescription(e.target.value)} className="h-8 text-sm" placeholder="Brief description" />
+                                  </div>
+                                  <div className="space-y-1">
+                                    <Label className="text-xs font-semibold">Asset Group <span className="text-red-500">*</span></Label>
+                                    <Input value={woAssetGroup} onChange={e => setWoAssetGroup(e.target.value)} className="h-8 text-sm" />
+                                  </div>
+                                  <div className="space-y-1">
+                                    <Label className="text-xs font-semibold">Department</Label>
+                                    <Input value={woDepartment} onChange={e => setWoDepartment(e.target.value)} className="h-8 text-sm" placeholder="e.g. PA\T\OM" />
+                                  </div>
+                                  <div className="space-y-1">
+                                    <Label className="text-xs font-semibold">WB Accounting Class <span className="text-red-500">*</span></Label>
+                                    <Input value={woWbClass} onChange={e => setWoWbClass(e.target.value)} className="h-8 text-sm" />
+                                  </div>
+                                  <div className="space-y-1">
+                                    <Label className="text-xs font-semibold">Department Description</Label>
+                                    <Input value={woDeptDesc} onChange={e => setWoDeptDesc(e.target.value)} className="h-8 text-sm" placeholder="e.g. NAAC O&M Group" />
+                                  </div>
+                                  <div className="space-y-1">
+                                    <Label className="text-xs font-semibold">Scheduled Start <span className="text-red-500">*</span></Label>
+                                    <Input type="datetime-local" value={woScheduledStart} onChange={e => setWoScheduledStart(e.target.value)} className="h-8 text-sm" />
+                                  </div>
+                                  <div className="space-y-1">
+                                    <Label className="text-xs font-semibold">Asset Activity</Label>
+                                    <Input value={woAssetActivity} onChange={e => setWoAssetActivity(e.target.value)} className="h-8 text-sm" />
+                                  </div>
+                                  <div className="space-y-1">
+                                    <Label className="text-xs font-semibold">Scheduled Completion <span className="text-red-500">*</span></Label>
+                                    <Input type="datetime-local" value={woScheduledEnd} onChange={e => setWoScheduledEnd(e.target.value)} className="h-8 text-sm" />
+                                  </div>
+                                  <div className="space-y-1">
+                                    <Label className="text-xs font-semibold">Firm</Label>
+                                    <select value={woFirm} onChange={e => setWoFirm(e.target.value)} className="w-full h-8 border border-gray-200 rounded-md px-2 text-sm bg-white">
+                                      <option>No</option><option>Yes</option>
+                                    </select>
+                                  </div>
+                                  <div className="space-y-1">
+                                    <Label className="text-xs font-semibold">Duration (hrs)</Label>
+                                    <Input type="number" value={woDuration} onChange={e => setWoDuration(e.target.value)} className="h-8 text-sm" />
+                                  </div>
+                                  <div className="space-y-1">
+                                    <Label className="text-xs font-semibold">Status</Label>
+                                    <select value={woStatus} onChange={e => setWoStatus(e.target.value)} className="w-full h-8 border border-gray-200 rounded-md px-2 text-sm bg-white">
+                                      <option>Draft</option><option>Active</option><option>Complete</option>
+                                    </select>
+                                  </div>
+                                  <div className="space-y-1">
+                                    <Label className="text-xs font-semibold">Request Number</Label>
+                                    <Input readOnly value={req.workRequestNumber || `REQ-${1000 + req.id}`} className="h-8 text-sm bg-gray-50 font-mono" />
+                                  </div>
+                                  <div className="space-y-1">
+                                    <Label className="text-xs font-semibold">Work Order Type</Label>
+                                    <select value={woType} onChange={e => setWoType(e.target.value)} className="w-full h-8 border border-gray-200 rounded-md px-2 text-sm bg-white">
+                                      <option>Preventive</option><option>Corrective</option><option>Emergency</option>
+                                    </select>
+                                  </div>
+                                  <div className="space-y-1">
+                                    <Label className="text-xs font-semibold">Priority</Label>
+                                    <select value={woPriority} onChange={e => setWoPriority(e.target.value)} className="w-full h-8 border border-gray-200 rounded-md px-2 text-sm bg-white">
+                                      <option>Low</option><option>Medium</option><option>High</option><option>Emergency</option>
+                                    </select>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                            <DialogFooter className="border-t pt-4">
+                              <Button variant="outline" onClick={() => setOpenWODialog(null)} className="uppercase tracking-tight">Cancel</Button>
+                              <Button onClick={() => handleSubmitWorkOrder(req.id)} disabled={isPending} className="bg-lime-600 hover:bg-lime-700 text-white uppercase tracking-tight">
+                                {isPending ? "Creating..." : "Save & Send to Finance"}
+                              </Button>
+                            </DialogFooter>
+                          </DialogContent>
+                        </Dialog>
                       )}
                       {req.status === 'PENDING_MANAGER_APPROVAL' && (userRole === 'MANAGER' || userRole === 'ADMIN') && (
                         <Button size="sm" onClick={() => handleApproveToFinance(req.id)} disabled={isPending}
@@ -348,10 +509,51 @@ export function FuelRequestTable({
                         </Dialog>
                       )}
                       {req.status === 'DELIVERED' && (userRole === 'FLEET_ADMIN' || userRole === 'ADMIN') && (
-                        <Button size="sm" onClick={() => handleVerifyDelivery(req.id)} disabled={isPending}
-                          className="h-7 px-3 text-[11px] bg-lime-600 hover:bg-lime-700 text-white font-semibold uppercase tracking-tight shadow-none">
-                          Verify Delivery
-                        </Button>
+                        <Dialog open={openVerifyDialog === req.id} onOpenChange={(open) => { if (!open) { setOpenVerifyDialog(null); setVerifyRemark("") } else setOpenVerifyDialog(req.id) }}>
+                          <DialogTrigger asChild>
+                            <Button size="sm"
+                              className="h-7 px-3 text-[11px] bg-lime-600 hover:bg-lime-700 text-white font-semibold uppercase tracking-tight shadow-none">
+                              Verify &amp; Close
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent className="max-w-lg">
+                            <DialogHeader className="border-b pb-3">
+                              <DialogTitle className="text-base font-bold">Verify Delivery &amp; Close Work Order</DialogTitle>
+                              <DialogDescription className="text-xs text-gray-500">
+                                Review delivery details and close this Work Order as COMPLETED.
+                              </DialogDescription>
+                            </DialogHeader>
+                            <div className="space-y-4 py-3">
+                              {/* Delivery Summary */}
+                              <div className="bg-lime-50 border border-lime-100 rounded-lg p-4 space-y-2">
+                                <p className="text-[11px] font-bold text-lime-700 uppercase tracking-widest">Delivery Summary</p>
+                                <div className="grid grid-cols-2 gap-2 text-sm">
+                                  <div><span className="text-gray-500 text-xs">Work Order</span><p className="font-mono font-semibold">{req.workOrderNumber || "N/A"}</p></div>
+                                  <div><span className="text-gray-500 text-xs">Site</span><p className="font-semibold">{req.site?.siteId} – {req.site?.name}</p></div>
+                                  <div><span className="text-gray-500 text-xs">Fuel Requested</span><p className="font-semibold">{req.literRequired ?? "–"} L</p></div>
+                                  <div><span className="text-gray-500 text-xs">Fuel Purchased</span><p className="font-semibold">{req.purchasedAmount ?? "–"} L</p></div>
+                                  <div><span className="text-gray-500 text-xs">Technician</span><p className="font-semibold">{req.technician?.name || "–"}</p></div>
+                                  <div><span className="text-gray-500 text-xs">Fuel Station</span><p className="font-semibold">{req.fuelStation || "–"}</p></div>
+                                </div>
+                              </div>
+                              <div className="space-y-2">
+                                <Label className="text-sm font-semibold">Closing Remark (Optional)</Label>
+                                <textarea
+                                  value={verifyRemark}
+                                  onChange={e => setVerifyRemark(e.target.value)}
+                                  placeholder="Add any closing notes or observations..."
+                                  className="w-full border border-gray-200 rounded-lg p-3 text-sm focus:ring-2 focus:ring-lime-500 outline-none resize-y min-h-[70px]"
+                                />
+                              </div>
+                            </div>
+                            <DialogFooter className="border-t pt-4">
+                              <Button variant="outline" onClick={() => { setOpenVerifyDialog(null); setVerifyRemark("") }} className="uppercase tracking-tight">Cancel</Button>
+                              <Button onClick={() => handleSubmitVerification(req.id)} disabled={isPending} className="bg-lime-600 hover:bg-lime-700 text-white uppercase tracking-tight">
+                                {isPending ? "Closing..." : "Confirm &amp; Close"}
+                              </Button>
+                            </DialogFooter>
+                          </DialogContent>
+                        </Dialog>
                       )}
                       {(req.status === 'ASSIGNED_TO_TECH' || req.status === 'FUNDS_RELEASED') && (userRole === 'TECHNICIAN' || userRole === 'ADMIN') && (
                         <Button 

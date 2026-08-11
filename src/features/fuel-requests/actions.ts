@@ -269,7 +269,23 @@ export async function approveToFinance(id: number) {
 }
 
 // Step 3: Fleet Admin creates Work Order → goes to Finance
-export async function createWorkOrder(id: number) {
+export async function createWorkOrder(id: number, data?: {
+  planner?: string;
+  assetNumber?: string;
+  assetGroup?: string;
+  wbAccountingClass?: string;
+  scheduledStart?: string;
+  scheduledEnd?: string;
+  durationHrs?: number;
+  workOrderType?: string;
+  priority?: string;
+  description?: string;
+  department?: string;
+  departmentDescription?: string;
+  assetActivity?: string;
+  firm?: string;
+  status?: string;
+}) {
   const { ability } = await requireAbility("update", "FuelRequest")
   const request = await prisma.fuelRequest.findUniqueOrThrow({ where: { id } })
   if (!ability.can('update', subject('FuelRequest', request) as any)) {
@@ -282,10 +298,20 @@ export async function createWorkOrder(id: number) {
 
   await prisma.fuelRequest.update({
     where: { id },
-    data: { status: "PENDING_FINANCE", workOrderNumber }
+    data: {
+      status: "PENDING_FINANCE",
+      workOrderNumber,
+      // Store WO form data in existing flexible fields
+      route: data?.assetActivity || request.route,
+      driverType: data?.workOrderType || request.driverType,
+      securityName: data?.planner || request.securityName,
+      notes: data?.description || request.notes,
+      employeeId: data?.departmentDescription || request.employeeId,
+    }
   })
   revalidatePath("/dashboard/fuel-request")
   revalidatePath("/dashboard")
+  return workOrderNumber
 }
 
 export async function releaseFunds(id: number, amount: number, remark: string, adminUserId: string) {
@@ -387,7 +413,7 @@ export async function purchaseAndAssignFuel(id: number, adminUserId: string, tec
   revalidatePath("/dashboard")
 }
 
-export async function verifyAndCompleteDelivery(id: number) {
+export async function verifyAndCompleteDelivery(id: number, remark?: string) {
   const { ability } = await requireAbility("update", "FuelRequest")
   const request = await prisma.fuelRequest.findUniqueOrThrow({ where: { id } })
   if (!ability.can('update', subject('FuelRequest', request) as any)) {
@@ -396,7 +422,10 @@ export async function verifyAndCompleteDelivery(id: number) {
 
   await prisma.fuelRequest.update({
     where: { id },
-    data: { status: "COMPLETED" }
+    data: {
+      status: "COMPLETED",
+      ...(remark ? { financeRemark: remark } : {})
+    }
   })
   revalidatePath("/dashboard/fuel-request")
   revalidatePath("/dashboard")
