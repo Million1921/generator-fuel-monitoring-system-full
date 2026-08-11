@@ -141,11 +141,11 @@ export default async function FuelRequestPage(props: {
 
     prisma.fuelRequest.findMany({
       orderBy,
-      where: { status: 'FUNDS_RELEASED', ...whereBase },
+      where: { status: { in: ['FUNDS_RELEASED', 'ASSIGNED_TO_TECH', 'DELIVERED'] }, ...whereBase },
       include: { site: true, technician: true },
       skip, take: limit
     }),
-    prisma.fuelRequest.count({ where: { status: 'FUNDS_RELEASED', ...whereBase } }),
+    prisma.fuelRequest.count({ where: { status: { in: ['FUNDS_RELEASED', 'ASSIGNED_TO_TECH', 'DELIVERED'] }, ...whereBase } }),
 
     prisma.fuelRequest.findMany({
       orderBy,
@@ -169,15 +169,15 @@ export default async function FuelRequestPage(props: {
         </div>
 
         <Tabs defaultValue={tab} className="flex flex-1 flex-col mt-1">
-          <TabsList className="bg-slate-100/50 p-1 w-full max-w-4xl grid grid-cols-6 rounded-lg">
+          <TabsList className="bg-slate-100/50 p-1 w-full max-w-4xl grid grid-cols-5 rounded-lg">
             <TabsTrigger value="pending" className="data-[state=active]:bg-white data-[state=active]:shadow-sm rounded-md py-2 text-xs">
               Approvals ({pendingTotal})
             </TabsTrigger>
             <TabsTrigger value="admin" className="data-[state=active]:bg-white data-[state=active]:shadow-sm rounded-md py-2 text-xs">
-              Admin ({adminTotal})
+              Fleet Admin ({adminTotal})
             </TabsTrigger>
             <TabsTrigger value="approved" className="data-[state=active]:bg-white data-[state=active]:shadow-sm rounded-md py-2 text-xs">
-              Approved ({approvedTotal})
+              Finance ({approvedTotal})
             </TabsTrigger>
             <TabsTrigger value="delivery" className="data-[state=active]:bg-white data-[state=active]:shadow-sm rounded-md py-2 text-xs">
               Delivery ({deliveryTotal})
@@ -237,7 +237,7 @@ export default async function FuelRequestPage(props: {
           <TabsContent value="delivery" className="flex-1 mt-1 m-0 border-0 p-0 focus-visible:ring-0">
             <FuelRequestTable 
               requests={deliveryRequests} 
-              title="Funds Released - Ready for Delivery" 
+              title="Delivery Pipeline (Funds Released → Assigned → Delivered)" 
               total={deliveryTotal} 
               page={page} 
               totalPages={Math.ceil(deliveryTotal/limit)} 
