@@ -22,6 +22,7 @@ function RegionFilterContent() {
       params.delete('region')
     }
     router.push(pathname + '?' + params.toString())
+    router.refresh()
   }, [pathname, router, searchParams])
 
   return (
