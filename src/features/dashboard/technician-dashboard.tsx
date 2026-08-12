@@ -222,6 +222,7 @@ export async function TechnicianDashboard({ email, userId, name }: { email: stri
             <Table className="w-full">
               <TableHeader>
                 <TableRow className=" h-8">
+                  <TableHead className="px-4 text-[13px] font-bold uppercase tracking-tight">Req #</TableHead>
                   <TableHead className="px-4 text-[13px] font-bold uppercase tracking-tight">Site</TableHead>
                   <TableHead className="px-4 text-[13px] font-bold uppercase tracking-tight">Status</TableHead>
                   <TableHead className="text-right px-4 text-[13px] font-bold uppercase tracking-tight">Requested</TableHead>
@@ -230,13 +231,14 @@ export async function TechnicianDashboard({ email, userId, name }: { email: stri
               <TableBody>
                 {recentRequests.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={3} className="h-20 text-center text-muted-foreground italic">
+                    <TableCell colSpan={4} className="h-20 text-center text-muted-foreground italic">
                       You haven&apos;t submitted any fuel requests yet.
                     </TableCell>
                   </TableRow>
                 ) : (
                   recentRequests.map((r) => (
                     <TableRow key={r.id} className="h-8">
+                      <TableCell className="px-4 font-mono text-[13px] text-lime-700 font-semibold">{r.workRequestNumber || `REQ-${1000 + r.id}`}</TableCell>
                       <TableCell className="px-4 font-normal text-slate-900">{r.site.name}</TableCell>
                       <TableCell className="px-4">{statusBadge(r.status)}</TableCell>
                       <TableCell className="text-right px-4 text-slate-600">{r.literRequired ?? "-"} L</TableCell>

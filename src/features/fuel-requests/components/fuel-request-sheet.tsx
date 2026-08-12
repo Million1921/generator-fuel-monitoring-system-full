@@ -114,8 +114,12 @@ export function FuelRequestSheet({
     }
 
     try {
-      await createFuelRequest(requestData)
-      toast.success("Work request submitted successfully")
+      const result = await createFuelRequest(requestData)
+      const reqNum = result.workRequestNumber || `REQ-${1000 + result.id}`
+      toast.success(`Request ${reqNum} submitted successfully!`, {
+        description: `Your request number is ${reqNum}. Track it in your dashboard.`,
+        duration: 8000,
+      })
       reset()
       onOpenChange(false)
     } catch (error) {
