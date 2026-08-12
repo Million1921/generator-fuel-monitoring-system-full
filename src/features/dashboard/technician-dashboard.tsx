@@ -141,12 +141,14 @@ export async function TechnicianDashboard({ email, userId, name }: { email: stri
 
   const { technician, myPending, myCompletedThisMonth, myDeliveredThisMonth, recentRequests, recentDeliveries } = data
 
-  // Check if onboarding is required
-  const needsOnboarding = !technician.phone || !technician.regionId || !technician.employeeId || !technician.jobTitle;
+  // Check if onboarding is required.
+  // Only require the technician to fill in what the admin can't: phone & employeeId.
+  // Region can be assigned by admin via User Management, so if it's set we don't block.
+  const needsOnboarding = !technician.phone || !technician.employeeId;
 
   if (needsOnboarding && userId) {
     const regions = await prisma.region.findMany({ orderBy: { name: 'asc' } });
-    return <TechnicianOnboardingForm userId={userId} initialName={technician.name || name} regions={regions} />;
+    return <TechnicianOnboardingForm userId={userId} initialName={technician.name || name} regions={regions} prefilledRegionId={technician.regionId ?? undefined} />;
   }
 
   const statCards = [

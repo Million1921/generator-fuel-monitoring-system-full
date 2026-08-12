@@ -9,7 +9,6 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { ADDIS_ABABA_REGIONS, OUTSIDE_ADDIS_REGIONS } from "@/lib/constants"
 import {
   Sheet,
   SheetContent,
@@ -135,21 +134,17 @@ export function AddTechnicianSheet({ regions }: { regions: Region[] }) {
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
               <div className="space-y-2">
-                <Label htmlFor="region" className="text-sm font-semibold text-gray-700 flex items-center gap-1.5">
+                <Label htmlFor="regionId" className="text-sm font-semibold text-gray-700 flex items-center gap-1.5">
                   <MapPin className="w-3.5 h-3.5 text-gray-400" /> Region <span className="text-red-500">*</span>
                 </Label>
-                <Select name="region" required>
-                  <SelectTrigger id="region" className="h-10 border-gray-200 focus:ring-lime-500 text-left">
+                <Select name="regionId" required>
+                  <SelectTrigger id="regionId" className="h-10 border-gray-200 focus:ring-lime-500 text-left">
                     <SelectValue placeholder="Select region" />
                   </SelectTrigger>
                   <SelectContent className="bg-white">
                     <SelectGroup>
-                      <SelectLabel className="font-semibold text-lime-700">Addis Ababa</SelectLabel>
-                      {ADDIS_ABABA_REGIONS.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}
-                    </SelectGroup>
-                    <SelectGroup>
-                      <SelectLabel className="font-semibold text-lime-700">Outside Addis Ababa</SelectLabel>
-                      {OUTSIDE_ADDIS_REGIONS.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}
+                      <SelectLabel className="font-semibold text-lime-700">Regions</SelectLabel>
+                      {regions.map(r => <SelectItem key={r.id} value={r.id.toString()}>{r.name}</SelectItem>)}
                     </SelectGroup>
                   </SelectContent>
                 </Select>

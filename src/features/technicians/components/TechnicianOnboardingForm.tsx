@@ -15,8 +15,9 @@ interface Region {
   name: string;
 }
 
-export function TechnicianOnboardingForm({ userId, initialName, regions }: { userId: string, initialName?: string, regions: Region[] }) {
+export function TechnicianOnboardingForm({ userId, initialName, regions, prefilledRegionId }: { userId: string, initialName?: string, regions: Region[], prefilledRegionId?: number }) {
   const [isPending, setIsPending] = React.useState(false)
+  const [selectedRegionId, setSelectedRegionId] = React.useState(prefilledRegionId?.toString() || "")
   const router = useRouter()
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -27,10 +28,10 @@ export function TechnicianOnboardingForm({ userId, initialName, regions }: { use
     const data = {
       name: formData.get("name") as string,
       employeeId: formData.get("employeeId") as string,
-      jobTitle: formData.get("jobTitle") as string,
+      jobTitle: (formData.get("jobTitle") as string) || "Technician",
       phone: formData.get("phone") as string,
-      department: formData.get("department") as string,
-      regionId: parseInt(formData.get("regionId") as string, 10),
+      department: (formData.get("department") as string) || "",
+      regionId: parseInt((formData.get("regionId") as string) || selectedRegionId, 10) || (prefilledRegionId ?? 0),
     }
 
     try {
@@ -89,8 +90,13 @@ export function TechnicianOnboardingForm({ userId, initialName, regions }: { use
           </div>
 
           <div className="space-y-2 text-left">
-            <Label htmlFor="regionId">Assigned Region <span className="text-red-500">*</span></Label>
-            <Select name="regionId" required>
+            <Label htmlFor="regionId">Assigned Region {!prefilledRegionId && <span className="text-red-500">*</span>}</Label>
+            <Select
+              name="regionId"
+              required={!prefilledRegionId}
+              value={selectedRegionId}
+              onValueChange={setSelectedRegionId}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Select a region" />
               </SelectTrigger>
@@ -104,6 +110,9 @@ export function TechnicianOnboardingForm({ userId, initialName, regions }: { use
                 </SelectGroup>
               </SelectContent>
             </Select>
+            {prefilledRegionId && (
+              <p className="text-xs text-emerald-600 font-medium">✓ Region already assigned by admin</p>
+            )}
           </div>
 
           <Button type="submit" className="w-full mt-4" disabled={isPending}>
