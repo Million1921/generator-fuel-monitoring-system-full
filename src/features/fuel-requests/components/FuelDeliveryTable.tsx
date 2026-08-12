@@ -147,7 +147,7 @@ export function FuelDeliveryTable({
               </TableRow>
             ) : (
               deliveries.map((delivery) => (
-                <TableRow key={delivery.id} className="border-b-gray-50 hover:bg-gray-50/50 transition-colors h-[22px]">
+                <TableRow key={delivery.id} className="border-b-gray-50 hover:bg-gray-50/50 transition-colors">
                   <TableCell className="px-4">
                     <span className="text-slate-700 font-medium px-1.5 py-0 rounded leading-none">
                       {delivery.site.siteId}
@@ -180,25 +180,34 @@ export function FuelDeliveryTable({
                   <TableCell className="text-center text-gray-500 tabular-nums">
                     {delivery.afterLevel ?? '-'}
                   </TableCell>
-                  <TableCell className="px-4">
+                  <TableCell className="px-4 py-2">
                     <div className="flex flex-col leading-tight">
                       <span className="font-medium text-gray-900">{delivery.fuelRequest?.technician?.name || '-'}</span>
+                      {delivery.fuelRequest?.technician?.employeeId && (
+                        <span className="text-[10px] uppercase tracking-tight text-gray-500 font-normal">
+                          ID: {delivery.fuelRequest.technician.employeeId}
+                        </span>
+                      )}
                     </div>
                   </TableCell>
-                  <TableCell className="px-4">
+                  <TableCell className="px-4 py-2">
                     <div className="flex flex-col leading-tight">
                       <span className="font-medium text-gray-900">{delivery.technicianName || '-'}</span>
-                      <span className="text-[10px] uppercase tracking-tight text-gray-500 font-normal">
-                        {delivery.technicianIdStr ? `ID: ${delivery.technicianIdStr}` : ''}
-                      </span>
+                      {delivery.technicianIdStr && (
+                        <span className="text-[10px] uppercase tracking-tight text-gray-500 font-normal">
+                          ID: {delivery.technicianIdStr}
+                        </span>
+                      )}
                     </div>
                   </TableCell>
-                  <TableCell className="px-4">
+                  <TableCell className="px-4 py-2">
                     <div className="flex flex-col leading-tight">
                       <span className="font-medium text-gray-900">{delivery.driverName || '-'}</span>
-                      <span className="text-[10px] uppercase tracking-tight text-gray-500 font-normal">
-                        {delivery.driverId ? `ID: ${delivery.driverId}` : ''}
-                      </span>
+                      {delivery.driverId && (
+                        <span className="text-[10px] uppercase tracking-tight text-gray-500 font-normal">
+                          ID: {delivery.driverId}
+                        </span>
+                      )}
                     </div>
                   </TableCell>
                   <TableCell className="text-right px-4">
