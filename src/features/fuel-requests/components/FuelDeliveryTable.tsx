@@ -181,7 +181,7 @@ export function FuelDeliveryTable({
                     {delivery.afterLevel ?? '-'}
                   </TableCell>
                   {/* REQUESTED BY */}
-                  <TableCell className="px-4 py-2">
+                  <TableCell className="px-4 py-2 whitespace-normal leading-snug">
                     <div className="flex flex-col leading-tight">
                       <span className="font-medium text-gray-900">{delivery.fuelRequest?.technician?.name || '-'}</span>
                       {delivery.fuelRequest?.technician?.employeeId && (
@@ -192,7 +192,7 @@ export function FuelDeliveryTable({
                     </div>
                   </TableCell>
                   {/* DELIVERED BY */}
-                  <TableCell className="px-4 py-2">
+                  <TableCell className="px-4 py-2 whitespace-normal leading-snug">
                     <div className="flex flex-col leading-tight">
                       <span className="font-medium text-gray-900">{delivery.technicianName || '-'}</span>
                       {(() => {
@@ -210,7 +210,7 @@ export function FuelDeliveryTable({
                     </div>
                   </TableCell>
                   {/* DRIVER DETAILS */}
-                  <TableCell className="px-4 py-2">
+                  <TableCell className="px-4 py-2 whitespace-normal leading-snug">
                     <div className="flex flex-col leading-tight">
                       <span className="font-medium text-gray-900">{delivery.driverName || '-'}</span>
                       {delivery.driverId && (
