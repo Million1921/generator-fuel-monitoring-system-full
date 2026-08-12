@@ -2,7 +2,7 @@
 
 import { cn } from "@/lib/utils"
 import { TableColumnHeader } from "@/components/ui/table-column-header"
-import { Fuel, LucideIcon, Search, Trash2 } from "lucide-react"
+import { Fuel, LucideIcon, Search, Trash2, X } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { toast } from "sonner"
 import { deleteFuelDelivery } from "../actions"
@@ -20,6 +20,7 @@ import {
 import { Pagination } from "@/components/ui/Pagination"
 import { Input } from "@/components/ui/input"
 import { useRouter, useSearchParams, usePathname } from "next/navigation"
+import { useState, useEffect } from "react"
 
 interface FuelDeliveryTableProps {
   deliveries: any[]
@@ -45,9 +46,19 @@ export function FuelDeliveryTable({
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
+  const [searchValue, setSearchValue] = useState(search ?? "")
 
-  const handleSort = (field: string) => {
-    // Keeping minimal setup for now
+  // Keep input in sync when URL changes (e.g. clear button)
+  useEffect(() => {
+    setSearchValue(search ?? "")
+  }, [search])
+
+  const applySearch = (val: string) => {
+    const params = new URLSearchParams(searchParams.toString())
+    if (val.trim()) params.set("search", val.trim())
+    else params.delete("search")
+    params.set("page", "1")
+    router.push(`${pathname}?${params.toString()}`)
   }
 
   const SortableHeader = ({ field, label, align = 'left' }: { field: string, label: string, align?: 'left' | 'right' | 'center' }) => (
@@ -68,36 +79,33 @@ export function FuelDeliveryTable({
       <div className="flex items-center gap-3">
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
-          <form onSubmit={(e) => {
-            e.preventDefault()
-            const val = (e.currentTarget.elements.namedItem("search") as HTMLInputElement)?.value ?? ""
-            const params = new URLSearchParams(searchParams.toString())
-            if (val) params.set("search", val)
-            else params.delete("search")
-            params.set("page", "1")
-            router.push(`${pathname}?${params.toString()}`)
-          }}>
-            <Input
-              name="search"
-              defaultValue={search}
-              placeholder="Search by site, driver, technician, work order..."
-              className="pl-9 h-9 border-gray-200 bg-white focus:ring-lime-500 text-sm"
-            />
-          </form>
-        </div>
-        {search && (
-          <button
-            onClick={() => {
-              const params = new URLSearchParams(searchParams.toString())
-              params.delete("search")
-              params.set("page", "1")
-              router.push(`${pathname}?${params.toString()}`)
+          <Input
+            value={searchValue}
+            onChange={(e) => setSearchValue(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") applySearch(searchValue)
             }}
-            className="text-xs font-semibold text-gray-400 hover:text-red-500 transition-colors uppercase tracking-tight"
+            placeholder="Search by site, driver, technician, work order..."
+            className="pl-9 pr-20 h-9 border-gray-200 bg-white focus:ring-lime-500 text-sm"
+          />
+          {searchValue && (
+            <button
+              type="button"
+              onClick={() => { setSearchValue(""); applySearch("") }}
+              className="absolute right-10 top-1/2 -translate-y-1/2 text-gray-400 hover:text-red-500 transition-colors"
+              title="Clear search"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={() => applySearch(searchValue)}
+            className="absolute right-2 top-1/2 -translate-y-1/2 bg-lime-500 hover:bg-lime-600 text-white rounded px-2 py-0.5 text-xs font-bold transition-colors"
           >
-            ✕ Clear
+            Go
           </button>
-        )}
+        </div>
         <RegionFilter />
       </div>
 
