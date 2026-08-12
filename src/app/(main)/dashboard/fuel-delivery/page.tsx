@@ -2,6 +2,7 @@ import { FuelDeliveryHeader } from "@/features/fuel-requests/components/FuelDeli
 import { RegionFilter } from "@/components/ui/RegionFilter"
 import prisma from "@/lib/db"
 import { FuelDeliveryTable } from "@/features/fuel-requests/components/FuelDeliveryTable"
+import { getRoleFromClerk, getRegionScope } from "@/lib/auth"
 
 export const dynamic = "force-dynamic"
 
@@ -16,7 +17,9 @@ export default async function FuelDeliveryPage(props: {
 }) {
   const searchParams = await props.searchParams;
   const search = searchParams.search;
-  const region = searchParams.region;
+  const role = await getRoleFromClerk();
+  const regionScope = await getRegionScope(role);
+  const region = regionScope ?? searchParams.region;
   const page = searchParams.page ? parseInt(searchParams.page) : 1;
   const from = searchParams.from;
   const to = searchParams.to;

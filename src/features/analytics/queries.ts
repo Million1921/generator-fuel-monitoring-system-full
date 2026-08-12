@@ -2,6 +2,7 @@ import prisma from "@/lib/db"
 import { Prisma } from "@prisma/client"
 import { APP_CONFIG } from "@/lib/config"
 import { classifyDeviation } from "@/lib/anomaly"
+import { getRoleFromClerk, getRegionScope } from "@/lib/auth"
 
 export async function getAnalyticalReport(
   region?: string, 
@@ -10,8 +11,12 @@ export async function getAnalyticalReport(
   sortBy: string = 'siteNumber',
   sortOrder: 'asc' | 'desc' = 'asc'
 ) {
+  const role = await getRoleFromClerk();
+  const regionScope = await getRegionScope(role);
+  const effectiveRegion = regionScope ?? region;
+
   const skip = (page - 1) * limit;
-  const where = region ? { region } : {};
+  const where = effectiveRegion ? { region: effectiveRegion } : {};
 
   // Validate sortBy to prevent arbitrary SQL/Prisma field injection
   const ALLOWED_SORT = ['siteNumber', 'location'] as const;
@@ -195,8 +200,12 @@ export async function getFuelJournalData(
   sortBy: string = 'currRefuelDate',
   sortOrder: 'asc' | 'desc' = 'desc'
 ) {
+  const role = await getRoleFromClerk();
+  const regionScope = await getRegionScope(role);
+  const effectiveRegion = regionScope ?? region;
+
   const skip = (page - 1) * limit;
-  const where = region ? { site: { region } } : {};
+  const where = effectiveRegion ? { site: { region: effectiveRegion } } : {};
   const orderBy = journalOrderBy(sortBy, sortOrder);
 
   const [refills, total] = await Promise.all([

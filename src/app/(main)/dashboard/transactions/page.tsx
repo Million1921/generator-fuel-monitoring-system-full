@@ -2,6 +2,7 @@ import prisma from "@/lib/db"
 import { TransactionsTable } from "@/features/transactions/components/TransactionsTable"
 import { SearchInput } from "@/components/ui/SearchInput"
 import { RegionFilter } from "@/components/ui/RegionFilter"
+import { getRoleFromClerk, getRegionScope } from "@/lib/auth"
 
 export const dynamic = "force-dynamic"
 
@@ -19,7 +20,9 @@ export default async function TransactionsPage(props: {
   const page = searchParams.page ? parseInt(searchParams.page) : 1;
   const from = searchParams.from;
   const to = searchParams.to;
-  const region = searchParams.region;
+  const role = await getRoleFromClerk();
+  const regionScope = await getRegionScope(role);
+  const region = regionScope ?? searchParams.region;
   
   const limit = 10;
   const skip = (page - 1) * limit;

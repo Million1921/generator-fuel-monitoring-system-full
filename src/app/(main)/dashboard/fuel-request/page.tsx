@@ -3,7 +3,7 @@ import { FileText, CheckCircle2, Shield, Settings } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { FuelRequestHeader } from "@/features/fuel-requests/components/FuelRequestHeader"
 import { FuelRequestTable } from "@/features/fuel-requests/components/FuelRequestTable"
-import { getRoleFromClerk } from "@/lib/auth"
+import { getRoleFromClerk, getRegionScope } from "@/lib/auth"
 import { SearchInput } from "@/components/ui/SearchInput"
 import { RegionFilter } from "@/components/ui/RegionFilter"
 
@@ -23,7 +23,9 @@ export default async function FuelRequestPage(props: {
 }) {
   const searchParams = await props.searchParams;
   const search = searchParams.search;
-  const region = searchParams.region;
+  const role = await getRoleFromClerk();
+  const regionScope = await getRegionScope(role);
+  const region = regionScope ?? searchParams.region;
   const from = searchParams.from;
   const to = searchParams.to;
   const page = searchParams.page ? parseInt(searchParams.page) : 1;
@@ -66,7 +68,6 @@ export default async function FuelRequestPage(props: {
   }
 
   // Fetch paginated data for main tabs
-  const role = await getRoleFromClerk();
 
   if (role === 'TECHNICIAN') {
     const allRequests = await prisma.fuelRequest.findMany({
