@@ -1,6 +1,7 @@
 "use client"
 
 import { useMemo, useState } from "react"
+import { motion } from "framer-motion"
 import {
   Bar,
   Cell,
@@ -93,9 +94,14 @@ interface StatCardProps {
   sub: string
   trend?: React.ReactNode
 }
+const statItemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } }
+}
+
 function StatCard({ icon, iconBg, label, value, sub, trend }: StatCardProps) {
   return (
-    <div className="flex items-center gap-3 rounded-xl border border-border bg-muted/40 px-4 py-3 flex-1 min-w-0">
+    <motion.div variants={statItemVariants} className="flex items-center gap-3 rounded-xl border border-border bg-muted/40 px-4 py-3 flex-1 min-w-0">
       <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${iconBg}`}>
         {icon}
       </div>
@@ -105,7 +111,7 @@ function StatCard({ icon, iconBg, label, value, sub, trend }: StatCardProps) {
         <p className="text-xs text-muted-foreground truncate">{sub}</p>
       </div>
       {trend && <div className="shrink-0">{trend}</div>}
-    </div>
+    </motion.div>
   )
 }
 
@@ -115,18 +121,33 @@ interface InsightProps {
   iconBg: string
   text: React.ReactNode
 }
+const insightItemVariants = {
+  hidden: { opacity: 0, x: -10 },
+  show: { opacity: 1, x: 0, transition: { type: "spring", stiffness: 300, damping: 24 } }
+}
+
 function Insight({ icon, iconBg, text }: InsightProps) {
   return (
-    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+    <motion.div variants={insightItemVariants} className="flex items-center gap-2 text-xs text-muted-foreground">
       <div className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${iconBg}`}>
         {icon}
       </div>
       <span>{text}</span>
-    </div>
+    </motion.div>
   )
 }
 
 /* ─── Main chart component ───────────────────────── */
+const containerVariants = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+    },
+  },
+}
+
 export function ConsumptionChart({ data }: { data: ConsumptionData[] }) {
   const [selectedYear] = useState(new Date().getFullYear())
 
@@ -166,7 +187,12 @@ export function ConsumptionChart({ data }: { data: ConsumptionData[] }) {
   }
 
   return (
-    <div className="rounded-2xl overflow-hidden shadow-sm border border-border bg-card">
+    <motion.div 
+      variants={containerVariants}
+      initial="hidden"
+      animate="show"
+      className="rounded-2xl overflow-hidden shadow-sm border border-border bg-card"
+    >
       {/* Header */}
       <div className="flex items-center justify-between px-6 pt-5 pb-2">
         <div className="flex items-center gap-3">
@@ -433,6 +459,6 @@ export function ConsumptionChart({ data }: { data: ConsumptionData[] }) {
           }
         />
       </div>
-    </div>
+    </motion.div>
   )
 }
