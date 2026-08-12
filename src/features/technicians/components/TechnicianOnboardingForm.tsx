@@ -62,30 +62,30 @@ export function TechnicianOnboardingForm({ userId, initialName, regions }: { use
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2 text-left">
               <Label htmlFor="name">Full Name <span className="text-red-500">*</span></Label>
-              <Input id="name" name="name" defaultValue={initialName || ""} placeholder="e.g. John Doe" required />
+              <Input id="name" name="name" defaultValue={initialName || ""} required />
             </div>
 
             <div className="space-y-2 text-left">
               <Label htmlFor="employeeId">ID NO <span className="text-red-500">*</span></Label>
-              <Input id="employeeId" name="employeeId" placeholder="e.g. EMP-001" required />
+              <Input id="employeeId" name="employeeId" required />
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2 text-left">
               <Label htmlFor="jobTitle">Title <span className="text-red-500">*</span></Label>
-              <Input id="jobTitle" name="jobTitle" placeholder="e.g. Senior Technician" required />
+              <Input id="jobTitle" name="jobTitle" required />
             </div>
 
             <div className="space-y-2 text-left">
               <Label htmlFor="phone">Phone Number <span className="text-red-500">*</span></Label>
-              <Input id="phone" name="phone" placeholder="e.g. 0911234567" required />
+              <Input id="phone" name="phone" required />
             </div>
           </div>
 
           <div className="space-y-2 text-left">
             <Label htmlFor="department">Department <span className="text-red-500">*</span></Label>
-            <Input id="department" name="department" placeholder="e.g. Maintenance" required />
+            <Input id="department" name="department" required />
           </div>
 
           <div className="space-y-2 text-left">

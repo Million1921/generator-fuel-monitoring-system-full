@@ -68,7 +68,6 @@ export function CustomSignInForm({ className, ...props }: React.ComponentProps<"
             id="email" 
             name="email" 
             type="email" 
-            placeholder="m@example.com" 
             required 
             value={emailAddress}
             onChange={(e) => setEmailAddress(e.target.value)}

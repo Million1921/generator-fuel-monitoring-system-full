@@ -103,7 +103,6 @@ export function AddSiteSheet() {
                 <Input
                   id="siteId"
                   name="siteId"
-                  placeholder="e.g. AA001"
                   required
                   className="h-10 border-gray-200 focus:ring-lime-500"
                 />
@@ -115,7 +114,6 @@ export function AddSiteSheet() {
                 <Input
                   id="name"
                   name="name"
-                  placeholder="e.g. Merkato Station"
                   required
                   className="h-10 border-gray-200 focus:ring-lime-500"
                 />
@@ -159,7 +157,6 @@ export function AddSiteSheet() {
                 name="tankerCapacity"
                 type="number"
                 step="0.1"
-                placeholder="e.g. 2000"
                 required
                 className="h-10 border-gray-200 focus:ring-lime-500"
               />
@@ -183,7 +180,6 @@ export function AddSiteSheet() {
                   step="any"
                   min={-90}
                   max={90}
-                  placeholder="e.g. 9.0227"
                   value={lat}
                   onChange={(e) => setLat(e.target.value)}
                   className="h-10 border-gray-200 focus:ring-lime-500"
@@ -199,7 +195,6 @@ export function AddSiteSheet() {
                   step="any"
                   min={-180}
                   max={180}
-                  placeholder="e.g. 38.7469"
                   value={lng}
                   onChange={(e) => setLng(e.target.value)}
                   className="h-10 border-gray-200 focus:ring-lime-500"

@@ -95,7 +95,6 @@ export function AddTechnicianSheet({ regions }: { regions: Region[] }) {
                 <Input
                   id="name"
                   name="name"
-                  placeholder="e.g. Abebe Kebede"
                   required
                   className="h-10 border-gray-200 focus:ring-lime-500"
                 />
@@ -109,7 +108,6 @@ export function AddTechnicianSheet({ regions }: { regions: Region[] }) {
                   id="email"
                   name="email"
                   type="email"
-                  placeholder="e.g. abebe@email.com"
                   required
                   className="h-10 border-gray-200 focus:ring-lime-500"
                 />
@@ -122,7 +120,6 @@ export function AddTechnicianSheet({ regions }: { regions: Region[] }) {
                 <Input
                   id="phone"
                   name="phone"
-                  placeholder="e.g. +251 911 223344"
                   required
                   className="h-10 border-gray-200 focus:ring-lime-500"
                 />
@@ -181,7 +178,6 @@ export function AddTechnicianSheet({ regions }: { regions: Region[] }) {
                 <Input
                   id="department"
                   name="department"
-                  placeholder="e.g. Network Operations"
                   className="h-10 border-gray-200 focus:ring-lime-500"
                 />
               </div>

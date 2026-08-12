@@ -95,7 +95,6 @@ export function CustomSignUpForm({ className, ...props }: React.ComponentProps<"
                 <Input
                   id="firstName"
                   type="text"
-                  placeholder="John"
                   required
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
@@ -107,7 +106,6 @@ export function CustomSignUpForm({ className, ...props }: React.ComponentProps<"
                 <Input
                   id="lastName"
                   type="text"
-                  placeholder="Doe"
                   required
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
@@ -121,7 +119,6 @@ export function CustomSignUpForm({ className, ...props }: React.ComponentProps<"
               <Input
                 id="email"
                 type="email"
-                placeholder="m@example.com"
                 required
                 value={emailAddress}
                 onChange={(e) => setEmailAddress(e.target.value)}

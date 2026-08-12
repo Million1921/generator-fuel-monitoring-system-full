@@ -264,7 +264,7 @@ export function FuelDeliverySheet() {
                   id="begRunningHour"
                   value={begRunningHour}
                   onChange={(e) => setBegRunningHour(e.target.value)}
-                  type="number" step="0.1" placeholder="0.0" required className="h-10 border-gray-200 focus:ring-lime-500"
+                  type="number" step="0.1" required className="h-10 border-gray-200 focus:ring-lime-500"
                 />
               </div>
               <div className="space-y-2">
@@ -273,7 +273,7 @@ export function FuelDeliverySheet() {
                   id="endRunningHour"
                   value={endRunningHour}
                   onChange={(e) => setEndRunningHour(e.target.value)}
-                  type="number" step="0.1" placeholder="0.0" required className="h-10 border-gray-200 focus:ring-lime-500"
+                  type="number" step="0.1" required className="h-10 border-gray-200 focus:ring-lime-500"
                 />
               </div>
 
@@ -292,15 +292,16 @@ export function FuelDeliverySheet() {
 
               <div className="space-y-2">
                 <Label htmlFor="fuelBeforeRefuel" className="text-sm font-semibold text-gray-700">Fuel Before Refuel (L) <span className="text-red-500">*</span></Label>
-                <Input id="fuelBeforeRefuel" name="fuelBeforeRefuel" type="number" step="0.1" placeholder="0.0" required className="h-10 border-gray-200 focus:ring-lime-500" />
+                <Input id="fuelBeforeRefuel" name="fuelBeforeRefuel" type="number" step="0.1" required className="h-10 border-gray-200 focus:ring-lime-500" />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="actualRefueled" className="text-sm font-semibold text-gray-700">Actual Refueled (L) <span className="text-red-500">*</span></Label>
                 <Input
                   id="actualRefueled"
+                  name="actualRefueled"
                   value={actualRefueled}
                   onChange={(e) => setActualRefueled(e.target.value)}
-                  type="number" step="0.1" placeholder="0.0" required className="h-10 border-gray-200 focus:ring-lime-500 font-bold"
+                  type="number" step="0.1" required className="h-10 border-gray-200 focus:ring-lime-500 font-bold"
                 />
               </div>
 
@@ -337,7 +338,7 @@ export function FuelDeliverySheet() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="eepu" className="text-sm font-semibold text-gray-700">EEPU Reading</Label>
-                <Input id="eepu" name="eepu" type="number" step="0.1" placeholder="Optional grid power reading" className="h-10 border-gray-200 focus:ring-lime-500" />
+                <Input id="eepu" name="eepu" type="number" step="0.1" className="h-10 border-gray-200 focus:ring-lime-500" />
               </div>
             </div>
           </div>
@@ -368,27 +369,27 @@ export function FuelDeliverySheet() {
                   <Label htmlFor="technicianName" className="text-sm font-semibold text-gray-700 flex items-center gap-1.5">
                     <Wrench className="w-3.5 h-3.5 text-gray-400" /> Technician Name <span className="text-red-500">*</span>
                   </Label>
-                  <Input id="technicianName" name="technicianName" value={technicianName} onChange={(e) => setTechnicianName(e.target.value)} placeholder="Full name" className="h-10 border-gray-200 focus:ring-lime-500" required />
+                  <Input id="technicianName" name="technicianName" value={technicianName} onChange={(e) => setTechnicianName(e.target.value)} className="h-10 border-gray-200 focus:ring-lime-500" required />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="technicianId" className="text-sm font-semibold text-gray-700">Technician ID <span className="text-red-500">*</span></Label>
-                  <Input id="technicianId" name="technicianId" value={technicianIdInput} onChange={(e) => setTechnicianIdInput(e.target.value)} placeholder="e.g. TECH-01" className="h-10 border-gray-200 focus:ring-lime-500" required />
+                  <Input id="technicianId" name="technicianId" value={technicianIdInput} onChange={(e) => setTechnicianIdInput(e.target.value)} className="h-10 border-gray-200 focus:ring-lime-500" required />
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="driverName" className="text-sm font-semibold text-gray-700 flex items-center gap-1.5">
                     <Truck className="w-3.5 h-3.5 text-gray-400" /> Driver Name <span className="text-red-500">*</span>
                   </Label>
-                  <Input id="driverName" name="driverName" value={driverName} onChange={(e) => setDriverName(e.target.value)} placeholder="Full name" className="h-10 border-gray-200 focus:ring-lime-500" required />
+                  <Input id="driverName" name="driverName" value={driverName} onChange={(e) => setDriverName(e.target.value)} className="h-10 border-gray-200 focus:ring-lime-500" required />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="driverId" className="text-sm font-semibold text-gray-700">Driver ID / License <span className="text-red-500">*</span></Label>
-                  <Input id="driverId" name="driverId" value={driverIdInput} onChange={(e) => setDriverIdInput(e.target.value)} placeholder="e.g. DRV-01" className="h-10 border-gray-200 focus:ring-lime-500" required />
+                  <Input id="driverId" name="driverId" value={driverIdInput} onChange={(e) => setDriverIdInput(e.target.value)} className="h-10 border-gray-200 focus:ring-lime-500" required />
                 </div>
 
                 <div className="space-y-2 sm:col-span-2">
                   <Label htmlFor="department" className="text-sm font-semibold text-gray-700">Department</Label>
-                  <Input id="department" name="department" value={department} onChange={(e) => setDepartment(e.target.value)} placeholder="e.g. NAZO&M" className="h-10 border-gray-200 focus:ring-lime-500" />
+                  <Input id="department" name="department" value={department} onChange={(e) => setDepartment(e.target.value)} className="h-10 border-gray-200 focus:ring-lime-500" />
                 </div>
               </div>
             </div>

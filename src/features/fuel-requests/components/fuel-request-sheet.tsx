@@ -182,7 +182,7 @@ export function FuelRequestSheet({
               
               <div className="space-y-2">
                 <Label htmlFor="department" className="text-sm font-semibold text-gray-700">Assign Department</Label>
-                <Input id="department" {...register("department")} placeholder="e.g. Facilities" className="h-10 border-gray-200 focus:ring-lime-500" />
+                <Input id="department" {...register("department")} className="h-10 border-gray-200 focus:ring-lime-500" />
               </div>
               
               <div className="space-y-2">
@@ -192,7 +192,7 @@ export function FuelRequestSheet({
 
               <div className="space-y-2">
                 <Label htmlFor="requestedForId" className="text-sm font-semibold text-gray-700">Requested For ID <span className="text-red-500">*</span></Label>
-                <Input id="requestedForId" {...register("requestedForId")} placeholder="e.g. ETHIO19492" className="h-10 border-gray-200 focus:ring-lime-500" />
+                <Input id="requestedForId" {...register("requestedForId")} className="h-10 border-gray-200 focus:ring-lime-500" />
                 {errors.requestedForId && (
                   <p className="text-xs text-red-500 font-medium">{errors.requestedForId.message}</p>
                 )}
@@ -239,30 +239,30 @@ export function FuelRequestSheet({
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="employeeId" className="text-xs font-bold text-gray-600 uppercase flex items-center gap-1.5"><User className="w-3.5 h-3.5 text-gray-400"/> Employee ID No.</Label>
-                <Input id="employeeId" {...register("employeeId")} placeholder="e.g. ETHIO19492" className="h-9 text-sm border-gray-200 focus:ring-lime-500 bg-gray-50/50" />
+                <Input id="employeeId" {...register("employeeId")} className="h-9 text-sm border-gray-200 focus:ring-lime-500 bg-gray-50/50" />
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="runningHour" className="text-xs font-bold text-gray-600 uppercase flex items-center gap-1.5"><Clock className="w-3.5 h-3.5 text-gray-400"/> Running Hr</Label>
-                <Input id="runningHour" type="number" step="0.1" {...register("runningHour")} placeholder="Current hours" className="h-9 text-sm border-gray-200 focus:ring-lime-500 bg-gray-50/50" />
+                <Input id="runningHour" type="number" step="0.1" {...register("runningHour")} className="h-9 text-sm border-gray-200 focus:ring-lime-500 bg-gray-50/50" />
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="securityName" className="text-xs font-bold text-gray-600 uppercase flex items-center gap-1.5"><Shield className="w-3.5 h-3.5 text-gray-400"/> Security Name</Label>
-                <Input id="securityName" {...register("securityName")} placeholder="Site security name" className="h-9 text-sm border-gray-200 focus:ring-lime-500 bg-gray-50/50" />
+                <Input id="securityName" {...register("securityName")} className="h-9 text-sm border-gray-200 focus:ring-lime-500 bg-gray-50/50" />
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="route" className="text-xs font-bold text-gray-600 uppercase flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5 text-gray-400"/> Route</Label>
-                <Input id="route" {...register("route")} placeholder="Delivery route" className="h-9 text-sm border-gray-200 focus:ring-lime-500 bg-gray-50/50" />
+                <Input id="route" {...register("route")} className="h-9 text-sm border-gray-200 focus:ring-lime-500 bg-gray-50/50" />
               </div>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5 pt-2">
               <div className="space-y-1.5">
                 <Label htmlFor="requestDescription" className="text-xs font-bold text-gray-600 uppercase">Request Description</Label>
-                <Textarea id="requestDescription" {...register("requestDescription")} placeholder="Main purpose of this request..." rows={2} className="border-gray-200 focus:ring-lime-500 text-sm resize-none" />
+                <Textarea id="requestDescription" {...register("requestDescription")} rows={2} className="border-gray-200 focus:ring-lime-500 text-sm resize-none" />
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="additionalDescription" className="text-xs font-bold text-gray-600 uppercase">Additional Details</Label>
-                <Textarea id="additionalDescription" {...register("additionalDescription")} placeholder="Extra information..." rows={2} className="border-gray-200 focus:ring-lime-500 text-sm resize-none" />
+                <Textarea id="additionalDescription" {...register("additionalDescription")} rows={2} className="border-gray-200 focus:ring-lime-500 text-sm resize-none" />
               </div>
             </div>
           </div>
@@ -284,7 +284,7 @@ export function FuelRequestSheet({
               </div>
               <div className="space-y-2">
                 <Label htmlFor="requesterPhone" className="text-sm font-semibold text-gray-700">Phone Number <span className="text-red-500">*</span></Label>
-                <Input id="requesterPhone" type="tel" {...register("requesterPhone")} placeholder="+251..." className="h-10 border-gray-200" />
+                <Input id="requesterPhone" type="tel" {...register("requesterPhone")} className="h-10 border-gray-200" />
                 {errors.requesterPhone && (
                   <p className="text-xs text-red-500 font-medium">{errors.requesterPhone.message}</p>
                 )}
@@ -339,7 +339,7 @@ export function FuelRequestSheet({
                 
                 <div className="space-y-1.5">
                   <Label htmlFor="driverPhone" className="text-xs font-bold text-gray-600 uppercase">Driver / Fuel Admin Phone No</Label>
-                  <Input id="driverPhone" {...register("driverPhone")} placeholder="+251..." className="h-9 bg-white border-lime-200 focus:ring-lime-500 text-sm" />
+                  <Input id="driverPhone" {...register("driverPhone")} className="h-9 bg-white border-lime-200 focus:ring-lime-500 text-sm" />
                 </div>
               </div>
             </div>
@@ -378,7 +378,7 @@ export function FuelRequestSheet({
 
               <div className="space-y-1.5 mt-5">
                 <Label htmlFor="remark" className="text-xs font-bold text-gray-600 uppercase flex items-center gap-1.5"><MessageSquare className="w-3.5 h-3.5 text-gray-400"/> Remark</Label>
-                <Textarea id="remark" {...register("remark")} placeholder="Any final comments..." rows={2} className="border-gray-200 focus:ring-lime-500 text-sm resize-none bg-gray-50/50" />
+                <Textarea id="remark" {...register("remark")} rows={2} className="border-gray-200 focus:ring-lime-500 text-sm resize-none bg-gray-50/50" />
               </div>
             </div>
 

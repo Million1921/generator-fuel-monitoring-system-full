@@ -124,14 +124,14 @@ export function AddGeneratorSheet({ sites }: { sites: Site[] }) {
                 <Label htmlFor="model" className="text-sm font-semibold text-gray-700 flex items-center gap-1.5">
                   <Cpu className="w-3.5 h-3.5 text-gray-400" /> Model / Type <span className="text-red-500">*</span>
                 </Label>
-                <Input id="model" name="model" placeholder="e.g. Cummins 50kVA" required className="h-10 border-gray-200 focus:ring-lime-500" />
+                <Input id="model" name="model" required className="h-10 border-gray-200 focus:ring-lime-500" />
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="serialNumber" className="text-sm font-semibold text-gray-700 flex items-center gap-1.5">
                   <Hash className="w-3.5 h-3.5 text-gray-400" /> Serial Number <span className="text-red-500">*</span>
                 </Label>
-                <Input id="serialNumber" name="serialNumber" placeholder="e.g. SN-987654321" required className="h-10 border-gray-200 focus:ring-lime-500" />
+                <Input id="serialNumber" name="serialNumber" required className="h-10 border-gray-200 focus:ring-lime-500" />
               </div>
             </div>
           </div>
@@ -147,21 +147,21 @@ export function AddGeneratorSheet({ sites }: { sites: Site[] }) {
                 <Label htmlFor="capacityKVA" className="text-sm font-semibold text-gray-700 flex items-center gap-1.5">
                   <Zap className="w-3.5 h-3.5 text-gray-400" /> Capacity (KVA) <span className="text-red-500">*</span>
                 </Label>
-                <Input id="capacityKVA" name="capacityKVA" type="number" step="0.1" placeholder="e.g. 50" required className="h-10 border-gray-200 focus:ring-lime-500" />
+                <Input id="capacityKVA" name="capacityKVA" type="number" step="0.1" required className="h-10 border-gray-200 focus:ring-lime-500" />
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="stdFuelConsumption" className="text-sm font-semibold text-gray-700 flex items-center gap-1.5">
                   <Gauge className="w-3.5 h-3.5 text-gray-400" /> Std Fuel (L/hr) <span className="text-red-500">*</span>
                 </Label>
-                <Input id="stdFuelConsumption" name="stdFuelConsumption" type="number" step="0.01" placeholder="e.g. 12.5" required className="h-10 border-gray-200 focus:ring-lime-500" />
+                <Input id="stdFuelConsumption" name="stdFuelConsumption" type="number" step="0.01" required className="h-10 border-gray-200 focus:ring-lime-500" />
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="lastRunningHours" className="text-sm font-semibold text-gray-700 flex items-center gap-1.5">
                   <Clock className="w-3.5 h-3.5 text-gray-400" /> Initial Running Hours <span className="text-red-500">*</span>
                 </Label>
-                <Input id="lastRunningHours" name="lastRunningHours" type="number" step="0.1" placeholder="e.g. 0" defaultValue="0" required className="h-10 border-gray-200 focus:ring-lime-500" />
+                <Input id="lastRunningHours" name="lastRunningHours" type="number" step="0.1" defaultValue="0" required className="h-10 border-gray-200 focus:ring-lime-500" />
               </div>
             </div>
           </div>
