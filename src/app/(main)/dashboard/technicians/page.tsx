@@ -18,7 +18,8 @@ export default async function TechniciansPage(props: {
   }> 
 }) {
   const searchParams = await props.searchParams;
-  const region = searchParams.region;
+  let region = searchParams.region;
+  if (region === "ALL" || region === "" || region === "undefined" || region === "null") region = undefined;
   const page = searchParams.page ? parseInt(searchParams.page) : 1;
   const sortBy = searchParams.sortBy || 'name';
   const sortOrder = searchParams.sortOrder || 'asc';

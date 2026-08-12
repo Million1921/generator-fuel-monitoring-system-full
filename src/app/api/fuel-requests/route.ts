@@ -28,7 +28,8 @@ export async function GET(req: NextRequest) {
     const { role } = await requireAbility("read", "FuelRequest")
     const scopedRegion = await getRegionScope(role)
     const queryRegion = req.nextUrl.searchParams.get("region") ?? undefined
-    const region = scopedRegion || queryRegion
+    let region = scopedRegion ?? queryRegion
+    if (region === "ALL" || region === "" || region === "undefined" || region === "null") region = undefined
 
     const status = req.nextUrl.searchParams.get("status") ?? undefined
     const requests = await prisma.fuelRequest.findMany({

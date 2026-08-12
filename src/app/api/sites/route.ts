@@ -22,7 +22,8 @@ export async function GET(req: NextRequest) {
     const { role } = await requireAbility("read", "Site")
     const scopedRegion = await getRegionScope(role)
     const queryRegion = req.nextUrl.searchParams.get("region") ?? undefined
-    const region = scopedRegion || queryRegion
+    let region = scopedRegion ?? queryRegion
+    if (region === "ALL" || region === "" || region === "undefined" || region === "null") region = undefined
 
     const sites = await prisma.site.findMany({
       where: region ? { region } : undefined,

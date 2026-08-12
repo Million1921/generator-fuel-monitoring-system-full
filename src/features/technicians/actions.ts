@@ -17,12 +17,15 @@ export async function getTechnicians(
 ) {
   const { role } = await requireAbility("read", "Technician")
   const scopedRegion = await getRegionScope(role)
-  region = scopedRegion || region
+  let effectiveRegion = scopedRegion ?? region
+  if (effectiveRegion === "ALL" || effectiveRegion === "" || effectiveRegion === "undefined" || effectiveRegion === "null") {
+    effectiveRegion = undefined
+  }
 
   const skip = (page - 1) * limit
   const where: any = {
     AND: [
-      region ? { region: { name: region } } : {},
+      effectiveRegion ? { region: { name: effectiveRegion } } : {},
       search ? {
         OR: [
           { name: { contains: search, mode: 'insensitive' } },

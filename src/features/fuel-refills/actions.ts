@@ -81,10 +81,13 @@ export async function getFuelRefills(
 ) {
   const { role } = await requireAbility("read", "FuelRefill")
   const scopedRegion = await getRegionScope(role)
-  region = scopedRegion || region
+  let effectiveRegion = scopedRegion ?? region
+  if (effectiveRegion === "ALL" || effectiveRegion === "" || effectiveRegion === "undefined" || effectiveRegion === "null") {
+    effectiveRegion = undefined
+  }
 
   const skip = (page - 1) * limit;
-  const where = region ? { site: { region } } : undefined;
+  const where = effectiveRegion ? { site: { region: effectiveRegion } } : undefined;
 
   let orderBy: any = { [sortBy]: sortOrder };
   if (sortBy === 'siteId' || sortBy === 'siteName') {

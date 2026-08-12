@@ -2,16 +2,16 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 async function main() {
   try {
-    const t = await prisma.technician.create({
-      data: {
-        userId: 'user_2kI0F7UHTL6s4t4bE8fV1uE8z0m',
-        email: 'milliontesfahun1921@gmail.com',
-        name: 'million tesfahun'
-      }
-    });
-    console.log(t);
+    // Revert the test site back to NAAR
+    await prisma.site.update({ where: { id: 21 }, data: { region: 'NAAR' } });
+    console.log('Site 21 reverted to NAAR');
+    const cnr = await prisma.site.count({ where: { region: 'CNR' } });
+    const naar = await prisma.site.count({ where: { region: 'NAAR' } });
+    console.log('CNR:', cnr, '  NAAR:', naar);
   } catch (e) {
     console.error(e);
+  } finally {
+    await prisma.$disconnect();
   }
 }
 main();

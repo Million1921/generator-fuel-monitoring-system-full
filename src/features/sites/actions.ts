@@ -9,7 +9,10 @@ import { z } from "zod"
 export async function getSites(region?: string) {
   const { role } = await requireAbility("read", "Site")
   const scopedRegion = await getRegionScope(role)
-  const effectiveRegion = scopedRegion || region
+  let effectiveRegion = scopedRegion ?? region
+  if (effectiveRegion === "ALL" || effectiveRegion === "" || effectiveRegion === "undefined" || effectiveRegion === "null") {
+    effectiveRegion = undefined
+  }
   return await prisma.site.findMany({
     where: effectiveRegion ? { region: effectiveRegion } : undefined,
     orderBy: { siteId: 'asc' }
