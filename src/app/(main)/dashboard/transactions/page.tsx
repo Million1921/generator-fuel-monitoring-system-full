@@ -22,7 +22,10 @@ export default async function TransactionsPage(props: {
   const to = searchParams.to;
   const role = await getRoleFromClerk();
   const regionScope = await getRegionScope(role);
-  const region = regionScope ?? searchParams.region;
+  let region = regionScope ?? searchParams.region;
+  if (region === "ALL" || region === "undefined" || region === "null" || region === "") {
+    region = undefined;
+  }
   
   const limit = 10;
   const skip = (page - 1) * limit;

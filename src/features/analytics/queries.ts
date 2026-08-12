@@ -13,7 +13,10 @@ export async function getAnalyticalReport(
 ) {
   const role = await getRoleFromClerk();
   const regionScope = await getRegionScope(role);
-  const effectiveRegion = regionScope ?? region;
+  let effectiveRegion = regionScope ?? region;
+  if (effectiveRegion === "ALL" || effectiveRegion === "undefined" || effectiveRegion === "null" || effectiveRegion === "") {
+    effectiveRegion = undefined;
+  }
 
   const skip = (page - 1) * limit;
   const where = effectiveRegion ? { region: effectiveRegion } : {};
@@ -202,7 +205,10 @@ export async function getFuelJournalData(
 ) {
   const role = await getRoleFromClerk();
   const regionScope = await getRegionScope(role);
-  const effectiveRegion = regionScope ?? region;
+  let effectiveRegion = regionScope ?? region;
+  if (effectiveRegion === "ALL" || effectiveRegion === "undefined" || effectiveRegion === "null" || effectiveRegion === "") {
+    effectiveRegion = undefined;
+  }
 
   const skip = (page - 1) * limit;
   const where = effectiveRegion ? { site: { region: effectiveRegion } } : {};

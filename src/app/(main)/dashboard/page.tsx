@@ -13,7 +13,10 @@ export default async function DashboardPage(props: { searchParams: Promise<{ reg
   const searchParams = await props.searchParams
   const role = await getRoleFromClerk()
   const regionScope = await getRegionScope(role)
-  const region = regionScope ?? searchParams.region
+  let region = regionScope ?? searchParams.region
+  if (region === "ALL" || region === "undefined" || region === "null" || region === "") {
+    region = undefined
+  }
   
   const topSitesPage = parseInt(searchParams.page || "1")
 

@@ -50,7 +50,7 @@ function RegionFilterContent() {
 
 export function RegionFilter() {
   const userRole = useAppRole()
-  const isGlobal = userRole === "ADMIN" || userRole === "FINANCE" || userRole === "FLEET_ADMIN"
+  const isGlobal = userRole === "ADMIN" || userRole === "FINANCE"
   if (!isGlobal) {
     return null
   }

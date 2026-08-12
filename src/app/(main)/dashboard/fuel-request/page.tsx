@@ -25,7 +25,10 @@ export default async function FuelRequestPage(props: {
   const search = searchParams.search;
   const role = await getRoleFromClerk();
   const regionScope = await getRegionScope(role);
-  const region = regionScope ?? searchParams.region;
+  let region = regionScope ?? searchParams.region;
+  if (region === "ALL" || region === "undefined" || region === "null" || region === "") {
+    region = undefined;
+  }
   const from = searchParams.from;
   const to = searchParams.to;
   const page = searchParams.page ? parseInt(searchParams.page) : 1;
