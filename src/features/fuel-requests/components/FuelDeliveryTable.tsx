@@ -180,6 +180,7 @@ export function FuelDeliveryTable({
                   <TableCell className="text-center text-gray-500 tabular-nums">
                     {delivery.afterLevel ?? '-'}
                   </TableCell>
+                  {/* REQUESTED BY */}
                   <TableCell className="px-4 py-2">
                     <div className="flex flex-col leading-tight">
                       <span className="font-medium text-gray-900">{delivery.fuelRequest?.technician?.name || '-'}</span>
@@ -190,16 +191,25 @@ export function FuelDeliveryTable({
                       )}
                     </div>
                   </TableCell>
+                  {/* DELIVERED BY */}
                   <TableCell className="px-4 py-2">
                     <div className="flex flex-col leading-tight">
                       <span className="font-medium text-gray-900">{delivery.technicianName || '-'}</span>
-                      {delivery.technicianIdStr && (
-                        <span className="text-[10px] uppercase tracking-tight text-gray-500 font-normal">
-                          ID: {delivery.technicianIdStr}
-                        </span>
-                      )}
+                      {(() => {
+                        // Prefer the employeeId from the related technician record
+                        const empId = delivery.technician?.employeeId
+                        // Fall back to technicianIdStr only if it looks like a short employee ID (not a long auth ID)
+                        const storedId = delivery.technicianIdStr && delivery.technicianIdStr.length <= 20 ? delivery.technicianIdStr : null
+                        const displayId = empId || storedId
+                        return displayId ? (
+                          <span className="text-[10px] uppercase tracking-tight text-gray-500 font-normal">
+                            ID: {displayId}
+                          </span>
+                        ) : null
+                      })()}
                     </div>
                   </TableCell>
+                  {/* DRIVER DETAILS */}
                   <TableCell className="px-4 py-2">
                     <div className="flex flex-col leading-tight">
                       <span className="font-medium text-gray-900">{delivery.driverName || '-'}</span>
