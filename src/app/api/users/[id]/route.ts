@@ -10,6 +10,7 @@ import prisma from "@/lib/db";
 const PatchSchema = z.object({
   role: z.enum(["ADMIN", "TECHNICIAN", "MANAGER", "SUPERVISOR", "FUEL_SUPERVISOR", "FLEET_MANAGER", "FL_COUNTRY_MANAGER", "FLEET_ADMIN", "GUEST"]).optional(),
   region: z.string().nullable().optional(),
+  accountNumber: z.string().optional(),
 });
 
 export async function PATCH(
@@ -27,12 +28,13 @@ export async function PATCH(
       return NextResponse.json({ error: "Invalid input" }, { status: 400 });
     }
     
-    const { role, region } = parsed.data;
+    const { role, region, accountNumber } = parsed.data;
     
     // Update Clerk publicMetadata
     const metadataUpdate: Record<string, any> = {};
     if (role !== undefined) metadataUpdate.role = role;
     if (region !== undefined) metadataUpdate.region = region;
+    if (accountNumber !== undefined) metadataUpdate.accountNumber = accountNumber;
 
     const client = await clerkClient();
     const updatedUser = await client.users.updateUserMetadata(id, {
@@ -66,6 +68,7 @@ export async function PATCH(
       id: updatedUser.id,
       role: updatedUser.publicMetadata?.role,
       region: updatedUser.publicMetadata?.region,
+      accountNumber: updatedUser.publicMetadata?.accountNumber,
     });
   } catch (error) {
     return apiErrorResponse(error, "PATCH /api/users/[id]");

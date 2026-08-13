@@ -19,6 +19,7 @@ export default async function UsersPage() {
     email: u.emailAddresses[0]?.emailAddress ?? "",
     role: (u.publicMetadata?.role as string) ?? "GUEST",
     region: (u.publicMetadata?.region as string) ?? null,
+    accountNumber: (u.publicMetadata?.accountNumber as string) ?? null,
   }));
 
   return (
