@@ -30,7 +30,7 @@ const run = (cmd) => {
 
 try {
   run('add -A');
-  run('commit -m "fix: add missing roles to user update API validation schema"');
+  run('commit -m "chore: minor updates"');
   run('push origin main');
   console.log('Successfully pushed!');
 } catch (e) {
