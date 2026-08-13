@@ -8,7 +8,7 @@ import { z } from "zod";
 import prisma from "@/lib/db";
 
 const PatchSchema = z.object({
-  role: z.enum(["ADMIN", "TECHNICIAN", "MANAGER", "SUPERVISOR", "FINANCE", "FLEET_ADMIN", "GUEST"]).optional(),
+  role: z.enum(["ADMIN", "TECHNICIAN", "MANAGER", "SUPERVISOR", "FUEL_SUPERVISOR", "FLEET_MANAGER", "FL_COUNTRY_MANAGER", "FLEET_ADMIN", "GUEST"]).optional(),
   region: z.string().nullable().optional(),
 });
 

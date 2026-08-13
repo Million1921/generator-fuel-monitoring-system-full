@@ -1,9 +1,9 @@
 const { execSync } = require('child_process');
 
 const gitPaths = [
+  'C:\\Users\\MILLION.TESFAHUN\\Downloads\\flutter_windows_3.44.8-stable\\flutter\\bin\\mingit\\cmd\\git.exe',
   'C:\\Program Files\\Git\\bin\\git.exe',
   'C:\\Program Files (x86)\\Git\\bin\\git.exe',
-  'C:\\Users\\MILLION.TESFAHUN\\AppData\\Local\\Programs\\Git\\bin\\git.exe',
 ];
 
 let gitExe = null;
