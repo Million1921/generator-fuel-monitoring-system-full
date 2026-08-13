@@ -39,7 +39,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       icon: LayoutDashboard,
       isActive: true,
       items: [],
-      roles: ["ADMIN", "TECHNICIAN", "MANAGER", "SUPERVISOR", "FINANCE", "FLEET_ADMIN"]
+      roles: ["ADMIN", "TECHNICIAN", "MANAGER", "SUPERVISOR", "FUEL_SUPERVISOR", "FL_COUNTRY_MANAGER", "FLEET_MANAGER", "FLEET_ADMIN"]
     },
     {
       title: "Sites",
@@ -53,7 +53,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       url: "/dashboard/site-map",
       icon: Map,
       items: [],
-      roles: ["ADMIN", "MANAGER", "SUPERVISOR", "TECHNICIAN", "FINANCE", "FLEET_ADMIN"]
+      roles: ["ADMIN", "MANAGER", "SUPERVISOR", "TECHNICIAN", "FUEL_SUPERVISOR", "FL_COUNTRY_MANAGER", "FLEET_MANAGER", "FLEET_ADMIN"]
     },
     {
       title: "User Management",
@@ -73,7 +73,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       url: "/dashboard/fuel-request",
       icon: FileText,
       items: [],
-      roles: ["ADMIN", "MANAGER", "SUPERVISOR", "TECHNICIAN", "FINANCE", "FLEET_ADMIN"]
+      roles: ["ADMIN", "MANAGER", "SUPERVISOR", "TECHNICIAN", "FUEL_SUPERVISOR", "FL_COUNTRY_MANAGER", "FLEET_MANAGER", "FLEET_ADMIN"]
     },
     {
       title: "Fuel Delivery",
@@ -87,13 +87,13 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       url: "/dashboard/transactions",
       icon: ArrowRightLeft,
       items: [],
-      roles: ["ADMIN", "MANAGER", "FINANCE"]
+      roles: ["ADMIN", "MANAGER", "FL_COUNTRY_MANAGER", "FLEET_MANAGER"]
     },
     {
       title: "Generator Fuel Journal",
       url: "/dashboard/fuel-journal",
       icon: BarChart2,
-      roles: ["ADMIN", "MANAGER", "SUPERVISOR", "TECHNICIAN", "FINANCE", "FLEET_ADMIN"]
+      roles: ["ADMIN", "MANAGER", "SUPERVISOR", "TECHNICIAN", "FUEL_SUPERVISOR", "FL_COUNTRY_MANAGER", "FLEET_MANAGER", "FLEET_ADMIN"]
     },
     {
       title: "Fuel Usage History",

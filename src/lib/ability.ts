@@ -11,7 +11,6 @@ export function defineAbilitiesFor(role: AppRole): AppAbility {
 
   switch (role) {
     case 'ADMIN':
-    case 'MANAGER':
       can('manage', 'all');
       break;
 
@@ -38,9 +37,8 @@ export function defineAbilitiesFor(role: AppRole): AppAbility {
 
     case 'MANAGER':
       can('read', 'all');
-      // Manager reviews requests after the supervisor and approves them to the admin (Finance)
       can('update', 'FuelRequest', {
-        status: { $in: ['PENDING_MANAGER_APPROVAL'] }
+        status: { $in: ['PENDING_MANAGER'] }
       } as any);
       can('update', 'FuelRefill');
       cannot('create', 'FuelRequest');
@@ -48,36 +46,38 @@ export function defineAbilitiesFor(role: AppRole): AppAbility {
       break;
 
     case 'FLEET_ADMIN':
-      // Fleet Department: only responsible for issuing the Work Order once a
-      // fuel request has cleared Supervisor -> Manager -> Admin approval.
-      // Cannot approve/reject fuel requests or create new ones.
       can('read', 'FuelRequest');
       can('read', 'Site');
       can('read', 'Generator');
-      // FLEET_ADMIN updates are constrained to specific statuses in the lifecycle.
-      // They can only act on requests that have been approved or are in progress.
       can('update', 'FuelRequest', {
-        status: { $in: ['APPROVED_REQUEST', 'PENDING_MANAGER_APPROVAL', 'FUNDS_RELEASED', 'ASSIGNED_TO_TECH'] }
+        status: { $in: ['PENDING_FLEET_ADMIN', 'FUNDS_RELEASED_TO_FLEET_ADMIN', 'ASSIGNED_TO_TECH'] }
       } as any);
       cannot('create', 'FuelRequest');
       cannot('delete', 'all');
       break;
 
-    case 'FINANCE':
+    case 'FUEL_SUPERVISOR':
       can('read', 'all');
-      can('manage', 'Transaction');
       can('update', 'FuelRequest', {
-        status: { $in: ['PENDING_FINANCE'] }
+        status: { $in: ['PENDING_FUEL_SUPERVISOR'] }
       } as any);
-      cannot('create', 'Site');
-      cannot('create', 'Generator');
-      cannot('create', 'Technician');
-      cannot('create', 'FuelRequest');
-      cannot('create', 'FuelRefill');
+      break;
+
+    case 'FLEET_MANAGER':
+      can('read', 'all');
+      can('update', 'FuelRequest', {
+        status: { $in: ['FUNDS_RELEASED_TO_FLEET_MANAGER'] }
+      } as any);
+      break;
+
+    case 'FL_COUNTRY_MANAGER':
+      can('read', 'all');
+      can('update', 'FuelRequest', {
+        status: { $in: ['PENDING_FUND_RELEASE_FL_MANAGER'] }
+      } as any);
       break;
 
     default:
-      // Fallback for anonymous or unassigned users: read-only general access
       can('read', 'Site');
       can('read', 'Generator');
       break;

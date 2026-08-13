@@ -96,9 +96,9 @@ describe('CASL Ability Definitions', () => {
 
     it('can update FuelRequests only if they are in specific statuses (condition test)', () => {
       // Allowed statuses
-      expect(ability.can('update', subject('FuelRequest', { status: 'APPROVED_REQUEST' } as any))).toBe(true)
-      expect(ability.can('update', subject('FuelRequest', { status: 'PENDING_MANAGER_APPROVAL' } as any))).toBe(true)
-      expect(ability.can('update', subject('FuelRequest', { status: 'FUNDS_RELEASED' } as any))).toBe(true)
+      expect(ability.can('update', subject('FuelRequest', { status: 'PENDING_FLEET_ADMIN' } as any))).toBe(true)
+      expect(ability.can('update', subject('FuelRequest', { status: 'PENDING_MANAGER' } as any))).toBe(true)
+      expect(ability.can('update', subject('FuelRequest', { status: 'FUNDS_RELEASED_TO_FLEET_ADMIN' } as any))).toBe(true)
       expect(ability.can('update', subject('FuelRequest', { status: 'ASSIGNED_TO_TECH' } as any))).toBe(true)
 
       // Disallowed statuses

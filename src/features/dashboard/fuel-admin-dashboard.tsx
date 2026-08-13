@@ -28,13 +28,13 @@ async function getFuelAdminData(userId: string, region?: string) {
     deliveredRequests
   ] = await Promise.all([
     prisma.fuelRequest.findMany({
-      where: { status: "APPROVED_REQUEST", ...fuelRequestFilter },
+      where: { status: "PENDING_FLEET_ADMIN", ...fuelRequestFilter },
       include: { site: true, technician: true },
       orderBy: { submittedAt: "asc" },
       take: 8,
     }),
     prisma.fuelRequest.findMany({
-      where: { status: "FUNDS_RELEASED", ...fuelRequestFilter },
+      where: { status: "FUNDS_RELEASED_TO_FLEET_ADMIN", ...fuelRequestFilter },
       include: { site: true, technician: true },
       orderBy: { updatedAt: "desc" },
       take: 8,

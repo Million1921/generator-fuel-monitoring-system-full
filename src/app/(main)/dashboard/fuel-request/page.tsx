@@ -121,35 +121,35 @@ export default async function FuelRequestPage(props: {
   ] = await Promise.all([
     prisma.fuelRequest.findMany({
       orderBy,
-      where: { status: { in: ['PENDING', 'PENDING_SUPERVISOR', 'PENDING_MANAGER_APPROVAL'] }, ...whereBase },
+      where: { status: { in: ['PENDING', 'PENDING_SUPERVISOR', 'PENDING_MANAGER'] }, ...whereBase },
       include: { site: true, technician: true },
       skip, take: limit
     }),
-    prisma.fuelRequest.count({ where: { status: { in: ['PENDING', 'PENDING_SUPERVISOR', 'PENDING_MANAGER_APPROVAL'] }, ...whereBase } }),
+    prisma.fuelRequest.count({ where: { status: { in: ['PENDING', 'PENDING_SUPERVISOR', 'PENDING_MANAGER'] }, ...whereBase } }),
 
     prisma.fuelRequest.findMany({
       orderBy,
-      where: { status: 'APPROVED_REQUEST', ...whereBase },
+      where: { status: 'PENDING_FLEET_ADMIN', ...whereBase },
       include: { site: true, technician: true },
       skip, take: limit
     }),
-    prisma.fuelRequest.count({ where: { status: 'APPROVED_REQUEST', ...whereBase } }),
+    prisma.fuelRequest.count({ where: { status: 'PENDING_FLEET_ADMIN', ...whereBase } }),
 
     prisma.fuelRequest.findMany({
       orderBy,
-      where: { status: 'PENDING_FINANCE', ...whereBase },
+      where: { status: { in: ['PENDING_FUEL_SUPERVISOR', 'PENDING_FUND_RELEASE_FL_MANAGER', 'FUNDS_RELEASED_TO_FLEET_MANAGER'] }, ...whereBase },
       include: { site: true, technician: true },
       skip, take: limit
     }),
-    prisma.fuelRequest.count({ where: { status: 'PENDING_FINANCE', ...whereBase } }),
+    prisma.fuelRequest.count({ where: { status: { in: ['PENDING_FUEL_SUPERVISOR', 'PENDING_FUND_RELEASE_FL_MANAGER', 'FUNDS_RELEASED_TO_FLEET_MANAGER'] }, ...whereBase } }),
 
     prisma.fuelRequest.findMany({
       orderBy,
-      where: { status: { in: ['FUNDS_RELEASED', 'ASSIGNED_TO_TECH', 'DELIVERED'] }, ...whereBase },
+      where: { status: { in: ['FUNDS_RELEASED_TO_FLEET_ADMIN', 'ASSIGNED_TO_TECH', 'DELIVERED'] }, ...whereBase },
       include: { site: true, technician: true },
       skip, take: limit
     }),
-    prisma.fuelRequest.count({ where: { status: { in: ['FUNDS_RELEASED', 'ASSIGNED_TO_TECH', 'DELIVERED'] }, ...whereBase } }),
+    prisma.fuelRequest.count({ where: { status: { in: ['FUNDS_RELEASED_TO_FLEET_ADMIN', 'ASSIGNED_TO_TECH', 'DELIVERED'] }, ...whereBase } }),
 
     prisma.fuelRequest.findMany({
       orderBy,

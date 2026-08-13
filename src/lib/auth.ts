@@ -2,7 +2,7 @@ import { auth, currentUser } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { defineAbilitiesFor, Actions, Subjects } from "./ability";
 
-export type AppRole = "ADMIN" | "TECHNICIAN" | "MANAGER" | "SUPERVISOR" | "FINANCE" | "FLEET_ADMIN" | "GUEST";
+export type AppRole = "ADMIN" | "TECHNICIAN" | "MANAGER" | "SUPERVISOR" | "FUEL_SUPERVISOR" | "FLEET_MANAGER" | "FL_COUNTRY_MANAGER" | "FLEET_ADMIN" | "GUEST";
 
 export class AuthError extends Error {
   status: number;
@@ -51,7 +51,7 @@ export async function requireRole(allowedRoles: AppRole[]) {
 }
 
 export async function getRegionScope(role: AppRole): Promise<string | undefined> {
-  if (role === "ADMIN" || role === "FINANCE") {
+  if (["ADMIN", "FL_COUNTRY_MANAGER", "FLEET_MANAGER", "FUEL_SUPERVISOR"].includes(role)) {
     return undefined; // All regions access
   }
   

@@ -68,7 +68,7 @@ async function getTechnicianDashboardData(email: string | null, userId?: string 
     prisma.fuelRequest.count({
       where: {
         technicianId: technician.id,
-        status: { in: ["PENDING_SUPERVISOR", "PENDING_MANAGER_APPROVAL", "PENDING_FINANCE", "FUNDS_RELEASED", "ASSIGNED_TO_TECH"] },
+        status: { in: ["PENDING_SUPERVISOR", "PENDING_MANAGER", "PENDING_FLEET_ADMIN", "PENDING_FUEL_SUPERVISOR", "PENDING_FUND_RELEASE_FL_MANAGER", "FUNDS_RELEASED_TO_FLEET_MANAGER", "FUNDS_RELEASED_TO_FLEET_ADMIN", "ASSIGNED_TO_TECH"] },
       },
     }),
     prisma.fuelRequest.count({

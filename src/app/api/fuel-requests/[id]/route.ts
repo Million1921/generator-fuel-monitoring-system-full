@@ -8,8 +8,10 @@ import { z } from "zod"
 import { 
   approveFuelRequest,
   createWorkOrder,
-  approveToFinance,
-  releaseFunds,
+  approveToFleetAdmin,
+  approveWorkOrder,
+  releaseFundsToFleetManager,
+  releaseFundsToFleetAdmin,
   purchaseAndAssignFuel,
   verifyAndCompleteDelivery,
   deleteFuelRequest
@@ -79,20 +81,27 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 
     // If status is changing, enforce the specific state transition logic
     if (data.status && data.status !== oldRequest.status) {
-      if (data.status === "PENDING_MANAGER_APPROVAL") {
+      if (data.status === "PENDING_MANAGER") {
         // Supervisor approves → Manager
         await approveFuelRequest(id)
-      } else if (data.status === "APPROVED_REQUEST") {
+      } else if (data.status === "PENDING_FLEET_ADMIN") {
         // Manager approves → Fleet Admin
-        await approveToFinance(id)
-      } else if (data.status === "PENDING_FINANCE") {
-        // Fleet Admin creates Work Order → Finance
-        await createWorkOrder(id)
-      } else if (data.status === "FUNDS_RELEASED") {
+        await approveToFleetAdmin(id)
+      } else if (data.status === "PENDING_FUEL_SUPERVISOR") {
+        // Fleet Admin creates Work Order → Fuel Supervisor
+        await createWorkOrder(id, {} as any) // Note: Need payload if used via API directly
+      } else if (data.status === "PENDING_FUND_RELEASE_FL_MANAGER") {
+        await approveWorkOrder(id)
+      } else if (data.status === "FUNDS_RELEASED_TO_FLEET_MANAGER") {
         if (!data.amount || !data.financeRemark) {
-          return NextResponse.json({ error: "Missing amount or financeRemark for FUNDS_RELEASED" }, { status: 400 })
+          return NextResponse.json({ error: "Missing amount or financeRemark for FUNDS_RELEASED_TO_FLEET_MANAGER" }, { status: 400 })
         }
-        await releaseFunds(id, data.amount, data.financeRemark, session.user.id)
+        await releaseFundsToFleetManager(id, data.amount, data.financeRemark)
+      } else if (data.status === "FUNDS_RELEASED_TO_FLEET_ADMIN") {
+        if (!data.amount || !data.financeRemark) {
+          return NextResponse.json({ error: "Missing amount or financeRemark for FUNDS_RELEASED_TO_FLEET_ADMIN" }, { status: 400 })
+        }
+        await releaseFundsToFleetAdmin(id, data.amount, data.financeRemark, session.user.id)
       } else if (data.status === "ASSIGNED_TO_TECH") {
         if (!data.technicianId || !data.fuelStation || !data.purchasedAmount) {
           return NextResponse.json({ error: "Missing technicianId, fuelStation, or purchasedAmount for ASSIGNED_TO_TECH" }, { status: 400 })

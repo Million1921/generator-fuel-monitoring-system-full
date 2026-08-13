@@ -39,7 +39,7 @@ export async function getApprovedRequests(siteId?: number) {
   await requireAbility("read", "FuelRequest")
   return await prisma.fuelRequest.findMany({
     where: {
-      status: { in: ["ASSIGNED_TO_TECH", "FUNDS_RELEASED"] },
+      status: { in: ["ASSIGNED_TO_TECH", "FUNDS_RELEASED_TO_FLEET_ADMIN"] },
       ...(siteId ? { siteId } : {})
     },
     include: { site: true, technician: true },
@@ -244,7 +244,7 @@ export async function approveFuelRequest(id: number) {
   await prisma.fuelRequest.update({
     where: { id },
     data: { 
-      status: "PENDING_MANAGER_APPROVAL",
+      status: "PENDING_MANAGER",
       approvedAt: new Date(),
     }
   })
@@ -253,7 +253,7 @@ export async function approveFuelRequest(id: number) {
 }
 
 // Step 2: Manager approves → goes to Fleet Admin
-export async function approveToFinance(id: number) {
+export async function approveToFleetAdmin(id: number) {
   const { ability } = await requireAbility("update", "FuelRequest")
   const request = await prisma.fuelRequest.findUniqueOrThrow({ where: { id } })
   if (!ability.can('update', subject('FuelRequest', request) as any)) {
@@ -262,7 +262,7 @@ export async function approveToFinance(id: number) {
 
   await prisma.fuelRequest.update({
     where: { id },
-    data: { status: "APPROVED_REQUEST" }
+    data: { status: "PENDING_FLEET_ADMIN" }
   })
   revalidatePath("/dashboard/fuel-request")
   revalidatePath("/dashboard")
@@ -299,7 +299,7 @@ export async function createWorkOrder(id: number, data?: {
   await prisma.fuelRequest.update({
     where: { id },
     data: {
-      status: "PENDING_FINANCE",
+      status: "PENDING_FUEL_SUPERVISOR",
       workOrderNumber,
       // Store WO form data in existing flexible fields
       route: data?.assetActivity || request.route,
@@ -314,7 +314,62 @@ export async function createWorkOrder(id: number, data?: {
   return workOrderNumber
 }
 
-export async function releaseFunds(id: number, amount: number, remark: string, adminUserId: string) {
+// Step 4: Fuel Supervisor approves Work Order → goes to F&L Country Manager
+export async function approveWorkOrder(id: number) {
+  const { ability } = await requireAbility("update", "FuelRequest")
+  const request = await prisma.fuelRequest.findUniqueOrThrow({ where: { id } })
+  if (!ability.can('update', subject('FuelRequest', request) as any)) {
+    throw new AuthError('Forbidden', 403)
+  }
+
+  await prisma.fuelRequest.update({
+    where: { id },
+    data: { status: "PENDING_FUND_RELEASE_FL_MANAGER" }
+  })
+  revalidatePath("/dashboard/fuel-request")
+  revalidatePath("/dashboard")
+}
+
+// Step 5: F&L Country Manager releases funds → to Fleet Manager
+export async function releaseFundsToFleetManager(id: number, amount: number, remark: string) {
+  try {
+    const { ability } = await requireAbility("update", "FuelRequest")
+    const requestRecord = await prisma.fuelRequest.findUniqueOrThrow({ where: { id } })
+    if (!ability.can('update', subject('FuelRequest', requestRecord) as any)) {
+      throw new AuthError('Forbidden', 403)
+    }
+
+    await prisma.fuelRequest.update({
+      where: { id },
+      data: { 
+        status: "FUNDS_RELEASED_TO_FLEET_MANAGER",
+        financeRemark: remark
+      }
+    })
+
+    // Log the transaction conceptually
+    await prisma.transaction.create({
+      data: {
+        type: "FUND_RELEASE_TO_FM",
+        paidAmount: amount,
+        remark: remark || `Funds released for ${requestRecord.workOrderNumber}`,
+        receiptNo: `FR-FL-${Date.now()}-${id}`,
+        siteId: requestRecord.siteId,
+        technicianId: requestRecord.technicianId,
+        payerName: "F&L Country Manager",
+      }
+    })
+
+    revalidatePath("/dashboard/fuel-request")
+    revalidatePath("/dashboard")
+  } catch (err: any) {
+    logger.error("releaseFundsToFleetManager failed", { id, error: err?.message, stack: err?.stack });
+    throw new Error(`Failed to release funds: ${err?.message}`);
+  }
+}
+
+// Step 6: Fleet Manager releases funds → to Fleet Admin
+export async function releaseFundsToFleetAdmin(id: number, amount: number, remark: string, adminUserId: string) {
   try {
     const { ability } = await requireAbility("update", "FuelRequest")
     const requestRecord = await prisma.fuelRequest.findUniqueOrThrow({ where: { id } })
@@ -325,12 +380,12 @@ export async function releaseFunds(id: number, amount: number, remark: string, a
     const request = await prisma.fuelRequest.update({
       where: { id },
       data: { 
-        status: "FUNDS_RELEASED",
+        status: "FUNDS_RELEASED_TO_FLEET_ADMIN",
         financeRemark: remark
       }
     })
 
-    // Update Fuel Admin's Wallet
+    // Update Fleet Admin's Wallet
     const wallet = await prisma.fuelAdminWallet.upsert({
       where: { userId: adminUserId },
       update: { balance: { increment: amount } },
@@ -343,27 +398,26 @@ export async function releaseFunds(id: number, amount: number, remark: string, a
         type: "DEPOSIT",
         amount,
         fuelRequestId: id,
-        description: `Funds released for Work Order ${request.workOrderNumber}`
+        description: `Funds released from Fleet Manager for Work Order ${request.workOrderNumber}`
       }
     })
 
-    // Integrate with Transaction table
     await prisma.transaction.create({
       data: {
-        type: "FUND_RELEASE",
+        type: "FUND_RELEASE_TO_FA",
         paidAmount: amount,
-        remark: remark || `Funds released for ${request.workOrderNumber}`,
-        receiptNo: `FR-${Date.now()}-${id}`, // Ensure uniqueness
+        remark: remark || `Funds released to Fleet Admin for ${request.workOrderNumber}`,
+        receiptNo: `FR-FM-${Date.now()}-${id}`,
         siteId: requestRecord.siteId,
         technicianId: requestRecord.technicianId,
-        payerName: "Finance Department",
+        payerName: "Fleet Manager",
       }
     })
 
     revalidatePath("/dashboard/fuel-request")
     revalidatePath("/dashboard")
   } catch (err: any) {
-    logger.error("releaseFunds failed", { id, error: err?.message, stack: err?.stack });
+    logger.error("releaseFundsToFleetAdmin failed", { id, error: err?.message, stack: err?.stack });
     throw new Error(`Failed to release funds: ${err?.message}`);
   }
 }

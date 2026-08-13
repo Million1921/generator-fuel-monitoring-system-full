@@ -3,8 +3,9 @@ import {
   createFuelRequest, 
   approveFuelRequest,
   createWorkOrder,
-  approveToFinance,
-  releaseFunds,
+  approveWorkOrder,
+  releaseFundsToFleetManager,
+  releaseFundsToFleetAdmin,
   purchaseAndAssignFuel,
   verifyAndCompleteDelivery
 } from './actions'
@@ -91,7 +92,7 @@ describe('Fuel Request Workflow State Machine', () => {
     expect(result.workRequestNumber).toBe('REQ-1001')
   })
 
-  it('approveFuelRequest transitions to PENDING_MANAGER_APPROVAL', async () => {
+  it('approveFuelRequest transitions to PENDING_MANAGER', async () => {
     const mockRecord = { id: 1, status: 'PENDING_SUPERVISOR' }
     // @ts-ignore
     prisma.fuelRequest.findUniqueOrThrow.mockResolvedValue(mockRecord)
@@ -102,26 +103,26 @@ describe('Fuel Request Workflow State Machine', () => {
     expect(prisma.fuelRequest.update).toHaveBeenCalledWith({
       where: { id: 1 },
       data: expect.objectContaining({
-        status: 'PENDING_MANAGER_APPROVAL',
+        status: 'PENDING_MANAGER',
       })
     })
   })
 
-  it('approveToFinance (manager) transitions to APPROVED_REQUEST', async () => {
-    const mockRecord = { id: 1, status: 'PENDING_MANAGER_APPROVAL' }
+  it('approveToFleetAdmin (manager) transitions to PENDING_FLEET_ADMIN', async () => {
+    const mockRecord = { id: 1, status: 'PENDING_MANAGER' }
     // @ts-ignore
     prisma.fuelRequest.findUniqueOrThrow.mockResolvedValue(mockRecord)
     
-    await approveToFinance(1)
+    await approveToFleetAdmin(1)
     
     expect(prisma.fuelRequest.update).toHaveBeenCalledWith({
       where: { id: 1 },
-      data: { status: 'APPROVED_REQUEST' }
+      data: { status: 'PENDING_FLEET_ADMIN' }
     })
   })
 
-  it('createWorkOrder (fleet admin) transitions to PENDING_FINANCE', async () => {
-    const mockRecord = { id: 1, status: 'APPROVED_REQUEST' }
+  it('createWorkOrder (fleet admin) transitions to PENDING_FUEL_SUPERVISOR', async () => {
+    const mockRecord = { id: 1, status: 'PENDING_FLEET_ADMIN' }
     // @ts-ignore
     prisma.fuelRequest.findUniqueOrThrow.mockResolvedValue(mockRecord)
     
@@ -130,14 +131,14 @@ describe('Fuel Request Workflow State Machine', () => {
     expect(prisma.fuelRequest.update).toHaveBeenCalledWith({
       where: { id: 1 },
       data: { 
-        status: 'PENDING_FINANCE',
+        status: 'PENDING_FUEL_SUPERVISOR',
         workOrderNumber: 'WO-1001'
       }
     })
   })
 
   it('releaseFunds handles wallet logic and transitions to FUNDS_RELEASED', async () => {
-    const mockRecord = { id: 1, status: 'PENDING_FINANCE', workOrderNumber: 'WO-1001' }
+    const mockRecord = { id: 1, status: 'PENDING_FUEL_SUPERVISOR', workOrderNumber: 'WO-1001' }
     // @ts-ignore
     prisma.fuelRequest.findUniqueOrThrow.mockResolvedValue(mockRecord)
     
@@ -146,11 +147,11 @@ describe('Fuel Request Workflow State Machine', () => {
     // @ts-ignore
     prisma.fuelRequest.update.mockResolvedValue(mockRecord)
     
-    await releaseFunds(1, 5000, 'Approved deposit', 'admin-123')
+    await releaseFundsToFleetAdmin(1, 10000, 'Approved deposit', 'admin-123')
     
     expect(prisma.fuelRequest.update).toHaveBeenCalledWith({
       where: { id: 1 },
-      data: { status: 'FUNDS_RELEASED', financeRemark: 'Approved deposit' }
+      data: { status: 'FUNDS_RELEASED_TO_FLEET_ADMIN', financeRemark: 'Approved deposit' }
     })
     
     expect(prisma.fuelAdminWallet.upsert).toHaveBeenCalledWith({
@@ -171,7 +172,7 @@ describe('Fuel Request Workflow State Machine', () => {
   })
 
   it('purchaseAndAssignFuel enforces wallet balance before updating', async () => {
-    const mockRecord = { id: 1, status: 'FUNDS_RELEASED' }
+    const mockRecord = { id: 1, status: 'FUNDS_RELEASED_TO_FLEET_ADMIN' }
     // @ts-ignore
     prisma.fuelRequest.findUniqueOrThrow.mockResolvedValue(mockRecord)
     
