@@ -31,7 +31,8 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { LogOut, User, Settings, Bell, Sun, Moon } from "lucide-react"
 import { useTheme } from "next-themes"
-import { useUser, useAuth } from "@clerk/nextjs"
+import { useUser, useAuth, useClerk } from "@clerk/nextjs"
+import { toast } from "sonner"
 import { usePathname } from "next/navigation"
 import { useAppRole } from "@/components/providers/role-provider"
 
@@ -67,6 +68,7 @@ export function DashboardHeader({ breadcrumbs, showRegionFilter }: DashboardHead
   const pathname = usePathname()
   const { user } = useUser()
   const { signOut } = useAuth()
+  const { openUserProfile } = useClerk()
   
   const [mounted, setMounted] = React.useState(false)
   
@@ -130,11 +132,11 @@ export function DashboardHeader({ breadcrumbs, showRegionFilter }: DashboardHead
           <DropdownMenuContent align="end" className="w-56 mt-1">
             <DropdownMenuLabel>My Account</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
+            <DropdownMenuItem className="cursor-pointer" onSelect={() => openUserProfile()}>
               <User className="mr-2 h-4 w-4" />
               <span>Profile</span>
             </DropdownMenuItem>
-            <DropdownMenuItem>
+            <DropdownMenuItem className="cursor-pointer" onSelect={() => toast.info("Settings feature coming soon")}>
               <Settings className="mr-2 h-4 w-4" />
               <span>Settings</span>
             </DropdownMenuItem>
@@ -159,7 +161,7 @@ export function DashboardHeader({ breadcrumbs, showRegionFilter }: DashboardHead
               </DropdownMenuPortal>
             </DropdownMenuSub>
 
-            <DropdownMenuItem>
+            <DropdownMenuItem className="cursor-pointer" onSelect={() => toast.info("Notifications coming soon")}>
               <Bell className="mr-2 h-4 w-4" />
               <span>Notifications</span>
             </DropdownMenuItem>
