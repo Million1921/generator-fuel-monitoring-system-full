@@ -5,7 +5,7 @@ import { ManagerDashboard } from "@/features/dashboard/manager-dashboard"
 import { TechnicianDashboard } from "@/features/dashboard/technician-dashboard"
 import { SupervisorDashboard } from "@/features/dashboard/supervisor-dashboard"
 import { FuelAdminDashboard } from "@/features/dashboard/fuel-admin-dashboard"
-import { FuelSupervisorDashboard, FLCountryManagerDashboard, FleetManagerDashboard } from "@/features/dashboard/finance-dashboard"
+import { FuelSupervisorDashboard, FLCountryManagerDashboard, FleetManagerDashboard } from "@/features/dashboard/fund-management-dashboard"
 
 export const dynamic = "force-dynamic"
 
