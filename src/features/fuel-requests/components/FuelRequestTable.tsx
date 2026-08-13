@@ -29,7 +29,7 @@ import { Input } from "@/components/ui/input"
 import { Pagination } from "@/components/ui/Pagination"
 import { RegionFilter } from "@/components/ui/RegionFilter"
 import { useRouter, useSearchParams, usePathname } from "next/navigation"
-import { approveFuelRequest, approveToFleetAdmin, createWorkOrder, deleteFuelRequest, approveWorkOrder, releaseFundsToFleetManager, releaseFundsToFleetAdmin, purchaseAndAssignFuel, verifyAndCompleteDelivery } from "@/features/fuel-requests/actions"
+import { approveFuelRequest, approveToFleetAdmin, createWorkOrder, deleteFuelRequest, approveWorkOrder, forwardToFLManager, releaseFundsToFleetManager, releaseFundsToFleetAdmin, purchaseAndAssignFuel, verifyAndCompleteDelivery } from "@/features/fuel-requests/actions"
 import { useUser } from "@clerk/nextjs"
 import { useAppRole } from "@/components/providers/role-provider"
 import {
@@ -149,9 +149,20 @@ export function FuelRequestTable({
     startTransition(async () => {
       try {
         await approveWorkOrder(id)
-        toast.success("Work Order Approved – forwarded to F&L Country Manager")
+        toast.success("Work Order Approved – forwarded to Fleet Manager")
       } catch (error) {
         toast.error("Approval failed")
+      }
+    })
+  }
+
+  const handleForwardToFLManager = (id: number) => {
+    startTransition(async () => {
+      try {
+        await forwardToFLManager(id)
+        toast.success("Work Order forwarded to F&L Country Manager")
+      } catch (error) {
+        toast.error("Forwarding failed")
       }
     })
   }
@@ -473,6 +484,12 @@ export function FuelRequestTable({
                         <Button size="sm" onClick={() => handleApproveWorkOrder(req.id)} disabled={isPending}
                           className="h-7 px-3 text-[11px] bg-lime-600 hover:bg-lime-700 text-white font-semibold uppercase tracking-tight shadow-none">
                           Approve WO
+                        </Button>
+                      )}
+                      {req.status === 'PENDING_FLEET_MANAGER_FORWARD' && (userRole === 'FLEET_MANAGER' || userRole === 'ADMIN') && (
+                        <Button size="sm" onClick={() => handleForwardToFLManager(req.id)} disabled={isPending}
+                          className="h-7 px-3 text-[11px] bg-lime-600 hover:bg-lime-700 text-white font-semibold uppercase tracking-tight shadow-none">
+                          Forward to F&L Manager
                         </Button>
                       )}
                       {req.status === 'PENDING_FUND_RELEASE_FL_MANAGER' && (userRole === 'FL_COUNTRY_MANAGER' || userRole === 'ADMIN') && (

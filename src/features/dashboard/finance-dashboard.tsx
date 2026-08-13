@@ -223,7 +223,7 @@ export async function FLCountryManagerDashboard({ region }: { region?: string })
         <div className="flex items-center justify-between gap-3 border-b px-5 py-4 bg-white">
           <div className="flex items-center gap-3">
             <DollarSign className="h-5 w-5 text-amber-500" strokeWidth={2.5} />
-            <h3 className="font-bold text-sm text-slate-900 uppercase tracking-tight">Approved WOs Awaiting Fund Release</h3>
+            <h3 className="font-bold text-sm text-slate-900 uppercase tracking-tight">WOs Awaiting Forward or Release</h3>
           </div>
           <Link href="/dashboard/fuel-request">
             <Button variant="ghost" size="sm" className="gap-1 text-amber-700 hover:text-amber-800">
@@ -277,10 +277,10 @@ async function getFleetManagerData(region?: string) {
     totalReleased
   ] = await Promise.all([
     prisma.fuelRequest.count({
-      where: { status: "FUNDS_RELEASED_TO_FLEET_MANAGER", ...fuelRequestFilter },
+      where: { status: { in: ["PENDING_FLEET_MANAGER_FORWARD", "FUNDS_RELEASED_TO_FLEET_MANAGER"] }, ...fuelRequestFilter },
     }),
     prisma.fuelRequest.findMany({
-      where: { status: "FUNDS_RELEASED_TO_FLEET_MANAGER", ...fuelRequestFilter },
+      where: { status: { in: ["PENDING_FLEET_MANAGER_FORWARD", "FUNDS_RELEASED_TO_FLEET_MANAGER"] }, ...fuelRequestFilter },
       include: { site: true, technician: true },
       orderBy: { updatedAt: "desc" },
       take: 10,

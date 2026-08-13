@@ -314,8 +314,24 @@ export async function createWorkOrder(id: number, data?: {
   return workOrderNumber
 }
 
-// Step 4: Fuel Supervisor approves Work Order → goes to F&L Country Manager
+// Step 4: Fuel Supervisor approves Work Order → goes to Fleet Manager to forward
 export async function approveWorkOrder(id: number) {
+  const { ability } = await requireAbility("update", "FuelRequest")
+  const request = await prisma.fuelRequest.findUniqueOrThrow({ where: { id } })
+  if (!ability.can('update', subject('FuelRequest', request) as any)) {
+    throw new AuthError('Forbidden', 403)
+  }
+
+  await prisma.fuelRequest.update({
+    where: { id },
+    data: { status: "PENDING_FLEET_MANAGER_FORWARD" }
+  })
+  revalidatePath("/dashboard/fuel-request")
+  revalidatePath("/dashboard")
+}
+
+// Step 4.5: Fleet Manager forwards Work Order to F&L Country Manager
+export async function forwardToFLManager(id: number) {
   const { ability } = await requireAbility("update", "FuelRequest")
   const request = await prisma.fuelRequest.findUniqueOrThrow({ where: { id } })
   if (!ability.can('update', subject('FuelRequest', request) as any)) {
