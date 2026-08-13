@@ -1,0 +1,38 @@
+const { execSync } = require('child_process');
+
+const gitPaths = [
+  'C:\\Program Files\\Git\\bin\\git.exe',
+  'C:\\Program Files (x86)\\Git\\bin\\git.exe',
+  'C:\\Users\\MILLION.TESFAHUN\\AppData\\Local\\Programs\\Git\\bin\\git.exe',
+];
+
+let gitExe = null;
+const fs = require('fs');
+for (const p of gitPaths) {
+  if (fs.existsSync(p)) {
+    gitExe = p;
+    break;
+  }
+}
+
+if (!gitExe) {
+  console.error('Git not found at any known path!');
+  process.exit(1);
+}
+
+const cwd = 'F:\\generator-fuel-monitoring-system-full';
+const run = (cmd) => {
+  console.log('>', cmd);
+  const result = execSync(`"${gitExe}" ${cmd}`, { cwd, encoding: 'utf8' });
+  console.log(result);
+  return result;
+};
+
+try {
+  run('add -A');
+  run('commit -m "feat: add new roles (FUEL_SUPERVISOR, FLEET_MANAGER, FL_COUNTRY_MANAGER) to User Management; fix workflow status migration"');
+  run('push origin main');
+  console.log('Successfully pushed!');
+} catch (e) {
+  console.error(e.stdout || e.message);
+}

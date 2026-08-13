@@ -37,9 +37,11 @@ const ROLES: AppRole[] = [
   "ADMIN",
   "MANAGER",
   "SUPERVISOR",
-  "TECHNICIAN",
-  "FINANCE",
+  "FUEL_SUPERVISOR",
+  "FLEET_MANAGER",
+  "FL_COUNTRY_MANAGER",
   "FLEET_ADMIN",
+  "TECHNICIAN",
   "GUEST",
 ];
 
