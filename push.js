@@ -1,38 +1,29 @@
 const { execSync } = require('child_process');
-
-const gitPaths = [
-  'C:\\Users\\MILLION.TESFAHUN\\Downloads\\flutter_windows_3.44.8-stable\\flutter\\bin\\mingit\\cmd\\git.exe',
-  'C:\\Program Files\\Git\\bin\\git.exe',
-  'C:\\Program Files (x86)\\Git\\bin\\git.exe',
-];
-
-let gitExe = null;
-const fs = require('fs');
-for (const p of gitPaths) {
-  if (fs.existsSync(p)) {
-    gitExe = p;
-    break;
-  }
-}
-
-if (!gitExe) {
-  console.error('Git not found at any known path!');
-  process.exit(1);
-}
-
+const gitExe = 'C:\\Users\\MILLION.TESFAHUN\\Downloads\\flutter_windows_3.44.8-stable\\flutter\\bin\\mingit\\cmd\\git.exe';
 const cwd = 'F:\\generator-fuel-monitoring-system-full';
+
 const run = (cmd) => {
   console.log('>', cmd);
-  const result = execSync(`"${gitExe}" ${cmd}`, { cwd, encoding: 'utf8' });
-  console.log(result);
-  return result;
+  try {
+    const result = execSync(`"${gitExe}" ${cmd}`, { cwd, encoding: 'utf8', timeout: 60000 });
+    console.log(result);
+    return result;
+  } catch (e) {
+    // If nothing to commit, that's fine — just continue to push
+    const out = e.stdout || e.stderr || '';
+    if (out.includes('nothing to commit')) {
+      console.log('Nothing new to commit, continuing to push...');
+      return '';
+    }
+    throw e;
+  }
 };
 
 try {
   run('add -A');
-  run('commit -m "feat: add new roles (FUEL_SUPERVISOR, FLEET_MANAGER, FL_COUNTRY_MANAGER) to User Management; fix workflow status migration"');
+  run('commit -m "fix: update API role validation to include new roles"');
   run('push origin main');
   console.log('Successfully pushed!');
 } catch (e) {
-  console.error(e.stdout || e.message);
+  console.error(e.stdout || e.stderr || e.message);
 }
