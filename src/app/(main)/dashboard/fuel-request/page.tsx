@@ -181,7 +181,7 @@ export default async function FuelRequestPage(props: {
               Fleet Admin ({adminTotal})
             </TabsTrigger>
             <TabsTrigger value="approved" className="data-[state=active]:bg-white data-[state=active]:shadow-sm rounded-md py-2 text-xs">
-              Finance ({approvedTotal})
+              Fund Release ({approvedTotal})
             </TabsTrigger>
             <TabsTrigger value="delivery" className="data-[state=active]:bg-white data-[state=active]:shadow-sm rounded-md py-2 text-xs">
               Delivery ({deliveryTotal})
