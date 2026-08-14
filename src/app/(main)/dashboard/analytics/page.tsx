@@ -33,7 +33,6 @@ export default async function AnalyticsPage(props: {
 
   const whereBase: any = {
     fuelRequest: {
-      isNot: null,
       status: "COMPLETED"
     }
   };
