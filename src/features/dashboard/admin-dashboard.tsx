@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
 import prisma from "@/lib/db"
+import { ConsumptionChart } from "@/features/analytics/components/ConsumptionChart"
 import { APP_CONFIG } from "@/lib/config"
 import { RegionFilter } from "@/components/ui/RegionFilter"
 import { MetricCard } from "@/components/ui/metric-card"
@@ -245,6 +246,9 @@ export async function AdminDashboard({ region }: { region?: string }) {
         </div>
       </div>
 
+      <div className="grid gap-4">
+        <ConsumptionChart data={data.monthlyTrend} />
+      </div>
     </div>
   )
 }
