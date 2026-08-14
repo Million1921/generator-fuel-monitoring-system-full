@@ -185,6 +185,8 @@ model FuelRefill {
   workOrderNumber String?
   unitPrice       Float?  @default(0)
 
+  transaction     Transaction?
+
   createdAt DateTime @default(now())
 }
 
@@ -209,4 +211,7 @@ model Transaction {
   site         Site?       @relation(fields: [siteId], references: [id])
   technicianId Int?
   technician   Technician? @relation(fields: [technicianId], references: [id])
+
+  fuelRefillId Int?        @unique
+  fuelRefill   FuelRefill? @relation(fields: [fuelRefillId], references: [id])
 }

@@ -107,6 +107,7 @@ export function TransactionsTable({
                 <TableHead className="font-bold uppercase tracking-tight text-[11px] px-4 align-middle whitespace-nowrap">Sender Amount</TableHead>
                 <TableHead className="font-bold uppercase tracking-tight text-[11px] px-4 align-middle whitespace-nowrap">Payer Name</TableHead>
                 <TableHead className="font-bold uppercase tracking-tight text-[11px] px-4 align-middle whitespace-nowrap">Location</TableHead>
+                <TableHead className="font-bold uppercase tracking-tight text-[11px] px-4 align-middle whitespace-nowrap">Fuel Info</TableHead>
                 <TableHead className="font-bold uppercase tracking-tight text-[11px] px-4 align-middle whitespace-nowrap">Station</TableHead>
                 <TableHead className="font-bold uppercase tracking-tight text-[11px] px-4 align-middle whitespace-nowrap">Type</TableHead>
                 <TableHead className="font-bold uppercase tracking-tight text-[11px] px-4 align-middle whitespace-nowrap">Remark</TableHead>
@@ -146,6 +147,9 @@ export function TransactionsTable({
                     </TableCell>
                     <TableCell className="px-1 py-0 text-gray-600 text-[14px] leading-none">
                       {tx.location || "-"}
+                    </TableCell>
+                    <TableCell className="px-1 py-0 text-gray-600 text-[14px] leading-none text-lime-700 font-medium">
+                      {tx.fuelRefill ? `${tx.fuelRefill.fuelDelivered} L` : "-"}
                     </TableCell>
                     <TableCell className="px-1 py-0 text-gray-600 text-[14px] leading-none font-normal text-slate-700">
                       {tx.fuelStation || "-"}

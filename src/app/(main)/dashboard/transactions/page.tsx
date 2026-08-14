@@ -65,7 +65,7 @@ export default async function TransactionsPage(props: {
         orderBy: { createdAt: 'desc' },
         skip,
         take: limit,
-        include: { site: true }
+        include: { site: true, fuelRefill: true }
       }),
       prisma.transaction.count({ where })
     ]);

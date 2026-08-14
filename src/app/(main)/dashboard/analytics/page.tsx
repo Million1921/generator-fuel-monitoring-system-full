@@ -56,7 +56,8 @@ export default async function AnalyticsPage(props: {
         }
       },
       fuelRequest: true,
-      technician: true
+      technician: true,
+      transaction: true
     },
     orderBy: { refillDate: 'desc' },
     take: 100 // Limit for performance, can add pagination later
@@ -92,6 +93,8 @@ export default async function AnalyticsPage(props: {
     return {
       id: refill.id?.toString() || Math.random().toString(),
       transactionId: `TRX-${(refill.id || 0).toString().padStart(5, '0')}`,
+      receiptNo: refill.transaction?.receiptNo || null,
+      paidAmount: refill.transaction?.paidAmount || null,
       mobileNo: refill.fuelRequest?.driverPhone || refill.technician?.phone || "",
       workRequest: refill.fuelRequest?.workRequestNumber || "",
       workOrder: refill.workOrderNumber || refill.fuelRequest?.workOrderNumber || "",

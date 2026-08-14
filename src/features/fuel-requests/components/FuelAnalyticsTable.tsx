@@ -14,6 +14,8 @@ import { format } from "date-fns";
 export type AnalyticsRow = {
   id: string;
   transactionId: string;
+  receiptNo: string | null;
+  paidAmount: number | null;
   mobileNo: string;
   workRequest: string;
   workOrder: string;
@@ -63,6 +65,8 @@ export function FuelAnalyticsTable({ data }: { data: AnalyticsRow[] }) {
             <TableRow>
               <TableHead className="w-[50px]">No.</TableHead>
               <TableHead>Transaction ID</TableHead>
+              <TableHead>Receipt No.</TableHead>
+              <TableHead>Paid Amount</TableHead>
               <TableHead>Mobile No.</TableHead>
               <TableHead>Work Request</TableHead>
               <TableHead>Work Order</TableHead>
@@ -98,7 +102,9 @@ export function FuelAnalyticsTable({ data }: { data: AnalyticsRow[] }) {
               data.map((row, index) => (
                 <TableRow key={row.id}>
                   <TableCell>{index + 1}</TableCell>
-                  <TableCell className="font-medium text-slate-700">{row.transactionId}</TableCell>
+                  <TableCell>{row.transactionId}</TableCell>
+                  <TableCell>{row.receiptNo || "-"}</TableCell>
+                  <TableCell>{row.paidAmount !== null ? row.paidAmount.toLocaleString() : "-"}</TableCell>
                   <TableCell>{row.mobileNo || "N/A"}</TableCell>
                   <TableCell>{row.workRequest || "N/A"}</TableCell>
                   <TableCell>{row.workOrder || "N/A"}</TableCell>
