@@ -21,6 +21,7 @@ export type AnalyticsRow = {
   siteName: string;
   generatorType: string;
   generatorCapacity: string;
+  tankerCapacity: number;
   stdConsumption: number;
   beforeHour: number;
   endHour: number;
@@ -68,7 +69,8 @@ export function FuelAnalyticsTable({ data }: { data: AnalyticsRow[] }) {
               <TableHead>Site ID</TableHead>
               <TableHead>Site Name</TableHead>
               <TableHead>Generator Type</TableHead>
-              <TableHead>Capacity (kVA)</TableHead>
+              <TableHead>Gen Capacity (kVA)</TableHead>
+              <TableHead>Tank Capacity (L)</TableHead>
               <TableHead>Std. Consumption (L/hr)</TableHead>
               <TableHead>Before Hour</TableHead>
               <TableHead>End Hour</TableHead>
@@ -104,6 +106,7 @@ export function FuelAnalyticsTable({ data }: { data: AnalyticsRow[] }) {
                   <TableCell>{row.siteName}</TableCell>
                   <TableCell>{row.generatorType || "N/A"}</TableCell>
                   <TableCell>{row.generatorCapacity || "0"}</TableCell>
+                  <TableCell>{row.tankerCapacity > 0 ? row.tankerCapacity : "N/A"}</TableCell>
                   <TableCell>{row.stdConsumption.toFixed(2)}</TableCell>
                   <TableCell>{row.beforeHour.toFixed(1)}</TableCell>
                   <TableCell>{row.endHour.toFixed(1)}</TableCell>

@@ -100,6 +100,7 @@ export default async function AnalyticsPage(props: {
       siteName: refill.site.name,
       generatorType: refill.site.dgType || refill.site.generator?.model || "",
       generatorCapacity: refill.site.dgCapacity || refill.site.generator?.capacityKVA?.toString() || "0",
+      tankerCapacity: capacity,
       stdConsumption,
       beforeHour: refill.beforeHours,
       endHour: refill.afterHours,
