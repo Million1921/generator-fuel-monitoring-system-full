@@ -245,9 +245,6 @@ export async function AdminDashboard({ region }: { region?: string }) {
         </div>
       </div>
 
-      <div className="grid gap-4">
-        <ConsumptionChart data={data.monthlyTrend} />
-      </div>
     </div>
   )
 }
