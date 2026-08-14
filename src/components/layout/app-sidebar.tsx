@@ -11,6 +11,7 @@ import {
   Zap,
   Users,
   ArrowRightLeft,
+  BarChart3,
 } from "lucide-react"
 import { NavMain } from "@/components/layout/nav-main"
 import {
@@ -101,6 +102,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       icon: History,
       roles: ["ADMIN", "MANAGER"]
     },
+    {
+      title: "Fuel Analytics",
+      url: "/dashboard/analytics",
+      icon: BarChart3,
+      roles: ["ADMIN", "FLEET_ADMIN"]
+    }
   ]
 
   const filteredNav = navMain.filter(item => 

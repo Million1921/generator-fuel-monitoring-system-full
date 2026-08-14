@@ -6,6 +6,7 @@ import { FuelRequestTable } from "@/features/fuel-requests/components/FuelReques
 import { getRoleFromClerk, getRegionScope } from "@/lib/auth"
 import { SearchInput } from "@/components/ui/SearchInput"
 import { RegionFilter } from "@/components/ui/RegionFilter"
+import { clerkClient } from "@clerk/nextjs/server"
 
 export const dynamic = "force-dynamic"
 
@@ -160,6 +161,25 @@ export default async function FuelRequestPage(props: {
     prisma.fuelRequest.count({ where: { status: 'COMPLETED', ...whereBase } })
   ]);
 
+  // Fetch account numbers for recipient roles from Clerk
+  const clerk = await clerkClient();
+  const allUsers = await clerk.users.getUserList({ limit: 200 });
+  const accountMap: Record<string, string | null> = {};
+  for (const u of allUsers.data) {
+    const role = u.publicMetadata?.role as string | undefined;
+    if (["FLEET_MANAGER", "FLEET_ADMIN", "FL_COUNTRY_MANAGER", "FUEL_SUPERVISOR"].includes(role ?? "")) {
+      accountMap[u.id] = (u.publicMetadata?.accountNumber as string) ?? null;
+    }
+  }
+  // Collect role → first account number mapping for display in dialogs
+  const roleAccountMap: Record<string, string | null> = {};
+  for (const u of allUsers.data) {
+    const role = u.publicMetadata?.role as string | undefined;
+    if (role && !roleAccountMap[role]) {
+      roleAccountMap[role] = (u.publicMetadata?.accountNumber as string) ?? null;
+    }
+  }
+
   return (
     <div className="flex flex-1 flex-col px-6 pb-6 bg-gray-50/30 overflow-x-auto overflow-y-hidden">
         <div className="flex items-center justify-between z-10 relative mb-4 mt-1">
@@ -226,7 +246,7 @@ export default async function FuelRequestPage(props: {
           <TabsContent value="approved" className="flex-1 mt-1 m-0 border-0 p-0 focus-visible:ring-0">
             <FuelRequestTable 
               requests={approvedRequests} 
-              title="Approved & Ready for Financial Voucher" 
+              title="Fund Release Pipeline" 
               total={approvedTotal} 
               page={page} 
               totalPages={Math.ceil(approvedTotal/limit)} 
@@ -236,6 +256,7 @@ export default async function FuelRequestPage(props: {
               dateFrom={from}
               dateTo={to}
               search={search}
+              roleAccountMap={roleAccountMap}
             />
           </TabsContent>
           <TabsContent value="delivery" className="flex-1 mt-1 m-0 border-0 p-0 focus-visible:ring-0">
@@ -251,6 +272,7 @@ export default async function FuelRequestPage(props: {
               dateFrom={from}
               dateTo={to}
               search={search}
+              roleAccountMap={roleAccountMap}
             />
           </TabsContent>
           <TabsContent value="closed" className="flex-1 mt-1 m-0 border-0 p-0 focus-visible:ring-0">
