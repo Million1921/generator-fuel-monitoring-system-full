@@ -113,37 +113,22 @@ export function FuelDeliveryTable({
       <div className="min-w-[1950px] rounded-xl border border-slate-400 bg-white shadow-sm overflow-hidden">
         <Table>
           <TableHeader className="sticky top-0 z-10">
-            <TableRow className=" h-8">
-              <SortableHeader field="siteId" label="Site ID" />
-              <SortableHeader field="name" label="Site Name" />
-              <SortableHeader field="workOrder" label="Work Order" />
-              <SortableHeader field="region" label="Region" />
-              <SortableHeader field="date" label="Date" />
-              <SortableHeader field="liters" label="Liters" align="right" />
-              <TableHead className="p-0 align-middle h-8">
-                <TableColumnHeader label="Run (B)" className="justify-center px-2 text-slate-900 font-bold whitespace-nowrap" />
-              </TableHead>
-              <TableHead className="p-0 align-middle h-8">
-                <TableColumnHeader label="Run (A)" className="justify-center px-2 text-slate-900 font-bold whitespace-nowrap" />
-              </TableHead>
-              <TableHead className="p-0 align-middle h-8">
-                <TableColumnHeader label="Level (B)" className="justify-center px-2 text-slate-900 font-bold whitespace-nowrap" />
-              </TableHead>
-              <TableHead className="p-0 align-middle h-8">
-                <TableColumnHeader label="Level (A)" className="justify-center px-2 text-slate-900 font-bold whitespace-nowrap" />
-              </TableHead>
-              <TableHead className="p-0 align-middle h-8">
-                <TableColumnHeader label="Requested By" className="justify-start px-4 text-slate-900 font-bold whitespace-nowrap" />
-              </TableHead>
-              <TableHead className="p-0 align-middle h-8">
-                <TableColumnHeader label="Delivered By" className="justify-start px-4 text-slate-900 font-bold whitespace-nowrap" />
-              </TableHead>
-              <TableHead className="p-0 align-middle h-8">
-                <TableColumnHeader label="Driver Details" className="justify-start px-4 text-slate-900 font-bold whitespace-nowrap" />
-              </TableHead>
-              <TableHead className="p-0 align-middle h-8">
-                <TableColumnHeader label="Actions" className="justify-end px-4 text-slate-900 font-bold whitespace-nowrap" />
-              </TableHead>
+            <TableRow className="h-8">
+              <TableHead className="font-bold uppercase tracking-tight text-[11px] px-4 align-middle whitespace-nowrap border-r border-slate-400 w-[40px] text-center">#</TableHead>
+              <TableHead className="font-bold uppercase tracking-tight text-[11px] px-4 align-middle whitespace-nowrap">Site ID</TableHead>
+              <TableHead className="font-bold uppercase tracking-tight text-[11px] px-4 align-middle whitespace-nowrap">Site Name</TableHead>
+              <TableHead className="font-bold uppercase tracking-tight text-[11px] px-4 align-middle whitespace-nowrap">Work Order</TableHead>
+              <TableHead className="font-bold uppercase tracking-tight text-[11px] px-4 align-middle whitespace-nowrap">Region</TableHead>
+              <TableHead className="font-bold uppercase tracking-tight text-[11px] px-4 align-middle whitespace-nowrap">Date</TableHead>
+              <TableHead className="font-bold uppercase tracking-tight text-[11px] px-4 align-middle whitespace-nowrap text-right">Liters</TableHead>
+              <TableHead className="font-bold uppercase tracking-tight text-[11px] px-2 align-middle whitespace-nowrap text-center">Run (B)</TableHead>
+              <TableHead className="font-bold uppercase tracking-tight text-[11px] px-2 align-middle whitespace-nowrap text-center">Run (A)</TableHead>
+              <TableHead className="font-bold uppercase tracking-tight text-[11px] px-2 align-middle whitespace-nowrap text-center">Level (B)</TableHead>
+              <TableHead className="font-bold uppercase tracking-tight text-[11px] px-2 align-middle whitespace-nowrap text-center">Level (A)</TableHead>
+              <TableHead className="font-bold uppercase tracking-tight text-[11px] px-4 align-middle whitespace-nowrap">Requested By</TableHead>
+              <TableHead className="font-bold uppercase tracking-tight text-[11px] px-4 align-middle whitespace-nowrap">Delivered By</TableHead>
+              <TableHead className="font-bold uppercase tracking-tight text-[11px] px-4 align-middle whitespace-nowrap">Driver</TableHead>
+              <TableHead className="font-bold uppercase tracking-tight text-[11px] px-4 align-middle whitespace-nowrap text-right border-l border-slate-400">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -154,81 +139,68 @@ export function FuelDeliveryTable({
                 </TableCell>
               </TableRow>
             ) : (
-              deliveries.map((delivery) => (
-                <TableRow key={delivery.id} className="border-b-gray-50 hover:bg-gray-50/50 transition-colors">
-                  <TableCell className="px-4">
-                    <span className="text-slate-700 font-medium px-1.5 py-0 rounded leading-none">
-                      {delivery.site.siteId}
-                    </span>
+              deliveries.map((delivery, idx) => (
+                <TableRow key={delivery.id} className="hover:bg-gray-50/50 border-b-gray-50 transition-colors h-[22px]">
+                  <TableCell className="text-center text-[11px] text-gray-400 font-normal border-r border-slate-400 px-1 py-0">
+                    {(page - 1) * 50 + idx + 1}
                   </TableCell>
-                  <TableCell className="px-4 text-gray-900 font-normal">
+                  <TableCell className="px-1 py-0 text-slate-700 font-medium text-[14px] leading-none">
+                    {delivery.site.siteId}
+                  </TableCell>
+                  <TableCell className="px-1 py-0 text-gray-900 font-normal text-[14px] leading-none">
                     {delivery.site.name}
                   </TableCell>
-                  <TableCell className="px-4 font-mono text-slate-700 font-normal">
+                  <TableCell className="px-1 py-0 font-mono text-slate-700 font-normal text-[14px] leading-none">
                     {delivery.workOrderNumber || '-'}
                   </TableCell>
-                  <TableCell className="px-4 text-slate-500 font-normal">
+                  <TableCell className="px-1 py-0 text-slate-500 font-normal text-[14px] leading-none">
                     {delivery.site.region || '-'}
                   </TableCell>
-                  <TableCell className="px-4 text-gray-500">
+                  <TableCell className="px-1 py-0 text-gray-500 text-[14px] leading-none">
                     {new Date(delivery.refillDate).toLocaleDateString()}
                   </TableCell>
-                  <TableCell className="text-slate-900 text-right px-4 font-medium tabular-nums">
+                  <TableCell className="px-1 py-0 text-slate-900 text-right font-medium tabular-nums text-[14px] leading-none">
                     {delivery.fuelDelivered.toLocaleString()}
                   </TableCell>
-                  <TableCell className="text-center text-gray-500 tabular-nums">
+                  <TableCell className="px-1 py-0 text-center text-gray-500 tabular-nums text-[14px] leading-none">
                     {delivery.beforeHours ?? '-'}
                   </TableCell>
-                  <TableCell className="text-center text-gray-500 tabular-nums">
+                  <TableCell className="px-1 py-0 text-center text-gray-500 tabular-nums text-[14px] leading-none">
                     {delivery.afterHours ?? '-'}
                   </TableCell>
-                  <TableCell className="text-center text-gray-500 tabular-nums">
+                  <TableCell className="px-1 py-0 text-center text-gray-500 tabular-nums text-[14px] leading-none">
                     {delivery.beforeLevel ?? '-'}
                   </TableCell>
-                  <TableCell className="text-center text-gray-500 tabular-nums">
+                  <TableCell className="px-1 py-0 text-center text-gray-500 tabular-nums text-[14px] leading-none">
                     {delivery.afterLevel ?? '-'}
                   </TableCell>
                   {/* REQUESTED BY */}
-                  <TableCell className="px-4 py-2 whitespace-normal leading-snug">
-                    <div className="flex flex-col leading-tight">
-                      <span className="font-medium text-gray-900">{delivery.fuelRequest?.technician?.name || '-'}</span>
-                      {delivery.fuelRequest?.technician?.employeeId && (
-                        <span className="text-[10px] uppercase tracking-tight text-gray-500 font-normal">
-                          ID: {delivery.fuelRequest.technician.employeeId}
-                        </span>
-                      )}
-                    </div>
+                  <TableCell className="px-1 py-0 text-[14px] leading-none">
+                    <span className="text-gray-900 font-medium">{delivery.fuelRequest?.technician?.name || '-'}</span>
+                    {delivery.fuelRequest?.technician?.employeeId && (
+                      <span className="text-gray-400 text-[11px] ml-1">({delivery.fuelRequest.technician.employeeId})</span>
+                    )}
                   </TableCell>
                   {/* DELIVERED BY */}
-                  <TableCell className="px-4 py-2 whitespace-normal leading-snug">
-                    <div className="flex flex-col leading-tight">
-                      <span className="font-medium text-gray-900">{delivery.technicianName || '-'}</span>
-                      {(() => {
-                        // Prefer the employeeId from the related technician record
-                        const empId = delivery.technician?.employeeId
-                        // Fall back to technicianIdStr only if it looks like a short employee ID (not a long auth ID)
-                        const storedId = delivery.technicianIdStr && delivery.technicianIdStr.length <= 20 ? delivery.technicianIdStr : null
-                        const displayId = empId || storedId
-                        return displayId ? (
-                          <span className="text-[10px] uppercase tracking-tight text-gray-500 font-normal">
-                            ID: {displayId}
-                          </span>
-                        ) : null
-                      })()}
-                    </div>
+                  <TableCell className="px-1 py-0 text-[14px] leading-none">
+                    <span className="text-gray-900 font-medium">{delivery.technicianName || '-'}</span>
+                    {(() => {
+                      const empId = delivery.technician?.employeeId
+                      const storedId = delivery.technicianIdStr && delivery.technicianIdStr.length <= 20 ? delivery.technicianIdStr : null
+                      const displayId = empId || storedId
+                      return displayId ? (
+                        <span className="text-gray-400 text-[11px] ml-1">({displayId})</span>
+                      ) : null
+                    })()}
                   </TableCell>
-                  {/* DRIVER DETAILS */}
-                  <TableCell className="px-4 py-2 whitespace-normal leading-snug">
-                    <div className="flex flex-col leading-tight">
-                      <span className="font-medium text-gray-900">{delivery.driverName || '-'}</span>
-                      {delivery.driverId && (
-                        <span className="text-[10px] uppercase tracking-tight text-gray-500 font-normal">
-                          ID: {delivery.driverId}
-                        </span>
-                      )}
-                    </div>
+                  {/* DRIVER */}
+                  <TableCell className="px-1 py-0 text-[14px] leading-none">
+                    <span className="text-gray-900 font-medium">{delivery.driverName || '-'}</span>
+                    {delivery.driverId && (
+                      <span className="text-gray-400 text-[11px] ml-1">({delivery.driverId})</span>
+                    )}
                   </TableCell>
-                  <TableCell className="text-right px-4">
+                  <TableCell className="text-right px-1 py-0 border-l border-slate-400">
                     <div className="flex items-center justify-end gap-1">
                       <EditFuelDeliveryDialog delivery={delivery} />
                       <button 
@@ -242,10 +214,10 @@ export function FuelDeliveryTable({
                             }
                           }
                         }}
-                        className="h-8 w-8 inline-flex items-center justify-center text-red-500 hover:bg-red-50 hover:text-red-700 rounded transition-colors"
+                        className="h-6 w-6 inline-flex items-center justify-center text-red-400 hover:bg-red-50 hover:text-red-700 rounded transition-colors"
                         title="Delete record"
                       >
-                        <Trash2 className="h-4 w-4" />
+                        <Trash2 className="h-3.5 w-3.5" />
                       </button>
                     </div>
                   </TableCell>
