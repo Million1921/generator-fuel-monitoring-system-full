@@ -58,11 +58,8 @@ export default function NewFuelDeliveryPage() {
   const unitPriceValue = watch("unitPrice")
 
   React.useEffect(() => {
-    getApprovedRequests().then(setRequests)
-    getDeliverySites().then(setSites)
-    getTransactions().then(res => {
-      setTransactions(res)
-      
+    getApprovedRequests().then(reqs => {
+      setRequests(reqs)
       // Auto-fill from URL params
       const params = new URLSearchParams(window.location.search);
       const paramSiteId = params.get("siteId");
@@ -70,29 +67,49 @@ export default function NewFuelDeliveryPage() {
       const paramWorkOrder = params.get("workOrder");
 
       if (paramSiteId) setValue("siteId", paramSiteId);
-      if (paramRequestId) setValue("requestId", paramRequestId);
+      if (paramRequestId) {
+        setValue("requestId", paramRequestId);
+        // auto-fill unit price from the linked request
+        const linked = reqs.find((r: any) => r.id.toString() === paramRequestId);
+        if (linked?.unitPrice) setValue("unitPrice", linked.unitPrice);
+      }
       if (paramWorkOrder) setValue("workOrderNumber", paramWorkOrder);
-
+    })
+    getDeliverySites().then(setSites)
+    getTransactions().then(res => {
+      setTransactions(res)
+      const params = new URLSearchParams(window.location.search);
       const txId = params.get("tx");
       if (txId) {
-        const tx = res.find(t => t.id.toString() === txId);
+        const tx = res.find((t: any) => t.id.toString() === txId);
         if (tx) {
           if (tx.siteId) setValue("siteId", tx.siteId.toString());
           if (tx.paidAmount) setValue("actualRefueled", tx.paidAmount);
-          setValue("unitPrice", 92.5);
           toast.success(`Integrated data from Transaction #${tx.receiptNo}`);
         }
       }
     })
   }, [setValue])
 
+  const handleRequestChange = (val: string) => {
+    if (!val || val === "none") return;
+    const req = requests.find((r: any) => r.id.toString() === val);
+    if (req) {
+      if (req.siteId) setValue("siteId", req.siteId.toString());
+      if (req.workOrderNumber) setValue("workOrderNumber", req.workOrderNumber);
+      if (req.driverName) setValue("guardName", req.driverName);
+      if (req.employeeId) setValue("guardSource", req.employeeId);
+      // Auto-fill unit price from the work order (set by Fleet Admin)
+      if (req.unitPrice) setValue("unitPrice", req.unitPrice);
+    }
+  }
+
   const handleTransactionChange = (txId: string) => {
     if (txId === "none") return;
-    const tx = transactions.find(t => t.id.toString() === txId);
+    const tx = transactions.find((t: any) => t.id.toString() === txId);
     if (tx) {
       if (tx.siteId) setValue("siteId", tx.siteId.toString());
       if (tx.paidAmount) setValue("actualRefueled", tx.paidAmount);
-      setValue("unitPrice", 92.5); // Default unit price if not in transaction
       toast.info(`Auto-filled from transaction #${tx.receiptNo}`);
     }
   }
@@ -108,7 +125,7 @@ export default function NewFuelDeliveryPage() {
       endRunningHour: data.endRunningHour,
       actualRefueled: data.actualRefueled,
       fuelBeforeRefuel: data.fuelBeforeRefuel,
-      unitPrice: isFleetAdmin && data.unitPrice ? data.unitPrice : 0,
+      unitPrice: isFleetAdmin && data.unitPrice ? data.unitPrice : undefined,
       guardName: data.guardName || undefined,
       driverId: data.guardSource || undefined,
     }
@@ -163,15 +180,7 @@ export default function NewFuelDeliveryPage() {
                 render={({ field }) => (
                   <Select onValueChange={(val) => {
                     field.onChange(val);
-                    if (val && val !== "none") {
-                      const req = requests.find(r => r.id.toString() === val);
-                      if (req) {
-                        if (req.siteId) setValue("siteId", req.siteId.toString());
-                        if (req.workOrderNumber) setValue("workOrderNumber", req.workOrderNumber);
-                        if (req.driverName) setValue("guardName", req.driverName);
-                        if (req.employeeId) setValue("guardSource", req.employeeId);
-                      }
-                    }
+                    handleRequestChange(val);
                   }} value={field.value}>
                     <SelectTrigger>
                       <SelectValue placeholder="Link to a pending request" />
@@ -181,6 +190,7 @@ export default function NewFuelDeliveryPage() {
                       {requests.map((req) => (
                         <SelectItem key={req.id} value={req.id.toString()}>
                           {req.workOrderNumber} - {req.site.siteId}
+                          {req.unitPrice ? ` (${req.unitPrice} Birr/L)` : ""}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -267,20 +277,35 @@ export default function NewFuelDeliveryPage() {
                   <p className="text-xs text-red-500 font-medium">{errors.actualRefueled.message}</p>
                 )}
               </div>
-              {isFleetAdmin && (
-                <div className="space-y-2">
-                  <Label htmlFor="unitPrice">Unit Price (Birr) <span className="text-red-500">*</span></Label>
-                  <Input 
-                    id="unitPrice" 
-                    type="number" 
-                    step="0.01" 
-                    {...register("unitPrice", { required: "Unit price is required for Fleet Admin", min: 0.1 })} 
-                  />
-                  {errors.unitPrice && (
-                    <p className="text-xs text-red-500 font-medium">{errors.unitPrice.message}</p>
-                  )}
-                </div>
-              )}
+              <div className="space-y-2">
+                <Label htmlFor="unitPrice">
+                  Unit Price (Birr/L)
+                  {isFleetAdmin && <span className="text-red-500 ml-1">*</span>}
+                  {!isFleetAdmin && unitPriceValue ? (
+                    <span className="ml-2 text-[10px] bg-lime-100 text-lime-700 px-1.5 py-0.5 rounded font-bold border border-lime-200 uppercase">
+                      Set by Fleet Admin
+                    </span>
+                  ) : null}
+                </Label>
+                <Input 
+                  id="unitPrice" 
+                  type="number" 
+                  step="0.01" 
+                  readOnly={!isFleetAdmin}
+                  className={!isFleetAdmin ? "bg-gray-50 text-gray-600 cursor-default border-gray-200" : ""}
+                  {...register("unitPrice", isFleetAdmin ? { required: "Unit price is required for Fleet Admin", min: 0.01 } : {})} 
+                />
+                {!isFleetAdmin && (
+                  <p className="text-[10px] text-gray-500 italic">
+                    {unitPriceValue 
+                      ? `Price of ${unitPriceValue} Birr/L was set by the Fleet Admin on the Work Order.`
+                      : "Unit price will be pulled automatically from the linked Work Order (set by Fleet Admin)."}
+                  </p>
+                )}
+                {errors.unitPrice && (
+                  <p className="text-xs text-red-500 font-medium">{errors.unitPrice.message}</p>
+                )}
+              </div>
             </div>
           </div>
 

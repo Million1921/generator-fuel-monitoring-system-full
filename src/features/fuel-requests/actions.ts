@@ -74,7 +74,7 @@ const FuelDeliveryServerSchema = z.object({
   begRunningHour: z.coerce.number().nonnegative(),
   endRunningHour: z.coerce.number().nonnegative(),
   fuelBeforeRefuel: z.coerce.number().nonnegative(),
-  unitPrice: z.coerce.number().positive(),
+  unitPrice: z.coerce.number().nonnegative().optional(),
   driverName: z.string().optional(),
   driverId: z.string().optional(),
   technicianName: z.string().optional(),
@@ -103,6 +103,13 @@ export async function createFuelDelivery(data: FuelDeliveryData) {
     const siteId = validated.siteId;
 
     const refill = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+      // 0. Resolve unit price: use supplied value, or fall back to the linked FuelRequest's price
+      let resolvedUnitPrice = validated.unitPrice ?? 0;
+      if (!resolvedUnitPrice && validated.requestId) {
+        const req = await tx.fuelRequest.findUnique({ where: { id: parseInt(validated.requestId) } });
+        if (req?.unitPrice) resolvedUnitPrice = req.unitPrice;
+      }
+
       // 1. Create a FuelRefill record
       const refill = await tx.fuelRefill.create({
         data: {
@@ -119,7 +126,7 @@ export async function createFuelDelivery(data: FuelDeliveryData) {
           employmentType: validated.employmentType,
           fuelRequestId: validated.requestId ? parseInt(validated.requestId) : null,
           workOrderNumber: validated.workOrderNumber,
-          unitPrice: validated.unitPrice,
+          unitPrice: resolvedUnitPrice,
           eepu: validated.eepu,
           remark: validated.remark,
           department: validated.department,
@@ -285,6 +292,7 @@ export async function createWorkOrder(id: number, data?: {
   assetActivity?: string;
   firm?: string;
   status?: string;
+  unitPrice?: number;
 }) {
   const { ability } = await requireAbility("update", "FuelRequest")
   const request = await prisma.fuelRequest.findUniqueOrThrow({ where: { id } })
@@ -307,6 +315,8 @@ export async function createWorkOrder(id: number, data?: {
       securityName: data?.planner || request.securityName,
       notes: data?.description || request.notes,
       employeeId: data?.departmentDescription || request.employeeId,
+      // Fleet Admin sets the current fuel unit price when creating the Work Order
+      ...(data?.unitPrice !== undefined && { unitPrice: data.unitPrice }),
     }
   })
   revalidatePath("/dashboard/fuel-request")

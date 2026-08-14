@@ -94,19 +94,20 @@ export function FuelRequestTable({
   const [openWODialog, setOpenWODialog] = useState<number | null>(null)
   const [woPlanner, setWoPlanner] = useState("")
   const [woAssetNumber, setWoAssetNumber] = useState("")
-  const [woAssetGroup, setWoAssetGroup] = useState("GENERATOR")
+  const [woAssetGroup, setWoAssetGroup] = useState("")
   const [woWbClass, setWoWbClass] = useState("O&M_DIESEL")
   const [woScheduledStart, setWoScheduledStart] = useState("")
   const [woScheduledEnd, setWoScheduledEnd] = useState("")
-  const [woDuration, setWoDuration] = useState("2")
+  const [woDurationHrs, setWoDurationHrs] = useState("2")
   const [woType, setWoType] = useState("Preventive")
   const [woPriority, setWoPriority] = useState("Medium")
   const [woDescription, setWoDescription] = useState("")
   const [woDepartment, setWoDepartment] = useState("")
   const [woDeptDesc, setWoDeptDesc] = useState("")
   const [woAssetActivity, setWoAssetActivity] = useState("FUEL REFILL")
-  const [woFirm, setWoFirm] = useState("No")
-  const [woStatus, setWoStatus] = useState("Draft")
+  const [woFirm, setWoFirm] = useState("")
+  const [woStatus, setWoStatus] = useState("Open")
+  const [woUnitPrice, setWoUnitPrice] = useState<number | "">("")
 
   // Verify Delivery form state
   const [openVerifyDialog, setOpenVerifyDialog] = useState<number | null>(null)
@@ -248,7 +249,7 @@ export function FuelRequestTable({
           wbAccountingClass: woWbClass,
           scheduledStart: woScheduledStart,
           scheduledEnd: woScheduledEnd,
-          durationHrs: parseFloat(woDuration) || 2,
+          durationHrs: woDurationHrs ? parseFloat(woDurationHrs) : undefined,
           workOrderType: woType,
           priority: woPriority,
           description: woDescription,
@@ -257,6 +258,7 @@ export function FuelRequestTable({
           assetActivity: woAssetActivity,
           firm: woFirm,
           status: woStatus,
+          unitPrice: woUnitPrice ? parseFloat(woUnitPrice.toString()) : undefined,
         })
         toast.success("Work Order created and sent to Fuel Supervisor")
         setOpenWODialog(null)
@@ -429,7 +431,7 @@ export function FuelRequestTable({
                                   </div>
                                   <div className="space-y-1">
                                     <Label className="text-xs font-semibold">Scheduled Completion <span className="text-red-500">*</span></Label>
-                                    <Input type="datetime-local" value={woScheduledEnd} onChange={e => setWoScheduledEnd(e.target.value)} className="h-8 text-sm" />
+                                    <Input type="date" value={woScheduledEnd} onChange={e => setWoScheduledEnd(e.target.value)} className="h-8 text-sm bg-white" />
                                   </div>
                                   <div className="space-y-1">
                                     <Label className="text-xs font-semibold">Firm</Label>
@@ -439,7 +441,7 @@ export function FuelRequestTable({
                                   </div>
                                   <div className="space-y-1">
                                     <Label className="text-xs font-semibold">Duration (hrs)</Label>
-                                    <Input type="number" value={woDuration} onChange={e => setWoDuration(e.target.value)} className="h-8 text-sm" />
+                                    <Input type="number" value={woDurationHrs} onChange={e => setWoDurationHrs(e.target.value)} className="h-8 text-sm" />
                                   </div>
                                   <div className="space-y-1">
                                     <Label className="text-xs font-semibold">Status</Label>
@@ -462,6 +464,19 @@ export function FuelRequestTable({
                                     <select value={woPriority} onChange={e => setWoPriority(e.target.value)} className="w-full h-8 border border-gray-200 rounded-md px-2 text-sm bg-white">
                                       <option>Low</option><option>Medium</option><option>High</option><option>Emergency</option>
                                     </select>
+                                  </div>
+                                  <div className="space-y-1 col-span-2">
+                                    <Label className="text-xs font-semibold text-lime-700">Unit Price (Birr) <span className="text-red-500">*</span></Label>
+                                    <Input 
+                                      type="number" 
+                                      step="0.01" 
+                                      value={woUnitPrice} 
+                                      onChange={e => setWoUnitPrice(e.target.value ? parseFloat(e.target.value) : "")} 
+                                      className="h-8 text-sm bg-lime-50 border-lime-300"
+                                      placeholder="e.g. 76.50"
+                                      required 
+                                    />
+                                    <p className="text-[10px] text-gray-500">Current fuel price per liter</p>
                                   </div>
                                 </div>
                               </div>
