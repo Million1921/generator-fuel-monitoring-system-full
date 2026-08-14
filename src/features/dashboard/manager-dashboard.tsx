@@ -9,7 +9,6 @@ import {
   TableCell
 } from "@/components/ui/table"
 import prisma from "@/lib/db"
-import { ConsumptionChart } from "@/features/analytics/components/ConsumptionChart"
 import { APP_CONFIG } from "@/lib/config"
 import { Pagination } from "@/components/ui/Pagination"
 import { Input } from "@/components/ui/input"
