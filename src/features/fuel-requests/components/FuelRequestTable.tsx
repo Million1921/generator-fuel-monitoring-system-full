@@ -57,6 +57,7 @@ interface FuelRequestTableProps {
   dateFrom?: string
   dateTo?: string
   search?: string
+  roleAccountMap?: Record<string, string | null>
 }
 
 export function FuelRequestTable({
