@@ -44,7 +44,7 @@ export const FuelDeliveryFormSchema = z.object({
   endRunningHour: z.coerce.number().min(0, "Hours cannot be negative"),
   fuelBeforeRefuel: z.coerce.number().min(0, "Fuel before refill cannot be negative"),
   actualRefueled: z.coerce.number().positive("Actual refueled must be greater than 0"),
-  unitPrice: z.coerce.number().positive("Unit price must be positive"),
+  unitPrice: z.coerce.number().min(0, "Unit price must be positive").optional(),
   guardName: z.string().optional(),
   guardSource: z.string().optional(),
 }).refine((data) => data.endRunningHour >= data.begRunningHour, {

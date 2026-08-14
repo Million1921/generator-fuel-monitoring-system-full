@@ -18,6 +18,7 @@ import { createFuelDelivery, getApprovedRequests, getDeliverySites } from "@/fea
 import { getTransactions } from "@/features/transactions/actions"
 import { toast } from "sonner"
 import { FuelDeliveryFormSchema, FuelDeliveryFormValues } from "@/schemas/fuel"
+import { useUser } from "@clerk/nextjs"
 
 export default function NewFuelDeliveryPage() {
   const router = useRouter()
@@ -25,6 +26,9 @@ export default function NewFuelDeliveryPage() {
   const [sites, setSites] = React.useState<any[]>([])
   const [transactions, setTransactions] = React.useState<any[]>([])
   const [isSubmitting, setIsSubmitting] = React.useState(false)
+  const { user } = useUser()
+  const userRole = user?.publicMetadata?.role as string
+  const isFleetAdmin = userRole === "FLEET_ADMIN"
 
   const {
     register,
@@ -104,8 +108,8 @@ export default function NewFuelDeliveryPage() {
       endRunningHour: data.endRunningHour,
       actualRefueled: data.actualRefueled,
       fuelBeforeRefuel: data.fuelBeforeRefuel,
-      unitPrice: data.unitPrice,
-      driverName: data.guardName || undefined,
+      unitPrice: isFleetAdmin && data.unitPrice ? data.unitPrice : 0,
+      guardName: data.guardName || undefined,
       driverId: data.guardSource || undefined,
     }
 
@@ -263,18 +267,20 @@ export default function NewFuelDeliveryPage() {
                   <p className="text-xs text-red-500 font-medium">{errors.actualRefueled.message}</p>
                 )}
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="unitPrice">Unit Price (Birr) <span className="text-red-500">*</span></Label>
-                <Input 
-                  id="unitPrice" 
-                  type="number" 
-                  step="0.01" 
-                  {...register("unitPrice")} 
-                />
-                {errors.unitPrice && (
-                  <p className="text-xs text-red-500 font-medium">{errors.unitPrice.message}</p>
-                )}
-              </div>
+              {isFleetAdmin && (
+                <div className="space-y-2">
+                  <Label htmlFor="unitPrice">Unit Price (Birr) <span className="text-red-500">*</span></Label>
+                  <Input 
+                    id="unitPrice" 
+                    type="number" 
+                    step="0.01" 
+                    {...register("unitPrice", { required: "Unit price is required for Fleet Admin", min: 0.1 })} 
+                  />
+                  {errors.unitPrice && (
+                    <p className="text-xs text-red-500 font-medium">{errors.unitPrice.message}</p>
+                  )}
+                </div>
+              )}
             </div>
           </div>
 
