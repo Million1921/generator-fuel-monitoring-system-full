@@ -64,10 +64,10 @@ export default async function AnalyticsPage(props: {
   });
 
   const data: AnalyticsRow[] = refills.map((refill) => {
-    const diffHours = refill.afterHours - refill.beforeHours;
-    const diffFuel = refill.afterLevel - refill.beforeLevel;
-    const stdConsumption = refill.site.generator?.stdFuelConsumption || 0;
-    const capacity = refill.site.tankerCapacity || 0;
+    const diffHours = (refill.afterHours || 0) - (refill.beforeHours || 0);
+    const diffFuel = (refill.afterLevel || 0) - (refill.beforeLevel || 0);
+    const stdConsumption = refill.site?.generator?.stdFuelConsumption || 0;
+    const capacity = refill.site?.tankerCapacity || 0;
     
     let actualConsumption = 0;
     if (diffHours > 0) {
@@ -91,30 +91,30 @@ export default async function AnalyticsPage(props: {
     }
 
     return {
-      id: refill.id.toString(),
-      transactionId: `TRX-${refill.id.toString().padStart(5, '0')}`,
+      id: refill.id?.toString() || Math.random().toString(),
+      transactionId: `TRX-${(refill.id || 0).toString().padStart(5, '0')}`,
       mobileNo: refill.fuelRequest?.driverPhone || refill.technician?.phone || "",
       workRequest: refill.fuelRequest?.workRequestNumber || "",
       workOrder: refill.workOrderNumber || refill.fuelRequest?.workOrderNumber || "",
-      siteId: refill.site.siteId,
-      siteName: refill.site.name,
-      generatorType: refill.site.dgType || refill.site.generator?.model || "",
-      generatorCapacity: refill.site.dgCapacity || refill.site.generator?.capacityKVA?.toString() || "0",
+      siteId: refill.site?.siteId || "N/A",
+      siteName: refill.site?.name || "N/A",
+      generatorType: refill.site?.dgType || refill.site?.generator?.model || "",
+      generatorCapacity: refill.site?.dgCapacity || refill.site?.generator?.capacityKVA?.toString() || "0",
       tankerCapacity: capacity,
       stdConsumption,
-      beforeHour: refill.beforeHours,
-      endHour: refill.afterHours,
+      beforeHour: refill.beforeHours || 0,
+      endHour: refill.afterHours || 0,
       hourDiff: diffHours,
-      beforeFuel: refill.beforeLevel,
-      afterFuel: refill.afterLevel,
+      beforeFuel: refill.beforeLevel || 0,
+      afterFuel: refill.afterLevel || 0,
       fuelDiff: diffFuel,
       actualConsumption,
       status,
-      location: refill.site.region || refill.fuelRequest?.route || "",
+      location: refill.site?.region || refill.fuelRequest?.route || "",
       fuelPrice: refill.unitPrice || 0,
       fleetAdminAccount: defaultFleetAdminAccount,
       assetType: "Generator",
-      date: refill.refillDate
+      date: refill.refillDate || new Date()
     };
   });
 
